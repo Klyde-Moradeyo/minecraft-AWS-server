@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  minecraft:
+    image: itzg/minecraft-server:latest
+    volumes:
+      # attach a directory relative to the directory containing this compose file
+      - ./minecraft-data:/data
+    ports:
+      - 25565:25565
+    environment:
+      EULA: "TRUE"
+      VERSION: "1.19.2"
+      DIFFICULTY: "hard"
+      MODE: "creative" # creative, survival, adventure, spectator 
+      MAX_PLAYERS: "20"
+      VIEW_DISTANCE: "25"
+      SIMULATION_DISTANCE: "25"
+      # SEED: "1785852800490497919" # Remove later
+      MOTD: "Welcome to my Server" # Server Message
+      TYPE: "VANILLA"
+      OPS: "TheBlackMango__"
+      ENABLE_WHITELIST: "FALSE"
+      ENFORCE_WHITELIST: "FALSE"
+      ANNOUNCE_PLAYER_ACHIEVEMENTS: "true"
+      TZ: "Europe/London" # Time zone
+      LOG_TIMESTAMP: "true"
+      # ICON: "http://..../some/image.png" # Server Icon
+    tty: true
+    stdin_open: true
+    restart: unless-stopped
+volumes:
+  minecraftdata:
+    external: true
