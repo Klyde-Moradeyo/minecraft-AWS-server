@@ -18,7 +18,7 @@ variable "instance_type" {
 
 variable "ami" {
     type = string
-    default = "ami-005e54dee72cc1d00"
+    default = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
 }
 
 variable "instance_keypair" {
