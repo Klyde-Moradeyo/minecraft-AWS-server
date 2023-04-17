@@ -36,8 +36,12 @@ data "aws_ami" "ubuntu" {
     name   = "virtualization-type"
     values = ["hvm"]
   }
-}
 
+  filter {
+      name   = "architecture"
+      values = ["x86_64"]
+  }
+}
 
 module "ec2_instance" {
   source  = "terraform-aws-modules/ec2-instance/aws"
