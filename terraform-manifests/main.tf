@@ -24,7 +24,7 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name   = "name"
-    values = [var.ami]
+    values = [ "${var.ami}" ]
   }
 
   filter {
@@ -50,9 +50,9 @@ module "ec2_instance" {
   name = "${var.name}-public"
 
   # Spot Instance
-  create_spot_instance = true
-  spot_price           = "0.60"
-  spot_type            = "persistent"
+  # create_spot_instance = true
+  # spot_price           = "0.60"
+  # spot_type            = "persistent"
 
   # Instance
   ami                    = data.aws_ami.ubuntu.id
@@ -60,11 +60,100 @@ module "ec2_instance" {
   key_name               = var.instance_keypair
 
   # Netowork
-  vpc_security_group_ids = [ "sg-12345678" ]
-  subnet_id              = "subnet-eddcdzz4"
+  vpc_security_group_ids = [ aws_security_group.minecraft_SG.id ]
+  subnet_id              = local.subnet_id
   
   # Monitoring
   monitoring             = true
 
   tags = module.label.tags
-}        
+}
+
+########################
+#   Security Groups    #
+########################
+resource "aws_security_group" "minecraft_SG" {
+  name        = "${var.name}-sg"
+  description = "Minecraft Security Group Allow SSH and TCP"
+  vpc_id      = local.vpc_id // default VPC
+
+  # Ingress rule for SSH
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    description = "SSH"
+    cidr_blocks = [ var.allowed_cidrs ]
+  }
+
+  # Ingress rule for Minecraft server
+  ingress {
+    description      = "Minecraft Server"
+    from_port        = var.mc_port
+    to_port          = var.mc_port
+    protocol         = "tcp"
+    cidr_blocks      = [ var.allowed_cidrs ]
+  }
+
+  // Allow all outgoing traffic without any restrictions
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = module.label.tags
+}
+
+########################
+#       S3 Bucket      #
+########################
+resource "random_string" "unique_bucket_suffix" {
+  length  = 8
+  special = false
+  upper   = false
+  number  = false
+}
+
+locals {
+  bucket_name = "${var.name}-s3-${random_string.unique_bucket_suffix.result}"
+}
+
+resource "aws_s3_bucket" "mc_s3" {
+  bucket = local.bucket_name
+  # acl    = "private"
+
+  force_destroy = var.bucket_force_destroy
+  
+  # versioning = {
+  #   enabled = false
+  # }
+
+  tags = module.label.tags
+}
+
+resource "aws_s3_bucket_public_access_block" "mc_s3_public_access_block" {
+  bucket = aws_s3_bucket.mc_s3.id
+
+  # S3 bucket-level Public Access Block configuration
+  block_public_acls       = true # blocks the creation or modification of any new public ACLs on the bucket
+  block_public_policy     = true # blocks the creation or modification of any new public bucket policies
+  ignore_public_acls      = true # instructs Amazon S3 to ignore all public ACLs associated with the bucket and its objects
+  restrict_public_buckets = true # restricts access to the bucket and its objects to only AWS services and authorized users
+}
+
+resource "aws_s3_bucket_ownership_controls" "mc_s3_ownership_control" {
+  bucket = aws_s3_bucket.mc_s3.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_acl" "mc_s3_acl" {
+  depends_on = [aws_s3_bucket_ownership_controls.mc_s3_ownership_control]
+
+  bucket = aws_s3_bucket.mc_s3.id
+  acl    = "private"
+}

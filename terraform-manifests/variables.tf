@@ -1,4 +1,37 @@
 ########################
+#     Minecraft        #
+########################
+variable "mc_port" {
+  description = "TCP port for minecraft"
+  type        = number
+  default     = 25565
+}
+
+variable "mc_root" {
+  description = "Where to install minecraft on your instance"
+  type        = string
+  default     = "/home/minecraft"
+}
+
+variable "mc_version" {
+  description = "Which version of minecraft to install"
+  type        = string
+  default     = "latest"
+}
+
+variable "mc_type" {
+  description = "Type of minecraft distribution - snapshot or release"
+  type        = string
+  default     = "release"
+}
+
+variable "mc_backup_freq" {
+  description = "How often (mins) to sync to S3"
+  type        = number
+  default     = 5
+}
+
+########################
 #     General AWS      #
 ########################
 variable "aws_region" {
@@ -30,6 +63,25 @@ variable "instance_keypair" {
 variable "network_interface_id" {
   type = string
   default = "network_id_from_aws"
+}
+
+########################
+#   Security Groups    #
+########################
+variable "allowed_cidrs" {
+  description = "Allow these CIDR blocks to the server - default is the Universe"
+  type        = string
+  default     = "0.0.0.0/0" // https://cidr.xyz/
+}
+
+
+########################
+#       S3 Bucket      #
+########################
+variable "bucket_force_destroy" {
+  description = "Boolean that indicates all objects should be deleted from the bucket"
+  type        = bool
+  default     = false
 }
 
 ########################
@@ -73,6 +125,7 @@ variable "tags" {
   type        = map
   default     = {}
 }
+
 
 
 
