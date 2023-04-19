@@ -24,7 +24,7 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name   = "name"
-    values = [ "${var.ami}" ]
+    values = [ var.ami ]
   }
 
   filter {
@@ -55,7 +55,7 @@ module "ec2_instance" {
   # spot_type            = "persistent"
 
   # Instance
-  ami                    = data.aws_ami.ubuntu.id
+  ami                    = data.aws_ami.ubuntu.image_id
   instance_type          = var.instance_type
   key_name               = var.instance_keypair
 
