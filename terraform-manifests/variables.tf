@@ -7,22 +7,10 @@ variable "mc_port" {
   default     = 25565
 }
 
-variable "mc_root" {
-  description = "Where to install minecraft on your instance"
-  type        = string
-  default     = "/home/minecraft"
-}
-
 variable "mc_version" {
   description = "Which version of minecraft to install"
   type        = string
   default     = "latest"
-}
-
-variable "mc_type" {
-  description = "Type of minecraft distribution - snapshot or release"
-  type        = string
-  default     = "release"
 }
 
 variable "mc_backup_freq" {
@@ -46,7 +34,7 @@ variable "aws_region" {
 variable "instance_type" {
   description = "EC2 Instnace Type"
   type = string
-  default = "t3.micro"
+  default = "t2.medium"	// "t3.micro"
 }
 
 variable "ami" {
