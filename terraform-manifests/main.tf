@@ -66,7 +66,73 @@ module "ec2_instance" {
   # Monitoring
   monitoring             = true
 
+  // Pre-req install Script
+  # user_data = file("scripts/ec2_install.sh")
+
   tags = module.label.tags
+}
+
+// Install Ec2 Pre-reqs
+resource "null_resource" "run_ec2_install_script" {
+  depends_on = [ module.ec2_instance ]
+
+  provisioner "file" {
+    source      = "./scripts/ec2_install.sh"
+    destination = "/home/ubuntu/ec2_install.sh"
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = "${file("./private-key/terraform-key.pem")}"
+      host        = module.ec2_instance.public_dns
+    }
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /home/ubuntu/ec2_install.sh",
+      "/home/ubuntu/ec2_install.sh > install.log"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = "${file("./private-key/terraform-key.pem")}"
+      host        = module.ec2_instance.public_dns
+    }
+  }
+}
+
+// Get docker-compose.yaml and Run Docker Compose
+resource "null_resource" "run_docker" {
+  depends_on = [ null_resource.run_ec2_install_script ]
+
+  // Get docker-compose.yml
+  provisioner "file" {
+    source      = "../docker-compose.yml"
+    destination = "/home/ubuntu/docker-compose.yml"
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = "${file("./private-key/terraform-key.pem")}"
+      host        = module.ec2_instance.public_dns
+    }
+  }
+
+  // Run Docker Compose
+  provisioner "remote-exec" {
+    inline = [
+      "sudo docker compose up -d"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = "${file("./private-key/terraform-key.pem")}"
+      host        = module.ec2_instance.public_dns
+    }
+  }
 }
 
 ########################
