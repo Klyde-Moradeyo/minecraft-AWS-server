@@ -5,9 +5,15 @@
 
 # How to SSH
 chmod 400 terraform-manifests/private-key/terraform-key.pem
-ssh -i terraform-manifests/private-key/terraform-key.pem ubuntu@<public-ip-address>
+ssh -i ./terraform-manifests/private-key/terraform-key.pem ubuntu@<public-ip-address>
+
+# Quick Commands for copy and pasting
+terraform destroy --auto-approve
+terraform apply --auto-approve
 
 
 # Enhacements
 - Static public IP Address for connecting to server
 - Server only starts up when a connection is request
+- m5.large
+- Datapack for vanilla tweeks
