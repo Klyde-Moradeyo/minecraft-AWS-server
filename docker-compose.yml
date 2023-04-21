@@ -11,6 +11,7 @@ services:
     environment:
       EULA: "TRUE"
       VERSION: "1.19.2"
+      WORLD: "./mc-world"
       DIFFICULTY: "hard"
       MODE: "creative" # creative, survival, adventure, spectator 
       MAX_PLAYERS: "20"
@@ -23,9 +24,10 @@ services:
       ENABLE_WHITELIST: "FALSE"
       ENFORCE_WHITELIST: "FALSE"
       ANNOUNCE_PLAYER_ACHIEVEMENTS: "true"
+      ENABLE_COMMAND_BLOCK: "false"
       TZ: "Europe/London" # Time zone
       LOG_TIMESTAMP: "true"
-      # ICON: "http://..../some/image.png" # Server Icon
+      ICON: "https://static.wikia.nocookie.net/hunterxhunter/images/8/88/Isaac_Netero_HE_Portrait.png" # Server Icon
     tty: true
     stdin_open: true
     restart: unless-stopped
