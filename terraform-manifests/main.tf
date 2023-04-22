@@ -59,7 +59,10 @@ module "ec2_instance" {
   instance_type          = var.instance_type
   key_name               = var.instance_keypair
 
-  # Netowork
+  # Instance Profile
+  iam_instance_profile = aws_iam_instance_profile.mc.name
+
+  # Network
   vpc_security_group_ids = [ aws_security_group.minecraft_SG.id ]
   subnet_id              = local.subnet_id
   
@@ -180,7 +183,7 @@ resource "random_string" "unique_bucket_suffix" {
   length  = 8
   special = false
   upper   = false
-  number  = false
+  numeric  = false
 }
 
 locals {
