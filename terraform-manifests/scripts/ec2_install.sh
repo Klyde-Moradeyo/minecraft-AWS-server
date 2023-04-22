@@ -1,14 +1,17 @@
 #!/bin/bash
 
-# Use: Installs Docker and Docker Compose
+# Use: Installs Docker, Docker Compose and AWS CLI
 # Ref:
 #   https://docs.docker.com/engine/install/ubuntu/
 #   https://docs.docker.com/compose/install/linux/#install-the-plugin-manually
-
+#   https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
 # Update the package list and install packages to allow apt to use a repository over HTTPS
 apt-get update && apt-get install -y sudo
 
+########################
+#    Docker Install    #
+########################
 sudo apt-get install -y \
     ca-certificates \
     curl \
@@ -43,6 +46,34 @@ chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 # Apply group membership changes
 # newgrp docker
 
-# Check installation
+# Check Docker Docker Compose installation
 docker --version
 docker compose version
+
+########################
+#    AWS CLI Install   #
+########################
+sudo apt-get install -y \
+    unzip \
+    curl 
+
+# Download the latest version of the AWS CLI
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+
+# Install the AWS CLI
+sudo ./aws/install
+
+# Verify the installation
+# aws --version
+
+########################
+#     Post Install     #
+########################
+rm -rfv aws awscliv2.zip
+
+# Print Everything that was installed in this script at the end
+docker --version
+docker compose version
+aws --version
+
