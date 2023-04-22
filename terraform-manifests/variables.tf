@@ -54,6 +54,15 @@ variable "network_interface_id" {
 }
 
 ########################
+#    Systems Manager   #
+########################
+variable "git_private_key_name" {
+  description = "Private Key name for Github SSH in Systems Manager Paramter Store"
+  type        = string
+  default     = "dark-mango-bot-private-key"
+}
+
+########################
 #   Security Groups    #
 ########################
 variable "allowed_cidrs" {
