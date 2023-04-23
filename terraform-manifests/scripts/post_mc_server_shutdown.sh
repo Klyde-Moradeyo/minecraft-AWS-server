@@ -22,7 +22,7 @@ get_current_date() {
 get_current_date
 
 # Stop the docker container
-$(cd $home_dir/minecraft-tf-AWS-server && docker-compose down)
+$(cd $home_dir/minecraft-tf-AWS-server && docker compose down)
 
 ########################
 # Save MC world in Git #
