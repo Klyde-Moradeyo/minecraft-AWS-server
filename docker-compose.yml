@@ -11,7 +11,7 @@ services:
     environment:
       EULA: "TRUE"
       VERSION: "1.19.2"
-      WORLD: "./mc-world"
+      WORLD: "${WORLD}"
       DIFFICULTY: "hard"
       MODE: "creative" # creative, survival, adventure, spectator 
       MAX_PLAYERS: "20"
