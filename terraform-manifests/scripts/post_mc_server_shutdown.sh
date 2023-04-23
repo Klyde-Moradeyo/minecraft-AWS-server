@@ -4,6 +4,7 @@
 # Use: Post "terraform destroy" script to be performed on ec2 instance
 
 home_dir="/home/ubuntu"
+git_private_key_path="$home_dir/.ssh/id_rsa"
 
 get_current_date() {
   local year=$(date +"%Y")
@@ -39,7 +40,7 @@ git add .
 git commit -m "Auto-commit: Update minecraft world date $(date +"%d"):$(date +"%m"):$(date +"%Y") $(date +"%H"):$(date +"%M")"
 
 # Push changes to the remote repository
-git push origin
+GIT_SSH_COMMAND="ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git push origin
 
 get_current_date
 
