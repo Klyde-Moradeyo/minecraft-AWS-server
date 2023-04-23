@@ -1,25 +1,33 @@
+#!/bin/bash
 # Prepare Enviornment
-year=$(date +"%Y"); 
-month=$(date +"%m"); 
-day=$(date +"%d"); 
-hour=$(date +"%H"); 
-minute=$(date +"%M"); 
-second=$(date +"%S")
 
-echo """
------------------------------------------------------------------
-Date: $day/$month/$year $hour:$minute:$second
------------------------------------------------------------------
-"""
+get_current_date() {
+  local year=$(date +"%Y")
+  local month=$(date +"%m")
+  local day=$(date +"%d")
+  local hour=$(date +"%H")
+  local minute=$(date +"%M")
+  local second=$(date +"%S")
+
+  echo """
+  -----------------------------------------------------------------
+  Date: $day/$month/$year $hour:$minute:$second
+  -----------------------------------------------------------------
+  """
+}
+get_current_date
+
+# Variables
+repo="git@github.com:klydem11/minecraft-AWS-server.git"
+repo_branch="main"
+repo_folder="$(pwd)/minecraft-tf-AWS-server"
+
+mc_map_repo="git@github.com:klydem11/minecraft-world.git"
+mc_map_repo_branch="test-world"
+mc_map_repo_folder="$(pwd)/minecraft-world"
 
 # git clone relevant repos
-git clone
-# minecraft aws terraform and minecraft world 
+git clone -b $scripts_git_branch $scripts_git $scripts_git_folder
+git clone -b $mc_map_repo_branch $mc_map_repo $mc_map_repo_folder
 
-# call the install script
-
-# docker compose up -d
-
-
-store private key in ~/.ssh 
-
+docker compose up -d -e WORLD=$mc_map_repo_folder/world
