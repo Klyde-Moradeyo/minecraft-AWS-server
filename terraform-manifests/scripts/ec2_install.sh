@@ -23,7 +23,8 @@ get_current_date() {
 get_current_date
 
 # Update the package list and install packages to allow apt to use a repository over HTTPS
-apt-get update && apt-get install -y sudo
+apt-get update && apt-get install -y sudo apt-utils
+
 
 ########################
 #    Docker Install    #
@@ -45,6 +46,9 @@ echo \
   "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
   "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Update the package list
+sudo apt-get update
 
 # Install Docker
 sudo apt-get install -y \
@@ -81,7 +85,7 @@ sudo apt-get install -y \
 
 # Download the latest version of the AWS CLI
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-unzip awscliv2.zip
+unzip -o awscliv2.zip
 
 # Install the AWS CLI
 sudo ./aws/install
