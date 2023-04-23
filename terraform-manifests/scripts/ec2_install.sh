@@ -45,8 +45,10 @@ echo \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 # Install Docker
-sudo apt-get update
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+sudo apt-get install -y \
+    docker-ce \
+    docker-ce-cli \
+    containerd.io
 
 # Download and install the Compose CLI plugin
 DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
@@ -62,6 +64,9 @@ chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 # Apply group membership changes
 # newgrp docker
 
+# Restart ubuntu instance
+# <insert reboot>
+
 # Check Docker Docker Compose installation
 docker --version
 docker compose version
@@ -70,8 +75,7 @@ docker compose version
 #    AWS CLI Install   #
 ########################
 sudo apt-get install -y \
-    unzip \
-    curl 
+    unzip 
 
 # Download the latest version of the AWS CLI
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
@@ -98,10 +102,11 @@ rm -rfv aws awscliv2.zip
 echo """
     -------------------------------------
     Installed:
-        $(docker --version)
-        $(docker compose version)
-        $(aws --version)
-        $(git --version)
+        Docker: 
+                $(docker --version)
+                $(docker compose version)
+        AWS CLI: $(aws --version)
+        GIT: $(git --version)
     """
 
 # Echo current Date
