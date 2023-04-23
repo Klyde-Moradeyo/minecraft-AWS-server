@@ -29,9 +29,11 @@ apt-get update && apt-get install -y sudo
 #    Docker Install    #
 ########################
 sudo apt-get install -y \
+    apt-transport-https \
     ca-certificates \
     curl \
-    gnupg
+    gnupg \
+    lsb-release
 
 # Add Docker’s official GPG
 sudo install -m 0755 -d /etc/apt/keyrings
@@ -105,7 +107,7 @@ echo """
         Docker: 
                 $(docker --version)
                 $(docker compose version)
-        AWS CLI: $(aws --version)
+        AWS-CLI: $(aws --version)
         GIT: $(git --version)
     """
 
