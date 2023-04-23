@@ -5,6 +5,8 @@
 
 home_dir="/home/ubuntu"
 git_private_key_path="$home_dir/.ssh/id_rsa"
+minecraft_world_repo_dir="$home_dir/minecraft-tf-AWS-server/minecraft-data/minecraft-world"
+container_world_repo_dir="$home_dir/minecraft-tf-AWS-server/minecraft-data/world"
 
 get_current_date() {
   local year=$(date +"%Y")
@@ -33,7 +35,9 @@ git config --global user.email "darkmango444@gmail.com"
 git config --global user.name "dark-mango-bot"
 
 # Go To minecraft-world repo
-cd "$home_dir/minecraft-tf-AWS-server/minecraft-data/minecraft-world"
+cd "$minecraft_world_repo_dir"
+rm -rf world
+cp $container_world_repo_dir $minecraft_world_repo_dir
 
 # Rebase branch
 GIT_SSH_COMMAND="ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git rebase origin
