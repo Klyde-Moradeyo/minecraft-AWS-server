@@ -15,15 +15,13 @@ get_current_date() {
   local minute=$(date +"%M")
   local second=$(date +"%S")
 
-  echo "$day/$month/$year $hour:$minute:$second"
+  echo """
+  -----------------------------------------------------------------
+  Date: $day/$month/$year $hour:$minute:$second
+  -----------------------------------------------------------------
+  """
 }
-
-echo """
------------------------------------------------------------------
-Date: $(get_current_date)
------------------------------------------------------------------
-"""
-
+get_current_date
 
 # Update the package list and install packages to allow apt to use a repository over HTTPS
 apt-get update && apt-get install -y sudo
@@ -107,9 +105,6 @@ echo """
         $(git --version)
     """
 
-echo """
------------------------------------------------------------------
-Date: $(get_current_date)
------------------------------------------------------------------
-"""
+# Echo current Date
+get_current_date
 
