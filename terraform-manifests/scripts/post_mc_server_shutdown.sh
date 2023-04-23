@@ -35,6 +35,9 @@ git config --global user.name "dark-mango-bot"
 # Go To minecraft-world repo
 cd "$home_dir/minecraft-tf-AWS-server/minecraft-data/minecraft-world"
 
+# Rebase branch
+GIT_SSH_COMMAND="ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git rebase origin
+
 # Add and commit changes
 git add .
 git commit -m "Auto-commit: Update minecraft world date $(date +"%d"):$(date +"%m"):$(date +"%Y") $(date +"%H"):$(date +"%M")"
