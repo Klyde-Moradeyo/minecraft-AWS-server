@@ -106,14 +106,16 @@ resource "null_resource" "run_ec2_install_script" {
   provisioner "remote-exec" {
     inline = [
       "#!/bin/bash",
-      "chmod +x /home/ubuntu/ec2_install.sh",
-      "sudo /home/ubuntu/ec2_install.sh > install.log",
+      "mkdir -p /home/ubuntu/setup/scripts /home/ubuntu/setup/logs",
+      "mv /home/ubuntu/ec2_install.sh /home/ubuntu/setup/scripts",
+      "mv /home/ubuntu/prepare_ec2_env.sh /home/ubuntu/setup/scripts",
+      "chmod +x /home/ubuntu/setup/scripts/ec2_install.sh",
+      "sudo /home/ubuntu/setup/scripts/ec2_install.sh > /home/ubuntu/setup/logs/install.log",
       "aws ssm get-parameter --name \"${var.git_private_key_name}\" --with-decryption --region \"${var.aws_region}\" --query \"Parameter.Value\" --output text > ~/.ssh/id_rsa",
       "chmod 600 ~/.ssh/id_rsa",
       "ssh-keyscan github.com >> ~/.ssh/known_hosts",
-      "ssh -T git@github.com",
-      "chmod +x /home/ubuntu/prepare_ec2_env.sh",
-      "sudo /home/ubuntu/prepare_ec2_env.sh > prepare_env.log"
+      "chmod +x /home/ubuntu/setup/scripts/prepare_ec2_env.sh",
+      "sudo /home/ubuntu/setup/scripts/prepare_ec2_env.sh > /home/ubuntu/setup/logs/prepare_env.log"
     ]
 
     connection {
