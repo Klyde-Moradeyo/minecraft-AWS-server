@@ -1,10 +1,29 @@
 #!/bin/bash
 
+
 # Use: Installs Docker, Docker Compose and AWS CLI
 # Ref:
 #   https://docs.docker.com/engine/install/ubuntu/
 #   https://docs.docker.com/compose/install/linux/#install-the-plugin-manually
 #   https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+
+get_current_date() {
+  local year=$(date +"%Y")
+  local month=$(date +"%m")
+  local day=$(date +"%d")
+  local hour=$(date +"%H")
+  local minute=$(date +"%M")
+  local second=$(date +"%S")
+
+  echo "$day/$month/$year $hour:$minute:$second"
+}
+
+echo """
+-----------------------------------------------------------------
+Date: $(get_current_date)
+-----------------------------------------------------------------
+"""
+
 
 # Update the package list and install packages to allow apt to use a repository over HTTPS
 apt-get update && apt-get install -y sudo
@@ -68,12 +87,29 @@ sudo ./aws/install
 # aws --version
 
 ########################
+#     Install Git      #
+########################
+sudo apt-get install git -y
+# git --version
+
+########################
 #     Post Install     #
 ########################
 rm -rfv aws awscliv2.zip
 
 # Print Everything that was installed in this script at the end
-docker --version
-docker compose version
-aws --version
+echo """
+    -------------------------------------
+    Installed:
+        $(docker --version)
+        $(docker compose version)
+        $(aws --version)
+        $(git --version)
+    """
+
+echo """
+-----------------------------------------------------------------
+Date: $(get_current_date)
+-----------------------------------------------------------------
+"""
 
