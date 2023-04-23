@@ -147,9 +147,9 @@ resource "null_resource" "post_mc_server_close" {
       public_ip=$(cat ec2_public_ip.txt)
       echo $public_ip
       ssh -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@$public_ip "\
-      sudo chmod +x /home/ubuntu/minecraft-tf-AWS-server/terraform-manifests/scripts/post_mc_server_shutdown.sh && \
-      cp /home/ubuntu/setup/logs/* /home/ubuntu/minecraft-tf-AWS-server/minecraft-data/minecraft-world/logs && \
-      sudo /home/ubuntu/minecraft-tf-AWS-server/terraform-manifests/scripts/post_mc_server_shutdown.sh > /home/ubuntu/minecraft-tf-AWS-server/minecraft-data/minecraft-world/logs/post_mc_server_shutdown.log "
+        sudo chmod +x /home/ubuntu/minecraft-tf-AWS-server/terraform-manifests/scripts/post_mc_server_shutdown.sh && \
+        cp /home/ubuntu/setup/logs/* /home/ubuntu/minecraft-tf-AWS-server/minecraft-data/minecraft-world/logs && \
+        sudo /home/ubuntu/minecraft-tf-AWS-server/terraform-manifests/scripts/post_mc_server_shutdown.sh > /home/ubuntu/minecraft-tf-AWS-server/minecraft-data/minecraft-world/logs/post_mc_server_shutdown.log "
     EOT
   }
 }
