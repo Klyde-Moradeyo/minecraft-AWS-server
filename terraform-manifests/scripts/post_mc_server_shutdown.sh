@@ -34,22 +34,22 @@ $(cd $home_dir/minecraft-tf-AWS-server && docker compose down)
 git config --global user.email "darkmango444@gmail.com"
 git config --global user.name "dark-mango-bot"
 
-# Rebase branch
-GIT_SSH_COMMAND="ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git rebase origin
-
 # Replace world in minecraft-world git repo
-rm -rf $minecraft_world_repo_dir/world
-cp $container_world_repo_dir $minecraft_world_repo_dir
+rm -rfv $minecraft_world_repo_dir/world
+cp -rfv $container_world_repo_dir $minecraft_world_repo_dir
 
 # Go To minecraft-world repo
 cd "$minecraft_world_repo_dir"
 
 # Add and commit changes
 git add .
-git commit -m "Auto-commit: Update minecraft world date $(date +"%d"):$(date +"%m"):$(date +"%Y") $(date +"%H"):$(date +"%M")"
+git commit -m "Auto-commit: Update minecraft world $(date +"%d"):$(date +"%m"):$(date +"%Y") $(date +"%H"):$(date +"%M"):$(date +"%S")"
 
 # Push changes to the remote repository
 GIT_SSH_COMMAND="ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git push origin
+
+# Rebase branch
+GIT_SSH_COMMAND="ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git rebase origin
 
 get_current_date
 
