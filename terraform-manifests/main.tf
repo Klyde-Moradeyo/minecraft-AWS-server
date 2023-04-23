@@ -107,13 +107,13 @@ resource "null_resource" "run_ec2_install_script" {
     inline = [
       "#!/bin/bash",
       "chmod +x /home/ubuntu/ec2_install.sh",
-      "/home/ubuntu/ec2_install.sh > install.log",
+      "sudo /home/ubuntu/ec2_install.sh > install.log",
       "aws ssm get-parameter --name \"${var.git_private_key_name}\" --with-decryption --region \"${var.aws_region}\" --query \"Parameter.Value\" --output text > ~/.ssh/id_rsa",
       "chmod 600 ~/.ssh/id_rsa",
       "ssh-keyscan github.com >> ~/.ssh/known_hosts",
       "ssh -T git@github.com",
       "chmod +x /home/ubuntu/prepare_ec2_env.sh",
-      "/home/ubuntu/prepare_ec2_env.sh > prepare_env.log"
+      "sudo /home/ubuntu/prepare_ec2_env.sh > prepare_env.log"
     ]
 
     connection {
