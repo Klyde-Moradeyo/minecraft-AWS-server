@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # Use: Installs Docker, Docker Compose and AWS CLI
 # Ref:
 #   https://docs.docker.com/engine/install/ubuntu/
