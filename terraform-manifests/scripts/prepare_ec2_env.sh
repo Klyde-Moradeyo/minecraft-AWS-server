@@ -27,7 +27,7 @@ mc_map_repo_branch="test-world"
 mc_map_repo_folder="$(pwd)/minecraft-world"
 
 # git clone relevant repos
-git clone -b $scripts_git_branch $scripts_git $scripts_git_folder
-git clone -b $mc_map_repo_branch $mc_map_repo $mc_map_repo_folder
+git clone -o StrictHostKeyChecking=no -b $repo $repo_branch $repo_folder
+git clone -o StrictHostKeyChecking=no -b $mc_map_repo_branch $mc_map_repo $mc_map_repo_folder
 
-docker compose up -d -e WORLD=$mc_map_repo_folder/world
+sudo docker compose up -d -e WORLD="$mc_map_repo_folder/world"
