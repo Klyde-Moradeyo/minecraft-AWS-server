@@ -76,7 +76,7 @@ module "ec2_instance" {
 }
 
 // Install Ec2 Pre-reqs
-resource "null_resource" "run_ec2_install_script" {
+resource "null_resource" "setup_ec2" {
   depends_on = [ module.ec2_instance ]
 
   provisioner "file" {
@@ -126,38 +126,6 @@ resource "null_resource" "run_ec2_install_script" {
     }
   }
 }
-
-// Get docker-compose.yaml and Run Docker Compose
-# resource "null_resource" "run_docker" {
-#   depends_on = [ null_resource.run_ec2_install_script ]
-
-#   // Get docker-compose.yml
-#   provisioner "file" {
-#     source      = "../docker-compose.yml"
-#     destination = "/home/ubuntu/docker-compose.yml"
-
-#     connection {
-#       type        = "ssh"
-#       user        = "ubuntu"
-#       private_key = "${file("./private-key/terraform-key.pem")}"
-#       host        = module.ec2_instance.public_dns
-#     }
-#   }
-
-#   provisioner "remote-exec" {
-#     inline = [
-#       "aws ssm get-parameter --name "${var.private_key_name}" --with-decryption --region "${var.region}" --query "Parameter.Value" --output text > /home/ubuntu/private_key.pem",
-#       "sudo docker compose up -d", // Run Docker Compose
-#     ]
-
-#     connection {
-#       type        = "ssh"
-#       user        = "ubuntu"
-#       private_key = "${file("./private-key/terraform-key.pem")}"
-#       host        = module.ec2_instance.public_dns
-#     }
-#   }
-# }
 
 ########################
 #   Security Groups    #
