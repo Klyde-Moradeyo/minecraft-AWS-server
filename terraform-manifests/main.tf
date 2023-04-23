@@ -141,9 +141,9 @@ resource "null_resource" "post_mc_server_close" {
     when    = destroy # Only execute on destruction of resource
     command = <<-EOT
       ssh -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@$(terraform output -raw public_ip) \
-      chmod +x /home/ubuntu/minecraft-tf-AWS-server/terraform-manifests/scripts/post_mc_server_shutdown.sh \
-      cp /home/ubuntu/scripts/logs/* /home/ubuntu/minecraft-tf-AWS-server/minecraft-data/minecraft-world/logs \
-      /home/ubuntu/minecraft-tf-AWS-server/terraform-manifests/scripts/post_mc_server_shutdown.sh > /home/ubuntu/minecraft-tf-AWS-server/minecraft-data/minecraft-world/logs/post_mc_server_shutdown.log
+      sudo chmod +x /home/ubuntu/minecraft-tf-AWS-server/terraform-manifests/scripts/post_mc_server_shutdown.sh \
+      cp /home/ubuntu/setup/logs/* /home/ubuntu/minecraft-tf-AWS-server/minecraft-data/minecraft-world/logs \
+      sudo /home/ubuntu/minecraft-tf-AWS-server/terraform-manifests/scripts/post_mc_server_shutdown.sh > /home/ubuntu/minecraft-tf-AWS-server/minecraft-data/minecraft-world/logs/post_mc_server_shutdown.log
     EOT
   }
 }
