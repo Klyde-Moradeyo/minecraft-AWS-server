@@ -75,7 +75,7 @@ module "ec2_instance" {
   tags = module.label.tags
 }
 
-// Install Ec2 Pre-reqs
+// Set-up Ec2 Pre-reqs
 resource "null_resource" "setup_ec2" {
   depends_on = [ module.ec2_instance ]
 
@@ -115,7 +115,7 @@ resource "null_resource" "setup_ec2" {
       "chmod 600 ~/.ssh/id_rsa",
       "ssh-keyscan github.com >> ~/.ssh/known_hosts",
       "chmod +x /home/ubuntu/setup/scripts/prepare_ec2_env.sh",
-      "sudo /home/ubuntu/setup/scripts/prepare_ec2_env.sh > /home/ubuntu/setup/logs/prepare_env.log"
+      "sudo /home/ubuntu/setup/scripts/prepare_ec2_env.sh > /home/ubuntu/setup/logs/prepare_ec2_env.log"
     ]
 
     connection {
@@ -124,6 +124,27 @@ resource "null_resource" "setup_ec2" {
       private_key = "${file("./private-key/terraform-key.pem")}"
       host        = module.ec2_instance.public_dns
     }
+  }
+}
+
+// Ec2 before destroy 
+resource "null_resource" "post_mc_server_close" {
+  depends_on = [ module.ec2_instance ]
+
+  triggers = {
+    # Every time you run terraform apply or terraform destroy, 
+    # the timestamp will be different, causing the null_resource to be recreated
+    before_destroy_timestamp = timestamp()
+  }
+
+  provisioner "local-exec" {
+    when    = destroy # Only execute on destruction of resource
+    command = <<-EOT
+      ssh -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@$(terraform output -raw public_ip) \
+      chmod +x /home/ubuntu/minecraft-tf-AWS-server/terraform-manifests/scripts/post_mc_server_shutdown.sh \
+      cp /home/ubuntu/scripts/logs/* /home/ubuntu/minecraft-tf-AWS-server/minecraft-data/minecraft-world/logs \
+      /home/ubuntu/minecraft-tf-AWS-server/terraform-manifests/scripts/post_mc_server_shutdown.sh > /home/ubuntu/minecraft-tf-AWS-server/minecraft-data/minecraft-world/logs/post_mc_server_shutdown.log
+    EOT
   }
 }
 
