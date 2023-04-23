@@ -27,7 +27,7 @@ repo_branch="main"
 repo_folder="$home_dir/minecraft-tf-AWS-server"
 
 mc_map_repo="git@github.com:klydem11/minecraft-world.git"
-mc_map_repo_branch="test-002" #"main"
+mc_map_repo_branch="main"
 mc_map_repo_folder="$repo_folder/minecraft-data/minecraft-world"
 
 # disable strict host key checking and then git clone relevant repos

@@ -48,9 +48,6 @@ git commit -m "Auto-commit: Update minecraft world $(date +"%d"):$(date +"%m"):$
 # Push changes to the remote repository
 GIT_SSH_COMMAND="ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git push origin
 
-# Rebase branch
-GIT_SSH_COMMAND="ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git rebase origin
-
 get_current_date
 
 
