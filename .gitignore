@@ -30,3 +30,4 @@ override.tf.json
 .gitsecret/keys/random_seed
 !*.secret
 terraform-manifests/private-key/terraform-key.pem
+terraform-manifests/ec2_public_ip.txt
