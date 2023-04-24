@@ -1,3 +1,5 @@
+// Used to fetch the details of the current AWS account 
+// and user or role that Terraform is using to make API calls.
 data "aws_caller_identity" "aws" {}
 
 locals {
