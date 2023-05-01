@@ -13,6 +13,7 @@ function get_current_date() {
 
     echo "-----------------------------------------------------------------"
     echo "Date: $day/$month/$year"
+    echo "Time: $hour:$minute:$second"
     echo "-----------------------------------------------------------------"
 }
 
