@@ -57,7 +57,7 @@ function run {
     rm -rfv "./scripts"
 }
 
-# Call the function from file1.sh
+# Call the run function
 start=$(date +%s.%N)
 run "$1"
 finish=$(date +%s.%N)
