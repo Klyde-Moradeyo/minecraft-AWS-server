@@ -76,67 +76,47 @@ module "ec2_instance" {
 }
 
 // Set-up Ec2 Pre-reqs
-resource "null_resource" "copy_scipts" {
+locals {
+  ec2_scripts = {
+    helper_functions            = "./scripts/helper_functions.sh"
+    ec2_install                 = "./scripts/ec2_install.sh"
+    prepare_ec2_env             = "./scripts/prepare_ec2_env.sh"
+    post_mc_server_shutdown     = "./scripts/post_mc_server_shutdown.sh"
+  }
+}
+
+resource "null_resource" "copy_scripts" {
+  for_each = local.ec2_scripts
+
   depends_on = [ aws_eip_association.mc_public_ip_to_ec2 ]
 
   provisioner "file" {
-    source      = "./scripts/helper_functions.sh"
-    destination = "/home/ubuntu/helper_functions.sh"
+    source      = each.value
+    destination = "/home/ubuntu/${each.key}.sh"
 
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      private_key = "${file("./private-key/terraform-key.pem")}"
+      private_key = file("./private-key/terraform-key.pem")
       host        = data.aws_eip.mc_public_ip.public_ip
     }
   }
-
-  provisioner "file" {
-    source      = "./scripts/ec2_install.sh"
-    destination = "/home/ubuntu/ec2_install.sh"
-
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = "${file("./private-key/terraform-key.pem")}"
-      host        = data.aws_eip.mc_public_ip.public_ip
-    }
-  }
-
-  provisioner "file" {
-    source      = "./scripts/prepare_ec2_env.sh"
-    destination = "/home/ubuntu/prepare_ec2_env.sh"
-
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = "${file("./private-key/terraform-key.pem")}"
-      host        = data.aws_eip.mc_public_ip.public_ip
-    }
-  }
-  
-  # provisioner "local-exec" {
-  #   command = "echo '${module.ec2_instance.public_ip}' > ec2_public_ip.txt"
-  # }
 }
 
 resource "null_resource" "setup_ec2" {
-  depends_on = [ null_resource.copy_scipts ]
+  depends_on = [ null_resource.copy_scripts ]
 
   provisioner "remote-exec" {
     inline = [
       "#!/bin/bash",
       "mkdir -p /home/ubuntu/setup/scripts /home/ubuntu/setup/logs",
-      "mv /home/ubuntu/ec2_install.sh /home/ubuntu/setup/scripts",
-      "mv /home/ubuntu/helper_functions.sh /home/ubuntu/setup/scripts",
-      "mv /home/ubuntu/prepare_ec2_env.sh /home/ubuntu/setup/scripts",
-      "chmod +x /home/ubuntu/setup/scripts/ec2_install.sh /home/ubuntu/setup/scripts/helper_functions.sh",
-      "sudo /home/ubuntu/setup/scripts/ec2_install.sh > /home/ubuntu/setup/logs/install.log",
-      "aws ssm get-parameter --name \"${var.git_private_key_name}\" --with-decryption --region \"${var.aws_region}\" --query \"Parameter.Value\" --output text > ~/.ssh/id_rsa",
+      "mv /home/ubuntu/{ec2_install,helper_functions,prepare_ec2_env,post_mc_server_shutdown}.sh /home/ubuntu/setup/scripts",
+      "chmod +x /home/ubuntu/setup/scripts/{ec2_install,helper_functions,prepare_ec2_env,post_mc_server_shutdown}.sh",
+      "sudo /home/ubuntu/setup/scripts/ec2_install.sh > /home/ubuntu/setup/logs/install.log", # Run Ec2 Install
+      "aws ssm get-parameter --name \"${var.git_private_key_name}\" --with-decryption --region \"${var.aws_region}\" --query \"Parameter.Value\" --output text > ~/.ssh/id_rsa", # Get git private key
       "chmod 600 ~/.ssh/id_rsa",
       "ssh-keyscan github.com >> ~/.ssh/known_hosts",
-      "chmod +x /home/ubuntu/setup/scripts/prepare_ec2_env.sh",
-      "sudo /home/ubuntu/setup/scripts/prepare_ec2_env.sh > /home/ubuntu/setup/logs/prepare_ec2_env.log"
+      "sudo /home/ubuntu/setup/scripts/prepare_ec2_env.sh > /home/ubuntu/setup/logs/prepare_ec2_env.log" # Run Ec2 Prepare Env
     ]
 
     connection {
@@ -145,31 +125,31 @@ resource "null_resource" "setup_ec2" {
       private_key = "${file("./private-key/terraform-key.pem")}"
       host        = data.aws_eip.mc_public_ip.public_ip
     }
-  }
+  } 
 }
 
 # Ec2 before destroy 
-# resource "null_resource" "post_mc_server_close" {
-#   depends_on = [ module.ec2_instance ]
+resource "null_resource" "post_mc_server_close" {
+  depends_on = [ module.ec2_instance ]
 
-#   triggers = {
-#     # Every time you run terraform apply or terraform destroy, 
-#     # the timestamp will be different, causing the null_resource to be recreated
-#     before_destroy_timestamp = timestamp()
-#   }
+  # Use a trigger to recreate the null_resource 
+  # when the EC2 instance is replaced
+  triggers = {
+    instance_id = module.ec2_instance.id
+  }
 
-#   provisioner "local-exec" {
-#     when    = destroy # Only execute on destruction of resource
-#     command = <<-EOT
-#       public_ip=$(cat EIP.txt)
-#       echo $public_ip
-#       ssh -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@$public_ip "\
-#         sudo chmod +x /home/ubuntu/minecraft-tf-AWS-server/terraform-manifests/scripts/post_mc_server_shutdown.sh && \
-#         cp /home/ubuntu/setup/logs/* /home/ubuntu/minecraft-tf-AWS-server/minecraft-data/minecraft-world/logs && \
-#         sudo /home/ubuntu/minecraft-tf-AWS-server/terraform-manifests/scripts/post_mc_server_shutdown.sh > /home/ubuntu/minecraft-tf-AWS-server/minecraft-data/minecraft-world/logs/post_mc_server_shutdown.log "
-#     EOT
-#   }
-# }
+  provisioner "local-exec" {
+    when    = destroy # Only execute on destruction of resource
+    command = <<-EOT
+      public_ip=$(cat ../eip/EIP.txt)
+      echo $public_ip
+      ssh -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@$public_ip "\
+        sudo chmod +x /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh && \
+        cp /home/ubuntu/setup/logs/* /home/ubuntu/minecraft-AWS-server/docker/minecraft-data/minecraft-world/logs && \
+        sudo /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh > /home/ubuntu/minecraft-AWS-server/docker/minecraft-data/minecraft-world/logs/post_mc_server_shutdown.log"
+    EOT
+  }
+}
 
 ########################
 #     EIP for EC2      #
