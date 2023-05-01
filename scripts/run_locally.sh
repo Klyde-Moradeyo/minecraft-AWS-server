@@ -19,8 +19,8 @@ if [[ "$mode" != "apply" && "$mode" != "destroy" && "$mode" != "plan" ]]; then
 fi
 
 # Go to the run_locally.sh directory
-script_dir="$(dirname "$(realpath "$0")")"
-cd $script_dir
+scripts_dir="$(dirname "$(realpath "$0")")"
+cd $scripts_dir
 
 function run_mc_infra {
     mode=$1
@@ -32,6 +32,9 @@ function run_mc_infra {
     cp -fv ../terraform/eip/EIP.txt $mc_infra_dir
 
     cd $mc_infra_dir
+
+    # Private Key Read Only
+    chmod 400 ./private-key/terraform-key.pem
 
     run_mode "$mode"
 
