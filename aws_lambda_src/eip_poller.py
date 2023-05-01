@@ -1,4 +1,8 @@
 import boto3
+import os
+import tempfile
+from git import Repo
+
 
 # Fetch the SSH key from the Parameter Store
 def get_git_ssh_key(param_name):
@@ -14,6 +18,12 @@ def get_git_ssh_key(param_name):
         
     return ssh_key_dir
 
+def git_clone(repo_url, dir, branch, ssh_key):
+    # Set the SSH key environment variable and disable host key checking
+    custom_ssh_env = os.environ.copy()
+    custom_ssh_env["GIT_SSH_COMMAND"] = f"ssh -i {ssh_key} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+
+    repo = Repo.clone_from(repo_url, dir, branch=branch, env=custom_ssh_env)
 
 def lambda_handler(event, context):
     # SSH Key name from system manager parameter store
@@ -27,6 +37,11 @@ def lambda_handler(event, context):
     }
 
     print(f"REPO_INFO: {repo_info}")
+    
+    with tempfile.TemporaryDirectory() as temp_dir:
+        git_clone(repo_info["url"], temp_dir, repo_info["branch"], repo_info["ssh_key"])
+        os.remove(repo_info["ssh_key"]) # Remove the SSH key file
+    
 
 
 
