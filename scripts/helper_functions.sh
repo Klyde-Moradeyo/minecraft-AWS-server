@@ -4,16 +4,16 @@
 # Use: Series of Helper functions for running scripts
 
 function get_current_date() {
-  local year=$(date +"%Y")
-  local month=$(date +"%m")
-  local day=$(date +"%d")
-  local hour=$(date +"%H")
-  local minute=$(date +"%M")
-  local second=$(date +"%S")
+    local year=$(date +"%Y")
+    local month=$(date +"%m")
+    local day=$(date +"%d")
+    local hour=$(date +"%H")
+    local minute=$(date +"%M")
+    local second=$(date +"%S")
 
-  echo "-----------------------------------------------------------------"
-  echo "Date: $day/$month/$year"
-  echo "-----------------------------------------------------------------"
+    echo "-----------------------------------------------------------------"
+    echo "Date: $day/$month/$year"
+    echo "-----------------------------------------------------------------"
 }
 
 
