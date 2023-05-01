@@ -7,7 +7,7 @@
 #   https://docs.docker.com/compose/install/linux/#install-the-plugin-manually
 #   https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
-source helper_functions.sh
+source /home/ubuntu/setup/scripts/helper_functions.sh
 
 function run {
     # Update the package list and install packages to allow apt to use a repository over HTTPS

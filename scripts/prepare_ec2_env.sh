@@ -3,7 +3,7 @@
 # Title: Prepare Enviornment
 # Use: Sets up workspace
 
-source helper_functions.sh
+source /home/ubuntu/setup/scripts/helper_functions.sh
 
 function run {
   # Variables

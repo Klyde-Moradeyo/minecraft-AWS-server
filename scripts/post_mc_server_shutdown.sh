@@ -3,7 +3,7 @@
 # Post Minecraft Server Container Close
 # Use: Post "terraform destroy" script to be performed on ec2 instance
 
-source helper_functions.sh
+source /home/ubuntu/setup/scripts/helper_functions.sh
 
 function run {
   home_dir="/home/ubuntu"
