@@ -12,7 +12,7 @@ function run {
 
   repo="git@github.com:klydem11/minecraft-AWS-server.git"
   repo_branch="main"
-  repo_folder="$home_dir/minecraft-tf-AWS-server"
+  repo_folder="$home_dir/minecraft-AWS-server"
 
   mc_map_repo="git@github.com:klydem11/minecraft-world.git"
   mc_map_repo_branch="main"

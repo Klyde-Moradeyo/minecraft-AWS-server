@@ -8,11 +8,11 @@ source /home/ubuntu/setup/scripts/helper_functions.sh
 function run {
   home_dir="/home/ubuntu"
   git_private_key_path="$home_dir/.ssh/id_rsa"
-  minecraft_world_repo_dir="$home_dir/minecraft-tf-AWS-server/docker/minecraft-data/minecraft-world"
-  container_world_repo_dir="$home_dir/minecraft-tf-AWS-server/docker/minecraft-data/world"
+  minecraft_world_repo_dir="$home_dir/minecraft-AWS-server/docker/minecraft-data/minecraft-world"
+  container_world_repo_dir="$home_dir/minecraft-AWS-server/docker/minecraft-data/world"
 
   # Stop the docker container
-  $(cd $home_dir/minecraft-tf-AWS-server && docker compose down)
+  $(cd $home_dir/minecraft-AWS-server && docker compose down)
 
   ########################
   # Save MC world in Git #
