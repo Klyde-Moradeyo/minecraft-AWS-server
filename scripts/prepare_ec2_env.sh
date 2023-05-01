@@ -16,7 +16,7 @@ function run {
 
   mc_map_repo="git@github.com:klydem11/minecraft-world.git"
   mc_map_repo_branch="main"
-  mc_map_repo_folder="$repo_folder/minecraft-data/minecraft-world"
+  mc_map_repo_folder="$repo_folder/docker/minecraft-data/minecraft-world"
 
   # disable strict host key checking and then git clone relevant repos
   GIT_SSH_COMMAND="ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git clone -b $repo_branch $repo $repo_folder
