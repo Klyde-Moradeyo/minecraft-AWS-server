@@ -6,62 +6,78 @@
 
 source helper_functions.sh
 
-function run {
+mode=$1
+environment=${2:-"minecraft_infrastructure"} # set default
+
+mode=$(echo "$mode" | tr '[:upper:]' '[:lower:]')
+environment=$(echo "$environment" | tr '[:upper:]' '[:lower:]')
+
+if [[ "$mode" != "apply" && "$mode" != "destroy" && "$mode" != "plan" ]]; then
+    echo "Invalid argument: $mode"
+    echo "Usage: $0 [apply|destroy|plan]"
+    exit 1
+fi
+
+# Go to the run_locally.sh directory
+script_dir="$(dirname "$(realpath "$0")")"
+cd $script_dir
+
+function run_mc_infra {
     mode=$1
-    if [[ "$mode" != "apply" && "$mode" != "destroy" && "$mode" != "plan" ]]; then
-        echo "Invalid argument: $mode"
-        echo "Usage: $0 [apply|destroy|plan]"
-        exit 1
-    fi
-
-    # Go to the run_locally.sh directory
-    script_dir="$(dirname "$(realpath "$0")")"
-    cd $script_dir
-
-    # variables
-    scripts_dir="../scripts"
-    mc_infra_dir="../terraform/minecraft_infrastructure"
-
+    mc_infra_dir=$2
 
     # Copy Scripts folder to mc infrastructure directory
-    echo "Copying scripts..."
+    echo "Copying files..."
     cp -rfv $scripts_dir $mc_infra_dir
+    cp -fv ../eip/EIP.txt .
 
     cd $mc_infra_dir
 
+    run_mode "$mode"
+
+    # Clean up
+    echo "Clean up:"
+    rm -rfv "./scripts"
+    rm -rfv ec2_public_ip.txt
+}
+
+function run_mc_eip {
+    mode=$1
+    mc_eip_dir=$2
+
+    cd $mc_eip_dir
+    run_mode "$mode"
+}
+
+function run_mode() {
     if [[ ! -d  ".terraform" ]]; then
         terraform init
     fi
 
-    echo -e "\n"
-    # If the argument is valid, proceed with the chosen action
-    case "$mode" in
+    case "$1" in
         "apply")
             echo "Applying changes..."
-            # cp -fv ../eip/EIP.txt .
             terraform apply --auto-approve
             ;;
         "destroy")
             echo "Destroying resources..."
             terraform destroy --auto-approve
-            # rm -rfv ec2_public_ip.txt
             ;;
         "plan")
+            echo "Plan..."
             terraform plan
             ;;
     esac
-    echo -e "\n"
-
-    # Clean up
-    echo "Clean up:"
-    rm -rfv "./scripts"
 }
 
-# Call the run function
+
 start=$(date +%s.%N)
-run "$1"
+if [ "$environment" == "eip" ]; then
+    run_mc_eip "$mode" "../terraform/eip"
+elif [ "$environment" == "minecraft_infrastructure" ]; then
+    run_mc_infra "$mode" "../terraform/minecraft_infrastructure"
+else
+    echo "Invalid argument"
+fi
 finish=$(date +%s.%N)
-
 calculate_runtime $start $finish
-
-
