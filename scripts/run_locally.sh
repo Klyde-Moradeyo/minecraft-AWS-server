@@ -30,6 +30,7 @@ function run_mc_infra {
     echo "Copying files..."
     cp -rfv $scripts_dir $mc_infra_dir
     cp -fv ../terraform/eip/EIP.txt $mc_infra_dir
+    echo -e "\n"
 
     cd $mc_infra_dir
 
@@ -39,6 +40,7 @@ function run_mc_infra {
     run_mode "$mode"
 
     # Clean up
+    echo -e "\n"
     echo "Clean up:"
     rm -rfv "./scripts"
 }
