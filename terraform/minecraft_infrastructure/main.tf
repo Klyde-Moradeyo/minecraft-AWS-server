@@ -132,27 +132,27 @@ resource "null_resource" "setup_ec2" {
 }
 
 # // Ec2 before destroy 
-# resource "null_resource" "post_mc_server_close" {
-#   depends_on = [ module.ec2_instance ]
+resource "null_resource" "post_mc_server_close" {
+  depends_on = [ module.ec2_instance ]
 
-#   triggers = {
-#     # Every time you run terraform apply or terraform destroy, 
-#     # the timestamp will be different, causing the null_resource to be recreated
-#     before_destroy_timestamp = timestamp()
-#   }
+  triggers = {
+    # Every time you run terraform apply or terraform destroy, 
+    # the timestamp will be different, causing the null_resource to be recreated
+    before_destroy_timestamp = timestamp()
+  }
 
-#   provisioner "local-exec" {
-#     when    = destroy # Only execute on destruction of resource
-#     command = <<-EOT
-#       public_ip=$(cat ec2_public_ip.txt)
-#       echo $public_ip
-#       ssh -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@$public_ip "\
-#         sudo chmod +x /home/ubuntu/minecraft-tf-AWS-server/terraform-manifests/scripts/post_mc_server_shutdown.sh && \
-#         cp /home/ubuntu/setup/logs/* /home/ubuntu/minecraft-tf-AWS-server/minecraft-data/minecraft-world/logs && \
-#         sudo /home/ubuntu/minecraft-tf-AWS-server/terraform-manifests/scripts/post_mc_server_shutdown.sh > /home/ubuntu/minecraft-tf-AWS-server/minecraft-data/minecraft-world/logs/post_mc_server_shutdown.log "
-#     EOT
-#   }
-# }
+  provisioner "local-exec" {
+    when    = destroy # Only execute on destruction of resource
+    command = <<-EOT
+      public_ip=$(cat ec2_public_ip.txt)
+      echo $public_ip
+      ssh -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@$public_ip "\
+        sudo chmod +x /home/ubuntu/minecraft-tf-AWS-server/terraform-manifests/scripts/post_mc_server_shutdown.sh && \
+        cp /home/ubuntu/setup/logs/* /home/ubuntu/minecraft-tf-AWS-server/minecraft-data/minecraft-world/logs && \
+        sudo /home/ubuntu/minecraft-tf-AWS-server/terraform-manifests/scripts/post_mc_server_shutdown.sh > /home/ubuntu/minecraft-tf-AWS-server/minecraft-data/minecraft-world/logs/post_mc_server_shutdown.log "
+    EOT
+  }
+}
 
 ########################
 #   Security Groups    #
