@@ -19,12 +19,12 @@ function run {
   mc_map_repo_folder="$repo_folder/docker/minecraft-data/minecraft-world"
 
   # disable strict host key checking and then git clone relevant repos
-  GIT_SSH_COMMAND="ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git clone -b $repo_branch $repo $repo_folder
-  GIT_SSH_COMMAND="ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git clone -b $mc_map_repo_branch $mc_map_repo $mc_map_repo_folder
+  GIT_SSH_COMMAND="ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git clone -v -b $repo_branch $repo $repo_folder
+  GIT_SSH_COMMAND="ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git clone -v -b $mc_map_repo_branch $mc_map_repo $mc_map_repo_folder
 
   # Run Docker Compose
   docker_compose_file="$repo_folder/docker"
-  docker-compose -f "$docker_compose_file/docker-compose.yml" --project-directory "$docker_compose_file" up -d
+  docker compose -f "$docker_compose_file/docker-compose.yml" --project-directory "$docker_compose_file" up -d
 }
 
 # Call the run function
