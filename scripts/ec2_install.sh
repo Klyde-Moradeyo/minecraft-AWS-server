@@ -97,10 +97,10 @@ function run {
     echo "              Installed              "
     echo "-------------------------------------"
     echo "Docker:
-                  $docker_version
-                  $compose_version"
-    echo "AWS CLI: $aws_version"
-    echo "GIT: $git_version"
+                  $(docker --version)
+                  $(docker compose version)"
+    echo "AWS CLI: $(aws --version)"
+    echo "GIT: $(git --version)"
     echo "-------------------------------------"
 }
 
