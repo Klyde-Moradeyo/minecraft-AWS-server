@@ -131,7 +131,7 @@ resource "null_resource" "setup_ec2" {
   }
 }
 
-# // Ec2 before destroy 
+# /Ec2 before destroy 
 resource "null_resource" "post_mc_server_close" {
   depends_on = [ module.ec2_instance ]
 
@@ -144,7 +144,7 @@ resource "null_resource" "post_mc_server_close" {
   provisioner "local-exec" {
     when    = destroy # Only execute on destruction of resource
     command = <<-EOT
-      public_ip=$(cat ec2_public_ip.txt)
+      public_ip=$(cat EIP.txt)
       echo $public_ip
       ssh -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@$public_ip "\
         sudo chmod +x /home/ubuntu/minecraft-tf-AWS-server/terraform-manifests/scripts/post_mc_server_shutdown.sh && \
@@ -153,6 +153,23 @@ resource "null_resource" "post_mc_server_close" {
     EOT
   }
 }
+
+########################
+#     EIP for EC2      #
+########################
+locals {
+  public_ip = trim(file("./EIP.txt"), " \t\n\r")
+}
+
+data "aws_eip" "mc_public_ip" {
+  public_ip = local.public_ip
+}
+
+resource "aws_eip_association" "mc_public_ip_to_ec2" {
+  instance_id   = module.ec2_instance.id
+  allocation_id = data.aws_eip.mc_public_ip.id
+}
+
 
 ########################
 #   Security Groups    #
