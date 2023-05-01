@@ -4,9 +4,9 @@
 - IAM User available with Admin access
 
 # How to SSH
-chmod 400 terraform-manifests/private-key/terraform-key.pem
-ssh -i ./terraform-manifests/private-key/terraform-key.pem ubuntu@$(terraform output -raw public_ip)
-cd terraform-manifests & ssh -i ./private-key/terraform-key.pem ubuntu@$(terraform output -raw public_ip)
+chmod 400 ./terraform/minecraft_infrastructure/private-key/terraform-key.pem
+sudo ssh-keygen -f "/root/.ssh/known_hosts" -R "$(cat ./terraform/minecraft_infrastructure/EIP.txt)"
+sudo ssh -i ./terraform/minecraft_infrastructure/private-key/terraform-key.pem ubuntu@$(cat ./terraform/minecraft_infrastructure/EIP.txt)
 
 # Quick Commands for copy and pasting
 terraform destroy --auto-approve
