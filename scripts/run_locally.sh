@@ -29,7 +29,7 @@ function run_mc_infra {
     # Copy Scripts folder to mc infrastructure directory
     echo "Copying files..."
     cp -rfv $scripts_dir $mc_infra_dir
-    cp -fv ../eip/EIP.txt .
+    cp -fv ../terraform/eip/EIP.txt $mc_infra_dir
 
     cd $mc_infra_dir
 
@@ -38,7 +38,6 @@ function run_mc_infra {
     # Clean up
     echo "Clean up:"
     rm -rfv "./scripts"
-    rm -rfv ec2_public_ip.txt
 }
 
 function run_mc_eip {
