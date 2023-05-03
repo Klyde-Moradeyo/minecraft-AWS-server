@@ -7,6 +7,7 @@
 #   https://docs.docker.com/compose/install/linux/#install-the-plugin-manually
 #   https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
+set -e
 source /home/ubuntu/setup/scripts/helper_functions.sh
 
 function run {

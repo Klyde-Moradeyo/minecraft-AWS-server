@@ -3,6 +3,7 @@
 # Post Minecraft Server Container Close
 # Use: Post "terraform destroy" script to be performed on ec2 instance
 
+set -e
 source /home/ubuntu/setup/scripts/helper_functions.sh
 
 function run {
@@ -10,7 +11,7 @@ function run {
   docker_dir="$home_dir/minecraft-AWS-server/docker"
   git_private_key_path="$home_dir/.ssh/id_rsa"
   minecraft_world_repo_dir="$docker_dir/minecraft-data/minecraft-world"
-  container_world_repo_dir="$working_dir/minecraft-data/world"
+  container_world_repo_dir="$docker_dir/minecraft-data/world"
 
   # Stop the docker container
   $(cd $docker_dir && docker compose down)
@@ -46,5 +47,6 @@ finish=$(date +%s.%N)
 
 get_current_date
 calculate_runtime $start $finish
+exit 0
 
 
