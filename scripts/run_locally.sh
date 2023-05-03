@@ -35,7 +35,7 @@ function run_mc_infra {
     cd $mc_infra_dir
 
     # Private Key Read Only
-    chmod 400 ./private-key/terraform-key.pem
+    sudo chmod 400 ./private-key/terraform-key.pem
 
     run_mode "$mode"
 
