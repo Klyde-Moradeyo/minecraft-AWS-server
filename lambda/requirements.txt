@@ -1,3 +1,4 @@
-boto3=1.26.121
-gitpython=3.1.31
-cryptography=3.4.8
+boto3==1.26.121
+gitpython==3.1.31
+cryptography==3.4.8
+python-terraform==0.10.1
