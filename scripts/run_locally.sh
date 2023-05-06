@@ -12,9 +12,9 @@ environment=${2:-"minecraft_infrastructure"} # set default
 mode=$(echo "$mode" | tr '[:upper:]' '[:lower:]')
 environment=$(echo "$environment" | tr '[:upper:]' '[:lower:]')
 
-if [[ "$mode" != "apply" && "$mode" != "destroy" && "$mode" != "plan" ]]; then
+if [[ "$mode" != "apply" && "$mode" != "destroy" && "$mode" != "plan" && "$mode" != "build" ]]; then
     echo "Invalid argument: $mode"
-    echo "Usage: $0 [apply|destroy|plan]"
+    echo "Usage: $0 [apply|destroy|plan|build(lambda)]"
     exit 1
 fi
 
@@ -45,10 +45,29 @@ function run_mc_infra {
     rm -rfv "./scripts"
 }
 
-function run_mc_eip {
+function run_mc_eip_lambda {
     mode=$1
     mc_eip_dir=$2
 
+    if [[ $mode == "build" ]]; then
+        lambda_dir="../lambda"
+
+        # Create python packages folder
+        while read requirement; do
+        module_name=$(echo $requirement | sed -e 's/#.*//' -e 's/[[:space:]]*$//') # Remove any comments (lines starting with #) and whitespace
+        if [ -n "$module_name" ]; then  # Check if the line is not empty
+            pip install --target $lambda_dir/package "$module_name"
+        fi
+        done < "$lambda_dir/requirements.txt"
+
+        chmod 644 "$lambda_dir/lambda_function.py" "$lambda_dir/package"
+        chmod 755 "$lambda_dir/lambda_function.py" "$lambda_dir/package"
+        zip -r $lambda_dir/lambda_deployment "$lambda_dir/lambda_function.py" "$lambda_dir/package"
+        rm -rf "$lambda_dir/package"
+    else
+        cd $mc_eip_dir
+        run_mode "$mode"
+    fi
     cd $mc_eip_dir
     run_mode "$mode"
 }
@@ -76,8 +95,8 @@ function run_mode() {
 
 
 start=$(date +%s.%N)
-if [ "$environment" == "eip" ]; then
-    run_mc_eip "$mode" "../terraform/eip"
+if [[ "$environment" == "eip" || "$environment" == "lambda" ]]; then
+    run_mc_eip_lambda "$mode" "../terraform/eip-lambda"
 elif [ "$environment" == "minecraft_infrastructure" ]; then
     run_mc_infra "$mode" "../terraform/minecraft_infrastructure"
 else
