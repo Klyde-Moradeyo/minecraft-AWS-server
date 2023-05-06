@@ -1,45 +1,12 @@
 import boto3
 import os
+import shutil
 import tempfile
 from git import Repo
 from python_terraform import Terraform
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
-
-######################################################################
-#                       Lambda Handler                               #
-######################################################################
-def lambda_handler(event, context):
-    # SSH Key name from system manager parameter store
-    ssh_key_name = "dark-mango-bot-private-key" 
-
-    # Repo to clone containing terraform manifests and scripts
-    repo = { 
-        "url": "https://github.com/klydem11/minecraft-AWS-server.git", 
-        "branch": "main",
-        "ssh_key": f"{get_git_ssh_key(ssh_key_name)}"
-    }
-
-    print(f"repo: {repo}")
-    
-    with tempfile.TemporaryDirectory() as temp_dir:
-        git_clone(repo["url"], temp_dir, repo["branch"], repo["ssh_key"])
-        os.remove(repo["ssh_key"]) # Remove the SSH key file
-
-        # Directories
-        tf_private_key_folder = os.path.join(temp_dir, "terraform", "minecraft_infrastructure", "private-key")
-        tf_mc_infra_manifests = os.path.join(temp_dir, "terraform", "minecraft_infrastructure")
-
-        # Ec2 Instance private Key directory
-        private_key = create_private_key("terraform_key.pem", tf_private_key_folder)
-
-        # Create a Terraform object in minecraft_infrastrucutre dir 
-        tf = Terraform(working_dir=tf_mc_infra_manifests)
-        terraform_init(tf)
-        terraform_apply(tf)
-        
-lambda_handler("event", "context")
 
 ######################################################################
 #                           Functions                                #
@@ -125,3 +92,45 @@ def terraform_destroy(tf_obj):
         raise Exception(f"Terraform destroy failed:\n{stderr}")
 
     return stdout
+
+######################################################################
+#                       Lambda Handler                               #
+######################################################################
+def lambda_handler(event, context):
+    # SSH Key name from system manager parameter store
+    ssh_key_name = "dark-mango-bot-private-key" 
+
+    # Repo to clone containing terraform manifests and scripts
+    repo = { 
+        "url": "https://github.com/klydem11/minecraft-AWS-server.git", 
+        "branch": "main",
+        "ssh_key": f"{get_git_ssh_key(ssh_key_name)}"
+    }
+
+    print(f"repo: {repo}")
+    
+    with tempfile.TemporaryDirectory() as temp_dir:
+        git_clone(repo["url"], temp_dir, repo["branch"], repo["ssh_key"])
+        os.remove(repo["ssh_key"]) # Remove the SSH key file
+
+        # Directories
+        scripts_folder = os.path.join(temp_dir, "scripts")
+
+        # Minecraft Infrasture Directories
+        tf_private_key_folder = os.path.join(temp_dir, "terraform", "minecraft_infrastructure", "private-key")
+        tf_mc_infra_manifests = os.path.join(temp_dir, "terraform", "minecraft_infrastructure")
+        tf_mc_infra_scripts = os.path.join(tf_mc_infra_manifests, "scripts")
+
+        ## Copy the contents of scripts_folder to the tf_mc_infra_scripts
+        os.makedirs(tf_mc_infra_scripts, exist_ok=True) # Create the directory if not exist
+        shutil.copytree(scripts_folder, tf_mc_infra_scripts, dirs_exist_ok=True)
+        
+        # Ec2 Instance private Key directory
+        private_key = create_private_key("terraform_key.pem", tf_private_key_folder)
+
+        # Create a Terraform object in minecraft_infrastrucutre dir 
+        tf = Terraform(working_dir=tf_mc_infra_manifests)
+        terraform_init(tf)
+        terraform_apply(tf)
+        
+lambda_handler("event", "context")
