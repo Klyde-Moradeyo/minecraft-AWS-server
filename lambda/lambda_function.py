@@ -34,8 +34,10 @@ def lambda_handler(event, context):
         # Ec2 Instance private Key directory
         private_key = create_private_key("terraform_key.pem", tf_private_key_folder)
 
-        # Change to minecraft_infrastrucutre dir
-        os.chdir(tf_mc_infra_manifests)
+        # Create a Terraform object in minecraft_infrastrucutre dir 
+        tf = Terraform(working_dir=tf_mc_infra_manifests)
+        terraform_init(tf)
+        terraform_apply(tf)
         
 lambda_handler("event", "context")
 
@@ -100,3 +102,26 @@ def git_clone(repo_url, dir, branch, ssh_key):
     
     return repo
 
+def terraform_init(tf_obj):
+    return_code, stdout, stderr = terraform_obj.init(capture_output=True)
+
+    if return_code != 0:
+        raise Exception(f"Terraform init failed:\n{stderr}")
+
+    return stdout
+
+def terraform_apply(tf_obj):
+    return_code, stdout, stderr = tf_obj.apply(skip_plan=True, capture_output=True, auto_approve=True)
+
+    if return_code != 0:
+        raise Exception(f"Terraform apply failed:\n{stderr}")
+
+    return stdout
+
+def terraform_destroy(tf_obj):
+    return_code, stdout, stderr = tf_obj.destroy(capture_output=True, auto_approve=True)
+
+    if return_code != 0:
+        raise Exception(f"Terraform destroy failed:\n{stderr}")
+
+    return stdout
