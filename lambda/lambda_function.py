@@ -39,7 +39,6 @@ def lambda_handler(event, context):
         
 lambda_handler("event", "context")
 
-
 ######################################################################
 #                           Functions                                #
 ######################################################################
@@ -56,14 +55,6 @@ def get_git_ssh_key(param_name):
         ssh_key_dir = ssh_key_file.name
         
     return ssh_key_dir
-
-def git_clone(repo_url, dir, branch, ssh_key):
-    # Set the SSH key environment variable and disable host key checking
-    custom_ssh_env = os.environ.copy()
-    custom_ssh_env["GIT_SSH_COMMAND"] = f"ssh -i {ssh_key} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
-
-    repo = Repo.clone_from(repo_url, dir, branch=branch, env=custom_ssh_env)
-    return
 
 def create_private_key(file_name, directory):
     # Generate an RSA key pair
@@ -95,4 +86,17 @@ def create_private_key(file_name, directory):
 
     # Return t he directory of the priv key
     return os.path.abspath(file_path)
+
+
+def git_clone(repo_url, dir, branch, ssh_key):
+    # Set the SSH key environment variable and disable host key checking
+    custom_ssh_env = os.environ.copy()
+    custom_ssh_env["GIT_SSH_COMMAND"] = f"ssh -i {ssh_key} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+    
+    try:
+        repo = Repo.clone_from(repo_url, dir, branch=branch, env=custom_ssh_env)
+    except Exception as e:
+        raise Exception(f"Git clone failed:\n{str(e)}")
+    
+    return repo
 
