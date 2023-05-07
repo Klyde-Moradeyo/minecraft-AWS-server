@@ -50,10 +50,6 @@ resource "aws_eip" "mc_server_eip" {
   tags = module.label.tags
 }
 
-output "eip" {
-  value = aws_eip.mc_server_eip.public_ip
-}
-
 resource "null_resource" "EIP_to_txt_file" {
   depends_on = [ aws_eip.mc_server_eip ]
 
