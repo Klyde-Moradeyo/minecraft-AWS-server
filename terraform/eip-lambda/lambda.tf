@@ -19,6 +19,12 @@ resource "aws_iam_role" "iam_for_lambda" {
   assume_role_policy = data.aws_iam_policy_document.assume_role_lambda.json
 }
 
+# Attach the SSM access policy to the Lambda IAM role
+resource "aws_iam_role_policy_attachment" "ssm_access" {
+  policy_arn = aws_iam_policy.ssm_access.arn
+  role       = aws_iam_role.iam_for_lambda.name
+}
+
 # IAM policy to allow Lambda to access specific 
 # SSM Parameter Store parameters
 resource "aws_iam_policy" "ssm_access" {
@@ -42,7 +48,6 @@ resource "aws_iam_policy" "ssm_access" {
   })
 }
 
-
 ########################
 #    Lambda Function   #
 ########################
@@ -60,11 +65,16 @@ resource "aws_lambda_function" "lambda_function" {
   handler             = "lambda_function.lambda_handler"
   runtime             = "python3.8"
 
+  depends_on = [
+    aws_iam_role_policy_attachment.ssm_access,
+  ]
+
   environment {
     variables = {
       DISCORD_TOKEN = var.discord_token_name
     }
   }
+
   tags = module.label.tags
 }
 
