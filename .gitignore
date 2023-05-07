@@ -32,10 +32,13 @@ override.tf.json
 terraform/minecraft_infrastructure/private-key/terraform-key.pem
 terraform-manifests/ec2_public_ip.txt
 
-# EC2 EIP in minecraft_infrastructure folder
+# Terraform EIP and Lambda minecraft_infrastructure
 terraform/minecraft_infrastructure/EIP.txt
 terraform/minecraft_infrastructure/scripts
 
 # Lambda Folder
 lambda/package
-lambda/lambda_deployment.zip
+lambda/lambda_function_payload.zip
+
+# Terraform EIP and Lambda
+terraform/eip-lambda/lambda_function_payload.zip

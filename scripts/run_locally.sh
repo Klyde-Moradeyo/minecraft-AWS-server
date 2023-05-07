@@ -62,7 +62,7 @@ function run_mc_eip_lambda {
 
         chmod 644 "$lambda_dir/lambda_function.py" "$lambda_dir/package"
         chmod 755 "$lambda_dir/lambda_function.py" "$lambda_dir/package"
-        zip -r $lambda_dir/lambda_deployment "$lambda_dir/lambda_function.py" "$lambda_dir/package"
+        zip -r $lambda_dir/lambda_function_payload "$lambda_dir/lambda_function.py" "$lambda_dir/package"
         rm -rf "$lambda_dir/package"
     else
         cd $mc_eip_dir
