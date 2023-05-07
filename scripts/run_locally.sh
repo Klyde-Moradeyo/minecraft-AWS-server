@@ -49,7 +49,7 @@ function run_mc_eip_lambda {
     mode=$1
     mc_eip_dir=$2
 
-    if [[ $mode == "build" ]]; then
+    if [[ $mode == "build" && "$environment" == "lambda" ]]; then
         lambda_dir="../lambda"
 
         # Create python packages folder
