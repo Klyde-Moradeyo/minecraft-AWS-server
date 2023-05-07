@@ -24,6 +24,21 @@ variable "subnet_id" {
 }
 
 ########################
+#    Systems Manager   #
+########################
+variable "git_private_key_name" {
+  description = "Private Key name for Github SSH in Systems Manager Parameter Store"
+  type        = string
+  default     = "dark-mango-bot-private-key"
+}
+
+variable "discord_token_name" {
+  description = "Discord token name in Systems Manager Parameter Store"
+  type        = string
+  default     = "discord-mango-machine-bot"
+}
+
+########################
 #         Tags         #
 ########################
 variable "name" {
