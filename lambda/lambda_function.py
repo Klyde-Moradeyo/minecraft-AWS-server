@@ -167,4 +167,4 @@ def lambda_handler(event, context):
         # terraform_init(tf)
         # terraform_apply(tf)
         
-lambda_handler("event", "context")
+# lambda_handler("event", "context")
