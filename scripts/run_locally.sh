@@ -4,7 +4,11 @@
 # Use: Run locally on your machine for testing
 # Terraform Version: Terraform CLI - Terraform v1.4.4
 
-source helper_functions.sh
+# Go to the run_locally.sh directory
+scripts_dir="$(dirname "$(realpath "$0")")"
+cd $scripts_dir
+
+source $scripts_dir/helper_functions.sh
 
 mode=$1
 environment=${2:-"minecraft_infrastructure"} # set default
@@ -17,10 +21,6 @@ if [[ "$mode" != "apply" && "$mode" != "destroy" && "$mode" != "plan" && "$mode"
     echo "Usage: $0 [apply|destroy|plan|build(lambda)]"
     exit 1
 fi
-
-# Go to the run_locally.sh directory
-scripts_dir="$(dirname "$(realpath "$0")")"
-cd $scripts_dir
 
 function run_mc_infra {
     mode=$1
@@ -51,25 +51,42 @@ function run_mc_eip_lambda {
 
     if [[ $mode == "build" && "$environment" == "lambda" ]]; then
         lambda_dir="../lambda"
-
+        cd $lambda_dir
+        
         # Create python packages folder
         while read requirement; do
-        module_name=$(echo $requirement | sed -e 's/#.*//' -e 's/[[:space:]]*$//') # Remove any comments (lines starting with #) and whitespace
-        if [ -n "$module_name" ]; then  # Check if the line is not empty
-            pip install --target $lambda_dir/package "$module_name"
-        fi
-        done < "$lambda_dir/requirements.txt"
+            module_name=$(echo $requirement | sed -e 's/#.*//' -e 's/[[:space:]]*$//') # Remove any comments (lines starting with #) and whitespace
+            if [ -n "$module_name" ]; then  # Check if the line is not empty
+                pip install --target package "$module_name"
+            fi
+        done < "requirements.txt"
 
-        chmod 644 "$lambda_dir/lambda_function.py" "$lambda_dir/package"
-        chmod 755 "$lambda_dir/lambda_function.py" "$lambda_dir/package"
-        zip -r $lambda_dir/lambda_function_payload "$lambda_dir/lambda_function.py" "$lambda_dir/package"
-        rm -rf "$lambda_dir/package"
+        chmod 644 "lambda_function.py" "package"
+        chmod 755 "lambda_function.py" "package"
+        
+        zip -r lambda_function_payload "lambda_function.py" "package"
+        
+        package_size=$(du -m "lambda_function_payload.zip" | cut -f1)
+        if (( package_size > 50 )); then
+            echo -e "Warning: \nThe lambda_function_payload is larger than 50 MB \nDoc: https://docs.aws.amazon.com/lambda/latest/dg/python-package.html"
+        else
+            # rm -rf "$lambda_dir/package" -- Commented Out For Testing
+            true
+        fi
+
     else
         cd $mc_eip_dir
+        lambda_function_payload_dir="../../lambda/lambda_function_payload.zip"
+
+        # Check Size of Lambda payload < 50mb
+        package_size=$(du -m "$lambda_function_payload_dir" | cut -f1)
+        if (( package_size > 50 )); then
+            echo -e "Warning: \nThe lambda_function_payload is larger than 50 MB \nDoc: https://docs.aws.amazon.com/lambda/latest/dg/python-package.html"
+        fi
+
         run_mode "$mode"
+        rm -rfv lambda_function_payload.zip
     fi
-    cd $mc_eip_dir
-    run_mode "$mode"
 }
 
 function run_mode() {
