@@ -61,10 +61,17 @@ function run_mc_eip_lambda {
             fi
         done < "requirements.txt"
 
+        # Add git to deployment package
+        create_git_executable
+
+        # Make sure files are lambda_function.py is dos2unix
+        dos2unix "lambda_function.py" # find . -type f -exec dos2unix {} \;
+
         chmod 644 "lambda_function.py" "package"
         chmod 755 "lambda_function.py" "package"
-        
-        zip -r lambda_function_payload "lambda_function.py" "package"
+
+        cp lambda_function.py package
+        zip -r lambda_function_payload.zip "package"
         
         package_size=$(du -m "lambda_function_payload.zip" | cut -f1)
         if (( package_size > 50 )); then
@@ -85,7 +92,7 @@ function run_mc_eip_lambda {
         fi
 
         run_mode "$mode"
-        rm -rfv lambda_function_payload.zip
+        # rm -rfv lambda_function_payload.zip
     fi
 }
 
@@ -108,6 +115,43 @@ function run_mode() {
             terraform plan
             ;;
     esac
+}
+
+function create_git_executable() {
+    # Check if docker is running
+    if ! docker info >/dev/null 2>&1; then
+        echo "Docker daemon is not running. Please start the Docker daemon and try again."
+        exit 1
+    else
+        echo "Docker daemon is running."
+    fi
+
+    # Pull the Amazon Linux 2 Docker image
+    docker pull amazonlinux:2
+
+    # Run a Docker container with the image, and compile git inside the container
+    if docker run --rm -it -v "$(pwd):/output" amazonlinux:2 /bin/bash -c "
+        yum groupinstall -y 'Development Tools'
+        yum install -y curl-devel expat-devel gettext-devel openssl-devel zlib-devel \
+                       asciidoc xmlto docbook2X epel-release perl-Switch perl-Thread-Queue \
+                       wget
+
+        wget https://github.com/git/git/archive/refs/tags/v2.34.1.tar.gz -O git.tar.gz
+        tar -xzf git.tar.gz
+        cd git-2.34.1/
+
+        make configure
+        ./configure --prefix=/usr/local
+        make all doc info
+        make install install-doc install-html install-info
+
+        cp /usr/local/bin/git /output/git
+    "; then
+        echo "git executable build successful"
+     else
+        echo "Failed to create git executable"
+        exit 1
+    fi
 }
 
 
