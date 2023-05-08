@@ -133,28 +133,34 @@ function create_git_executable() {
     if docker run --rm -it -v "$(pwd):/output" amazonlinux:2 /bin/bash -c "
         yum groupinstall -y 'Development Tools'
         yum install -y curl-devel expat-devel gettext-devel openssl-devel zlib-devel \
-                       asciidoc xmlto docbook2X epel-release perl-Switch perl-Thread-Queue \
-                       wget
+                    asciidoc xmlto docbook2X epel-release perl-Switch perl-Thread-Queue \
+                    wget
+
+        # Install the necessary dependencies for HTTPS support
+        yum install -y libcurl-devel
+
+        # Install additional dependencies
+        yum install -y pcre2-devel
 
         wget https://github.com/git/git/archive/refs/tags/v2.34.1.tar.gz -O git.tar.gz
         tar -xzf git.tar.gz
         cd git-2.34.1/
 
-        # Generate the configure script 
+        # Generate the configure script
         make configure
-        ./configure --prefix=/usr/local
+        ./configure --prefix=/usr/local --with-curl --with-expat --with-openssl
 
-        # Compile the Git binary and its documentation and
-        # Run the configure script with a custom installation prefix
-        make all doc info # Compile the Git binary and its documentation
+        # Compile the Git binary and its documentation
+        make all doc info
 
         # Install Git, its documentation, and other related files
-        make install install-doc install-html install-info  
+        make install install-doc install-html install-info
 
+        strip /usr/local/bin/git # removing debugging symbols and other unnecessary information
         cp /usr/local/bin/git /output/git
     "; then
         echo "git executable build successful"
-     else
+    else
         echo "Failed to create git executable"
         exit 1
     fi
