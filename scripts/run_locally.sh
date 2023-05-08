@@ -54,30 +54,26 @@ function run_mc_eip_lambda {
         cd $lambda_dir
         
         # Create python packages folder
-        while read requirement; do
-            module_name=$(echo $requirement | sed -e 's/#.*//' -e 's/[[:space:]]*$//') # Remove any comments (lines starting with #) and whitespace
-            if [ -n "$module_name" ]; then  # Check if the line is not empty
-                pip install --target package "$module_name"
-            fi
-        done < "requirements.txt"
+        pip install -t package -r requirements.txt
 
         # Add git to deployment package
         create_git_executable
 
         # Make sure files are lambda_function.py is dos2unix
         dos2unix "lambda_function.py" # find . -type f -exec dos2unix {} \;
+        mv -f git package/bin
 
         chmod 644 "lambda_function.py" "package"
         chmod 755 "lambda_function.py" "package"
 
         cp lambda_function.py package
-        zip -r lambda_function_payload.zip "package"
+        (cd package && zip -r ../lambda_function_payload.zip .)
         
         package_size=$(du -m "lambda_function_payload.zip" | cut -f1)
         if (( package_size > 50 )); then
             echo -e "Warning: \nThe lambda_function_payload is larger than 50 MB \nDoc: https://docs.aws.amazon.com/lambda/latest/dg/python-package.html"
         else
-            # rm -rf "$lambda_dir/package" -- Commented Out For Testing
+            rm -rf "$lambda_dir/package" -- Commented Out For Testing
             true
         fi
 
@@ -127,7 +123,11 @@ function create_git_executable() {
     fi
 
     # Pull the Amazon Linux 2 Docker image
-    docker pull amazonlinux:2
+    # Check if the amazonlinux:2 image exists locally
+    if ! docker image ls | grep -q 'amazonlinux\s*2'; then
+        docker pull amazonlinux:2
+    fi
+
 
     # Run a Docker container with the image, and compile git inside the container
     if docker run --rm -it -v "$(pwd):/output" amazonlinux:2 /bin/bash -c "
@@ -140,10 +140,16 @@ function create_git_executable() {
         tar -xzf git.tar.gz
         cd git-2.34.1/
 
+        # Generate the configure script 
         make configure
         ./configure --prefix=/usr/local
-        make all doc info
-        make install install-doc install-html install-info
+
+        # Compile the Git binary and its documentation and
+        # Run the configure script with a custom installation prefix
+        make all doc info # Compile the Git binary and its documentation
+
+        # Install Git, its documentation, and other related files
+        make install install-doc install-html install-info  
 
         cp /usr/local/bin/git /output/git
     "; then
