@@ -36,7 +36,7 @@ resource "aws_iam_policy" "ssm_access" {
     Statement = [
       {
         Action   = [
-          "ssm:GetParameters",
+          "ssm:GetParameter",
         ]
         Effect   = "Allow"
         Resource = [
