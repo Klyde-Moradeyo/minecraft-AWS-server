@@ -65,6 +65,7 @@ resource "aws_lambda_function" "lambda_function" {
   environment {
     variables = {
       DISCORD_TOKEN = var.discord_token_name
+      PATH = "/var/task/bin:/usr/local/bin:/usr/bin/:/bin:/opt/bin" # Add "/var/task/bin" containing the git executable in lambda path 
     }
   }
 
