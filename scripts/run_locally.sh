@@ -138,23 +138,28 @@ function create_git_executable() {
     # Run a Docker container with the image, and compile git inside the container
     if docker run --rm -it -v "$(pwd):/output" amazonlinux:2 /bin/bash -c "
         # Install required packages
-        yum groupinstall -y "Development Tools"
+        yum groupinstall -y 'Development Tools'
         yum install -y wget openssl-devel curl-devel expat-devel gettext-devel zlib-devel perl-ExtUtils-MakeMaker
 
         # Download git source code
-        GIT_VERSION="2.34.0" # You can change this to the version you want
-        wget https://github.com/git/git/archive/refs/tags/v${GIT_VERSION}.tar.gz
-        tar -xf v${GIT_VERSION}.tar.gz
-        cd git-${GIT_VERSION}
+        GIT_VERSION='2.34.0' # You can change this to the version you want
+        wget https://github.com/git/git/archive/refs/tags/v\${GIT_VERSION}.tar.gz
+        tar -xf v\${GIT_VERSION}.tar.gz
+        cd git-\${GIT_VERSION}
 
         # Compile git with libcurl and OpenSSL support
         make configure
         ./configure --prefix=/usr/local \
-                    CFLAGS="${CFLAGS} -I/usr/local/include" \
-                    LDFLAGS="-L/usr/local/lib" \
+                    CFLAGS='\${CFLAGS} -I/usr/local/include' \
+                    LDFLAGS='-L/usr/local/lib' \
                     --with-curl \
                     --with-openssl
         make
+
+        if ! test -e 'git'; then
+            echo 'Error: Docker - Git Binary Missing'
+            exit 1
+        fi
 
         # Copy the git binary to the desired output location
         cp git /output/git
@@ -167,7 +172,7 @@ function create_git_executable() {
 }
 
 
-start="$(date +%s.%N)"
+start=$(date +%s.%N)
 if [[ "$environment" == "eip" || "$environment" == "lambda" ]]; then
     run_mc_eip_lambda "$mode" "../terraform/eip-lambda"
 elif [ "$environment" == "minecraft_infrastructure" ]; then
@@ -175,6 +180,6 @@ elif [ "$environment" == "minecraft_infrastructure" ]; then
 else
     echo "Invalid argument"
 fi
-finish="$(date +%s.%N)"
+finish=$(date +%s.%N)
 unzip lambda_function_payload.zip -d lambda_function_payload/ 
 calculate_runtime $start $finish
