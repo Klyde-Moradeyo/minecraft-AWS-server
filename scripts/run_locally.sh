@@ -61,7 +61,14 @@ function run_mc_eip_lambda {
 
         # Make sure files are lambda_function.py is dos2unix
         dos2unix "lambda_function.py" # find . -type f -exec dos2unix {} \;
-        mv -f git package/bin
+
+        if ! test -e "git"; then
+            echo "Error: Git Binary Missing"
+            exit 1
+        else
+            mv -f git package/bin
+        fi
+        mv -rf template package/template
 
         chmod 644 "lambda_function.py" "package"
         chmod 755 "lambda_function.py" "package"
@@ -73,7 +80,7 @@ function run_mc_eip_lambda {
         if (( package_size > 50 )); then
             echo -e "Warning: \nThe lambda_function_payload is larger than 50 MB \nDoc: https://docs.aws.amazon.com/lambda/latest/dg/python-package.html"
         else
-            rm -rf "$lambda_dir/package" -- Commented Out For Testing
+            # rm -rf "$lambda_dir/package" -- Commented Out For Testing
             true
         fi
 
@@ -128,36 +135,29 @@ function create_git_executable() {
         docker pull amazonlinux:2
     fi
 
-
     # Run a Docker container with the image, and compile git inside the container
     if docker run --rm -it -v "$(pwd):/output" amazonlinux:2 /bin/bash -c "
-        yum groupinstall -y 'Development Tools'
-        yum install -y curl-devel expat-devel gettext-devel openssl-devel zlib-devel \
-                    asciidoc xmlto docbook2X epel-release perl-Switch perl-Thread-Queue \
-                    wget
+        # Install required packages
+        yum groupinstall -y "Development Tools"
+        yum install -y wget openssl-devel curl-devel expat-devel gettext-devel zlib-devel perl-ExtUtils-MakeMaker
 
-        # Install the necessary dependencies for HTTPS support
-        yum install -y libcurl-devel
+        # Download git source code
+        GIT_VERSION="2.34.0" # You can change this to the version you want
+        wget https://github.com/git/git/archive/refs/tags/v${GIT_VERSION}.tar.gz
+        tar -xf v${GIT_VERSION}.tar.gz
+        cd git-${GIT_VERSION}
 
-        # Install additional dependencies
-        yum install -y pcre2-devel
-
-        wget https://github.com/git/git/archive/refs/tags/v2.34.1.tar.gz -O git.tar.gz
-        tar -xzf git.tar.gz
-        cd git-2.34.1/
-
-        # Generate the configure script
+        # Compile git with libcurl and OpenSSL support
         make configure
-        ./configure --prefix=/usr/local --with-curl --with-expat --with-openssl
+        ./configure --prefix=/usr/local \
+                    CFLAGS="${CFLAGS} -I/usr/local/include" \
+                    LDFLAGS="-L/usr/local/lib" \
+                    --with-curl \
+                    --with-openssl
+        make
 
-        # Compile the Git binary and its documentation
-        make all doc info
-
-        # Install Git, its documentation, and other related files
-        make install install-doc install-html install-info
-
-        strip /usr/local/bin/git # removing debugging symbols and other unnecessary information
-        cp /usr/local/bin/git /output/git
+        # Copy the git binary to the desired output location
+        cp git /output/git
     "; then
         echo "git executable build successful"
     else
@@ -167,7 +167,7 @@ function create_git_executable() {
 }
 
 
-start=$(date +%s.%N)
+start="$(date +%s.%N)"
 if [[ "$environment" == "eip" || "$environment" == "lambda" ]]; then
     run_mc_eip_lambda "$mode" "../terraform/eip-lambda"
 elif [ "$environment" == "minecraft_infrastructure" ]; then
@@ -175,5 +175,6 @@ elif [ "$environment" == "minecraft_infrastructure" ]; then
 else
     echo "Invalid argument"
 fi
-finish=$(date +%s.%N)
+finish="$(date +%s.%N)"
+unzip lambda_function_payload.zip -d lambda_function_payload/ 
 calculate_runtime $start $finish
