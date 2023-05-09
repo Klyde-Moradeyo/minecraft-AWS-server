@@ -58,6 +58,8 @@ resource "aws_lambda_function" "lambda_function" {
   handler             = "lambda_function.lambda_handler"
   runtime             = "python3.8"
 
+  layers = [ local.git_lambda_layer_arn ]
+
   depends_on = [
     aws_iam_role_policy_attachment.ssm_access,
   ]
@@ -71,3 +73,6 @@ resource "aws_lambda_function" "lambda_function" {
   tags = module.label.tags
 }
 
+locals {
+  git_lambda_layer_arn = "arn:aws:lambda:${var.aws_region}:553035198032:layer:git-lambda2:8"
+}
