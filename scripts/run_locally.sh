@@ -49,6 +49,8 @@ function run_mc_eip_lambda {
     mode=$1
     mc_eip_dir=$2
 
+    lambda_zip="lambda_function_payload.zip"
+
     if [[ $mode == "build" && "$environment" == "lambda" ]]; then
         lambda_dir="../lambda"
         cd $lambda_dir
@@ -62,10 +64,15 @@ function run_mc_eip_lambda {
         chmod 644 "lambda_function.py" "package"
         chmod 755 "lambda_function.py" "package"
 
+        # Remove lambda zip if it exists 
+        if [[ -f "$lambda_zip" ]]; then
+            rm -rf $lambda_zip
+        fi
+
         cp lambda_function.py package
-        (cd package && zip -r ../lambda_function_payload.zip .)
+        (cd package && zip -r ../$lambda_zip .)
         
-        package_size=$(du -m "lambda_function_payload.zip" | cut -f1)
+        package_size=$(du -m "$lambda_zip" | cut -f1)
         if (( package_size > 50 )); then
             echo -e "Warning: \nThe lambda_function_payload is larger than 50 MB \nDoc: https://docs.aws.amazon.com/lambda/latest/dg/python-package.html"
         else
@@ -75,7 +82,7 @@ function run_mc_eip_lambda {
 
     else
         cd $mc_eip_dir
-        lambda_function_payload_dir="../../lambda/lambda_function_payload.zip"
+        lambda_function_payload_dir="../../lambda/$lambda_zip"
 
         # Check Size of Lambda payload < 50mb
         package_size=$(du -m "$lambda_function_payload_dir" | cut -f1)
@@ -84,7 +91,7 @@ function run_mc_eip_lambda {
         fi
 
         run_mode "$mode"
-        # rm -rfv lambda_function_payload.zip
+        # rm -rfv $lambda_zip
     fi
 }
 
