@@ -3,6 +3,7 @@ import os
 import shutil
 import tempfile
 import requests
+import json
 from git import Repo, Actor
 from python_terraform import Terraform
 from cryptography.hazmat.primitives import serialization
@@ -166,5 +167,10 @@ def lambda_handler(event, context):
         tf = Terraform(working_dir=tf_mc_infra_manifests)
         # terraform_init(tf)
         # terraform_apply(tf)
+    
+    return {
+        'statusCode': 200,
+        'body': json.dumps("Success")
+    }
         
 # lambda_handler("event", "context")
