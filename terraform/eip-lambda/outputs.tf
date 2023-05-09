@@ -42,3 +42,10 @@ output "iam_policy_arn" {
   description = "The ARN of the IAM policy for Lambda to access SSM Parameter Store"
   value       = aws_iam_policy.ssm_access.arn
 }
+
+########################
+#     API Gateway      #
+########################
+output "api_gateway_url" {
+  value = aws_apigatewayv2_api.minecraft_http_api.api_endpoint
+}
