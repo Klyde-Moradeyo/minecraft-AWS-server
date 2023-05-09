@@ -56,19 +56,8 @@ function run_mc_eip_lambda {
         # Create python packages folder
         pip install -t package -r requirements.txt
 
-        # Add git to deployment package
-        create_git_executable
-
         # Make sure files are lambda_function.py is dos2unix
         dos2unix "lambda_function.py" # find . -type f -exec dos2unix {} \;
-
-        if ! test -e "git"; then
-            echo "Error: Git Binary Missing"
-            exit 1
-        else
-            mv -f git package/bin
-        fi
-        mv -rf template package/template
 
         chmod 644 "lambda_function.py" "package"
         chmod 755 "lambda_function.py" "package"
@@ -80,7 +69,7 @@ function run_mc_eip_lambda {
         if (( package_size > 50 )); then
             echo -e "Warning: \nThe lambda_function_payload is larger than 50 MB \nDoc: https://docs.aws.amazon.com/lambda/latest/dg/python-package.html"
         else
-            # rm -rf "$lambda_dir/package" -- Commented Out For Testing
+            rm -rf "$lambda_dir/package" # -- Commented Out For Testing
             true
         fi
 
@@ -120,58 +109,6 @@ function run_mode() {
     esac
 }
 
-function create_git_executable() {
-    # Check if docker is running
-    if ! docker info >/dev/null 2>&1; then
-        echo "Docker daemon is not running. Please start the Docker daemon and try again."
-        exit 1
-    else
-        echo "Docker daemon is running."
-    fi
-
-    # Pull the Amazon Linux 2 Docker image
-    # Check if the amazonlinux:2 image exists locally
-    if ! docker image ls | grep -q 'amazonlinux\s*2'; then
-        docker pull amazonlinux:2
-    fi
-
-    # Run a Docker container with the image, and compile git inside the container
-    if docker run --rm -it -v "$(pwd):/output" amazonlinux:2 /bin/bash -c "
-        # Install required packages
-        yum groupinstall -y 'Development Tools'
-        yum install -y wget openssl-devel curl-devel expat-devel gettext-devel zlib-devel perl-ExtUtils-MakeMaker
-
-        # Download git source code
-        GIT_VERSION='2.34.0' # You can change this to the version you want
-        wget https://github.com/git/git/archive/refs/tags/v\${GIT_VERSION}.tar.gz
-        tar -xf v\${GIT_VERSION}.tar.gz
-        cd git-\${GIT_VERSION}
-
-        # Compile git with libcurl and OpenSSL support
-        make configure
-        ./configure --prefix=/usr/local \
-                    CFLAGS='\${CFLAGS} -I/usr/local/include' \
-                    LDFLAGS='-L/usr/local/lib' \
-                    --with-curl \
-                    --with-openssl
-        make
-
-        if ! test -e 'git'; then
-            echo 'Error: Docker - Git Binary Missing'
-            exit 1
-        fi
-
-        # Copy the git binary to the desired output location
-        cp git /output/git
-    "; then
-        echo "git executable build successful"
-    else
-        echo "Failed to create git executable"
-        exit 1
-    fi
-}
-
-
 start=$(date +%s.%N)
 if [[ "$environment" == "eip" || "$environment" == "lambda" ]]; then
     run_mc_eip_lambda "$mode" "../terraform/eip-lambda"
@@ -181,5 +118,4 @@ else
     echo "Invalid argument"
 fi
 finish=$(date +%s.%N)
-unzip lambda_function_payload.zip -d lambda_function_payload/ 
 calculate_runtime $start $finish
