@@ -148,7 +148,7 @@ def lambda_handler(event, context):
 
         # Directories
         scripts_folder = os.path.join(temp_dir, "scripts")
-        eip_txt_file = os.path.join(temp_dir, "terraform", "eip", "EIP.txt")
+        eip_txt_file = os.path.join(temp_dir, "terraform", "eip-lambda", "EIP.txt")
 
         # Minecraft Infrasture Directories
         tf_private_key_folder = os.path.join(temp_dir, "terraform", "minecraft_infrastructure", "private-key")
