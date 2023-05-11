@@ -21,3 +21,10 @@ docker run -it --name my-ubuntu-container -v $(pwd):/app ubuntu:latest /bin/bash
 - Server only starts up when a connection is request
 - m5.large
 - Datapack for vanilla tweeks
+
+# Trigger Lambda Function
+url="https://bape7bis1f.execute-api.eu-west-2.amazonaws.com/minecraft-prod/command"
+message="start"
+header="-H Content-Type: application/json"
+data="{\"command\":\"$message\"}"
+curl -X POST $header -d "${data}" "${url}"
