@@ -4,11 +4,13 @@ import shutil
 import tempfile
 import requests
 import json
-from git import Repo, Actor
+import logging
 from python_terraform import Terraform
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.backends import default_backend
+from git import Repo, Actor
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 
 ######################################################################
 #                           Functions                                #
@@ -27,36 +29,6 @@ def get_git_ssh_key(param_name):
         
     return ssh_key_dir
 
-def create_private_key(file_name, directory):
-    # Generate an RSA key pair
-    # - public_exponent: The public exponent (e) is a value used in the RSA algorithm, usually set to 65537
-    # - key_size: The size of the key in bits, here set to 2048 bits
-    # - backend: The backend used for cryptographic operations, here we use the default_backend
-    private_key = rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=2048,
-        backend=default_backend()
-    )
-
-    # Serialize the private key in PEM format (Privacy-Enhanced Mail, a widely used format for storing and sending cryptographic keys)
-    # - encoding: The format used to encode the key, here PEM
-    # - format: The format used for the private key, here PKCS8 (Public-Key Cryptography Standards #8)
-    # - encryption_algorithm: The algorithm used to encrypt the key, here no encryption is used
-    private_key_pem = private_key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.PKCS8,
-        encryption_algorithm=serialization.NoEncryption()
-    )
-
-    # Save the serialized private key to a file named "private_key.pem" with write binary mode
-    file_path = os.path.join(directory, file_name)
-    with open(file_path, "wb") as f:
-        f.write(private_key_pem)
-
-    os.chmod(file_path, 0o400)
-
-    # Return t he directory of the priv key
-    return os.path.abspath(file_path)
 
 ################################
 #         Git Functions        #
@@ -161,11 +133,11 @@ def lambda_handler(event, context):
         shutil.copy2(eip_txt_file, tf_mc_infra_manifests)
     
         # Create Ec2 Instance private Key=
-        create_private_key("terraform_key.pem", tf_private_key_folder)
+        # create_private_key("terraform_key.pem", tf_private_key_folder)
 
         # Create a Terraform object in minecraft_infrastrucutre dir 
         tf = Terraform(working_dir=tf_mc_infra_manifests)
-        # terraform_init(tf)
+        terraform_init(tf)
         # terraform_apply(tf)
     
     return {
@@ -174,3 +146,6 @@ def lambda_handler(event, context):
     }
         
 # lambda_handler("event", "context")
+
+# logger.info('This is an INFO level message.')
+#     logger.error('This is an ERROR level message.')
