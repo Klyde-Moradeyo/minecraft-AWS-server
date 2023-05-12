@@ -48,6 +48,35 @@ resource "aws_iam_policy" "ssm_access" {
   })
 }
 
+# IAM policy for CloudWatch Logs
+data "aws_iam_policy_document" "cloudwatch_logs" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+
+    resources = ["arn:aws:logs:*:*:*"]
+  }
+}
+
+# IAM policy to allow Lambda to access CloudWatch Logs
+resource "aws_iam_policy" "lambda_cloudwatch_logs" {
+  name        = "lambda_cloudwatch_logs"
+  description = "IAM policy to allow Lambda to write to CloudWatch Logs"
+
+  policy = data.aws_iam_policy_document.cloudwatch_logs.json
+}
+
+# Attach the CloudWatch Logs access policy to the Lambda IAM role
+resource "aws_iam_role_policy_attachment" "cloudwatch_logs" {
+  policy_arn = aws_iam_policy.lambda_cloudwatch_logs.arn
+  role       = aws_iam_role.iam_for_lambda.name
+}
+
 ########################
 #    Lambda Function   #
 ########################
