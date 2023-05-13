@@ -1,32 +1,44 @@
 #!/bin/bash
 
 set -e 
+source ../lamdba_function/helper_functions.sh
 
-# Get the ECR repository URL as a command line argument
-ECR_REPO_URL=${1:-"847399026905.dkr.ecr.eu-west-2.amazonaws.com/mc_infra_runner"}
 
-# The name of the Docker image you want to create
-IMAGE_NAME=${2:-"mc_infra_runner"}
+function run() {
+    # Get the ECR repository URL as a command line argument
+    ECR_REPO_URL=${1:-"847399026905.dkr.ecr.eu-west-2.amazonaws.com/mc_infra_runner"}
 
-# Get a unique identifier for the image tag (current timestamp)
-IMAGE_TAG="latest"
+    # The name of the Docker image you want to create
+    IMAGE_NAME=${2:-"mc_infra_runner"}
 
-AWS_REGION="eu-west-2"
+    # Get a unique identifier for the image tag (current timestamp)
+    IMAGE_TAG="latest"
 
-# Build the Docker image
-echo "Building Docker image $IMAGE_NAME..."
-docker build -t $IMAGE_NAME .
+    AWS_REGION="eu-west-2"
 
-# Tag the Docker image
-echo "Tagging Docker image with $ECR_REPO_URL..."
-docker tag $IMAGE_NAME:latest $ECR_REPO_URL:$IMAGE_TAG
+    # Build the Docker image
+    echo "Building Docker image $IMAGE_NAME..."
+    docker build -t $IMAGE_NAME .
 
-# Login to ECR
-echo "Logging into ECR..."
-aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO_URL
+    # Tag the Docker image
+    echo "Tagging Docker image with $ECR_REPO_URL..."
+    docker tag $IMAGE_NAME:latest $ECR_REPO_URL:$IMAGE_TAG
 
-# Push the Docker image to the ECR repository
-echo "Pushing Docker image to ECR repository..."
-docker push $ECR_REPO_URL:$IMAGE_TAG
+    # Login to ECR
+    echo "Logging into ECR..."
+    aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO_URL
 
-echo "Done."
+    # Push the Docker image to the ECR repository
+    echo "Pushing Docker image to ECR repository..."
+    docker push $ECR_REPO_URL:$IMAGE_TAG
+
+    echo "Done."
+}
+
+# Call the run function
+start=$(date +%s.%N)
+run
+finish=$(date +%s.%N)
+
+get_current_date
+calculate_runtime $start $finish
