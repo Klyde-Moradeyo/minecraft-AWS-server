@@ -2,8 +2,22 @@ import json
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 import os
+import tempfile
+import datetime
 
-def create_fargate_container(ecs_client, task_definition, cluster, network_configuration, environment_variables):
+# Helper Funfctions
+class DateTimeEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, datetime.datetime):
+            return o.isoformat()
+
+        return super(DateTimeEncoder, self).default(o)
+
+
+######################################################################
+#                           Fargate                                  #
+######################################################################
+def create_fargate_container(ecs_client, task_definition, cluster, container_name, network_configuration, environment_variables):
     response = ecs_client.run_task(
         cluster=cluster,
         launchType="FARGATE",
@@ -13,14 +27,13 @@ def create_fargate_container(ecs_client, task_definition, cluster, network_confi
         networkConfiguration=network_configuration,
         overrides={
             "containerOverrides": [{
-                "name": task_definition,
+                "name": container_name,
                 "environment": environment_variables
             }]
         }
     )
     task_arn = response["tasks"][0]["taskArn"]
     print(f"Created Fargate container with ARN: {task_arn}")
-    task_arn = create_fargate_container(task_definition, cluster, network_configuration, environment_variables)
     return task_arn
 
 def destroy_fargate_container(ecs_client, cluster, task_arn):
@@ -33,13 +46,13 @@ def destroy_fargate_container(ecs_client, cluster, task_arn):
     return response
 
 def check_task_status(ecs_client, cluster, task):
-    ecs_client = boto3.client('ecs')
+    ecs_client = boto3.client("ecs")
     response = ecs_client.describe_tasks(
         cluster=cluster,
         tasks=[task]
     )
     
-    for task in response['tasks']:
+    for task in response["tasks"]:
         print(f"Task {task['taskArn']} is {task['lastStatus']}")
 
     return response
@@ -55,10 +68,11 @@ def lambda_handler(event, context):
 
         # ECS Fargate Config
         ecs_client = boto3.client("ecs")
-        task_definition = "minecraft-task-definition"
+        task_definition = "minecraft_task_definition"
         cluster = "minecraft_cluster"
-        subnet_id = os.getenv('DEFAULT_SUBNET_ID')
-        security_group_id = os.getenv('DEFAULT_SECURITY_GROUP_ID')
+        container_name = os.getenv("CONTAINER_NAME")
+        subnet_id = os.getenv("DEFAULT_SUBNET_ID")
+        security_group_id = os.getenv("DEFAULT_SECURITY_GROUP_ID")
         network_configuration = {
             "awsvpcConfiguration": {
                 "subnets": [ subnet_id ],  # replace with your subnet
@@ -78,14 +92,14 @@ def lambda_handler(event, context):
         ]
         
         if ( command != "status"):
-            response = create_fargate_container(ecs_client, task_definition, cluster, network_configuration, environment_variables)
+            response = create_fargate_container(ecs_client, task_definition, cluster, container_name, network_configuration, environment_variables)
         else:
             # Check if task_arn is not null
             if not task_arn:
                 print("Error: task_arn must not be null when checking task status")
                 return {
-                    'statusCode': 400,
-                    'body': json.dumps('Error: task_arn must not be null when checking task status')
+                    "statusCode": 400,
+                    "body": json.dumps("Error: task_arn must not be null when checking task status", cls=DateTimeEncoder)
                 }
             
             response = check_task_status(ecs_client, cluster, task_arn)
@@ -94,11 +108,11 @@ def lambda_handler(event, context):
         # If there was an error, return an HTTP 500 response with the error message
         print(f"Error running Fargate task: {error}")
         return {
-            'statusCode': 500,
-            'body': json.dumps(f"Error running Fargate task: {error}")
+            "statusCode": 500,
+            "body": json.dumps(f"Error running Fargate task: {error}", cls=DateTimeEncoder)
         }
 
     return {
         "statusCode": 200,
-        "body": json.dumps(response)
+        "body": json.dumps(response, cls=DateTimeEncoder)
     }
