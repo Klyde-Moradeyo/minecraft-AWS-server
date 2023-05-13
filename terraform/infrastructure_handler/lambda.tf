@@ -130,15 +130,12 @@ resource "aws_lambda_function" "lambda_function" {
   #   aws_lambda_layer_version.terraform_lambda_layer.arn
   #   ]
 
-  depends_on = [
-    aws_iam_role_policy_attachment.ssm_access,
-  ]
-
   environment {
     variables = {
       DISCORD_TOKEN = var.discord_token_name
       DEFAULT_SUBNET_ID = local.subnet_id
       DEFAULT_SECURITY_GROUP_ID = local.security_group_id
+      CONTAINER_NAME = var.ecr_repo_name
     }
   }
 
