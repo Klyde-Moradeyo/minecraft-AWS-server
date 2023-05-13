@@ -81,17 +81,17 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_logs" {
 #    Lambda Function   #
 ########################
 resource "aws_lambda_function" "lambda_function" {
-  filename            = "${path.module}/../../lambda/lambda_function_payload.zip"
+  filename            = "${path.module}/../../lambda_function/lambda_function_payload.zip"
   function_name       = "${var.name}-lambda-function"
   role                = aws_iam_role.iam_for_lambda.arn
   handler             = "lambda_function.lambda_handler"
   runtime             = "python3.8"
   timeout             = 900  # Set the timeout to the max (15 minutes)
 
-  layers = [ 
-    local.git_lambda_layer_arn,
-    aws_lambda_layer_version.terraform_lambda_layer.arn
-    ]
+  # layers = [ 
+  #   local.git_lambda_layer_arn,
+  #   aws_lambda_layer_version.terraform_lambda_layer.arn
+  #   ]
 
   depends_on = [
     aws_iam_role_policy_attachment.ssm_access,
@@ -111,13 +111,13 @@ resource "aws_lambda_function" "lambda_function" {
 ########################
 #     Lambda Layer     #
 ########################
-locals {
-  git_lambda_layer_arn = "arn:aws:lambda:${var.aws_region}:553035198032:layer:git-lambda2:8"
-}
+# locals {
+#   git_lambda_layer_arn = "arn:aws:lambda:${var.aws_region}:553035198032:layer:git-lambda2:8"
+# }
 
-resource "aws_lambda_layer_version" "terraform_lambda_layer" {
-  filename   = "${path.module}/../../lambda/terraform_layer.zip"  # Replace with your layer ZIP filename
-  layer_name = "terraform_lambda_layer"
-  compatible_runtimes = [ "python3.8" ]  # Replace with your desired runtime
-}
+# resource "aws_lambda_layer_version" "terraform_lambda_layer" {
+#   filename   = "${path.module}/../../lambda/terraform_layer.zip"  # Replace with your layer ZIP filename
+#   layer_name = "terraform_lambda_layer"
+#   compatible_runtimes = [ "python3.8" ]  # Replace with your desired runtime
+# }
 
