@@ -158,7 +158,7 @@ function build_lambda_function() {
 
 start=$(date +%s.%N)
 if [[ "$environment" == "eip" || "$environment" == "lambda" ]]; then
-    run_mc_eip_lambda "$mode" "../terraform/eip-lambda"
+    run_mc_eip_lambda "$mode" "../terraform/infrastructure_handler"
 elif [ "$environment" == "minecraft_infrastructure" ]; then
     run_mc_infra "$mode" "../terraform/minecraft_infrastructure"
 else

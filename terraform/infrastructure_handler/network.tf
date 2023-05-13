@@ -24,7 +24,7 @@ data "aws_security_group" "default" {
 locals {
   vpc_id    = length(var.vpc_id) > 0 ? var.vpc_id : data.aws_vpc.default.id
   subnet_id = length(var.subnet_id) > 0 ? var.subnet_id : sort(data.aws_subnets.default.ids)[0]
-  security_group_id = length(var.security_group_id) > 0 ? var.security_group_id : data.aws_security_group.default.id
+  security_group_id = data.aws_security_group.default.id
 }
 
 
