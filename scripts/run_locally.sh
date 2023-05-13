@@ -54,12 +54,11 @@ function run_mc_eip_lambda {
     lambda_zip="lambda_function_payload.zip"
 
     if [[ $mode == "build" && "$environment" == "lambda" ]]; then
-        lambda_dir="../lambda"
+        lambda_dir="../lambda_function"
         cd $lambda_dir
 
         pull_amazonLinux_image
         build_lambda_function $lambda_zip
-        build_lambda_terraform_layer "terraform_layer.zip"
         
         package_size=$(du -m "$lambda_zip" | cut -f1)
         echo "$lambda_zip size: $package_size"
@@ -156,38 +155,6 @@ function build_lambda_function() {
     "
     execute_in_amazonLinux "$commands"
 }
-
-function build_lambda_terraform_layer() {
-    terraform_zip=$1
-
-    commands="
-        # Install required packages
-        yum install -y zip unzip
-
-        # Enter app Directory
-        cd app
-
-        # Remove layer zip if it exists 
-        if [[ -f "$terraform_zip" ]]; then
-            rm -rf $terraform_zip
-        fi
-
-        curl -o terraform.zip https://releases.hashicorp.com/terraform/1.4.4/terraform_1.4.4_linux_amd64.zip
-        unzip terraform.zip
-        mkdir -p tf_lambda_package/bin
-        mv terraform tf_lambda_package/bin
-
-        chmod 755 tf_lambda_package/bin/terraform
-
-        (cd tf_lambda_package && zip -r ../$terraform_zip .)
-
-        # Clean up after ourselves
-        rm -rf bin terraform.zip
-    "
-    execute_in_amazonLinux "$commands"
-}
-
-
 
 start=$(date +%s.%N)
 if [[ "$environment" == "eip" || "$environment" == "lambda" ]]; then
