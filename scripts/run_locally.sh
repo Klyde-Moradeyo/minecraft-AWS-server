@@ -61,7 +61,7 @@ function run_mc_eip_lambda {
         build_lambda_function $lambda_zip
         
         package_size=$(du -m "$lambda_zip" | cut -f1)
-        echo "$lambda_zip size: $package_size"
+        echo "$lambda_zip size: $package_size mb"
         if (( package_size > 50 )); then
             echo -e "Warning: \nThe lambda_function_payload is larger than 50 MB \nDoc: https://docs.aws.amazon.com/lambda/latest/dg/python-package.html"
         fi
@@ -72,6 +72,7 @@ function run_mc_eip_lambda {
 
         # Check Size of Lambda payload < 50mb
         package_size=$(du -m "$lambda_function_payload_dir" | cut -f1)
+        echo "$lambda_zip size: $package_size mb"
         if (( package_size > 50 )); then
             echo -e "Warning: \nThe lambda_function_payload is larger than 50 MB \nDoc: https://docs.aws.amazon.com/lambda/latest/dg/python-package.html"
         fi
