@@ -60,6 +60,7 @@ resource "aws_iam_policy" "ecs_cloudwatch_logs" {
 # Cloud Watch Log Group
 resource "aws_cloudwatch_log_group" "ecs_log_group" {
   name = "/ecs/${var.ecr_image_name}"
+  retention_in_days = 1
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {

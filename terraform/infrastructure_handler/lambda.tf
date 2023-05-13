@@ -71,6 +71,13 @@ resource "aws_iam_policy" "lambda_cloudwatch_logs" {
   policy = data.aws_iam_policy_document.cloudwatch_logs.json
 }
 
+# lambda log group
+resource "aws_cloudwatch_log_group" "example" {
+  name              = "/aws/lambda/${aws_lambda_function.lambda_function.function_name}"
+  retention_in_days = 1
+}
+
+
 # Attach the CloudWatch Logs access policy to the Lambda IAM role
 resource "aws_iam_role_policy_attachment" "cloudwatch_logs" {
   policy_arn = aws_iam_policy.lambda_cloudwatch_logs.arn
