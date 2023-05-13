@@ -68,8 +68,12 @@ def lambda_handler(event, context):
         }
         environment_variables = [
             { 
-                "BOT_COMMAND": f"{command}", 
-                "value2": "my_value2" 
+                "name": "BOT_COMMAND",
+                "value": f"{command}"
+            }, 
+            {
+                "name": "task_arn",
+                "value": f"{task_arn}" 
             }, 
         ]
         
@@ -84,7 +88,7 @@ def lambda_handler(event, context):
                     'body': json.dumps('Error: task_arn must not be null when checking task status')
                 }
             
-            response =  check_task_status(ecs_client, cluster, task_arn)
+            response = check_task_status(ecs_client, cluster, task_arn)
 
     except (BotoCoreError, ClientError) as error:
         # If there was an error, return an HTTP 500 response with the error message

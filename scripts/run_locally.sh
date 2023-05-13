@@ -68,7 +68,7 @@ function run_mc_eip_lambda {
 
     else
         cd $mc_eip_dir
-        lambda_function_payload_dir="../../lambda/$lambda_zip"
+        lambda_function_payload_dir="../../lambda_function/$lambda_zip"
 
         # Check Size of Lambda payload < 50mb
         package_size=$(du -m "$lambda_function_payload_dir" | cut -f1)
