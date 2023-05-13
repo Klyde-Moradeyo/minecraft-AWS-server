@@ -77,6 +77,36 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_logs" {
   role       = aws_iam_role.iam_for_lambda.name
 }
 
+# Fargate Access 
+data "aws_iam_policy_document" "fargate_access" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "ecs:RunTask",
+      "ecs:StopTask",
+      "ecs:DescribeTasks",
+      "iam:PassRole",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
+
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_policy" "lambda_fargate_access" {
+  name        = "lambda_fargate_access"
+  description = "IAM policy to allow Lambda to manage Fargate tasks"
+
+  policy = data.aws_iam_policy_document.fargate_access.json
+}
+
+resource "aws_iam_role_policy_attachment" "fargate_access" {
+  policy_arn = aws_iam_policy.lambda_fargate_access.arn
+  role       = aws_iam_role.iam_for_lambda.name
+}
+
 ########################
 #    Lambda Function   #
 ########################
