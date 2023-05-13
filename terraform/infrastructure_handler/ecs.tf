@@ -38,6 +38,30 @@ resource "aws_iam_policy" "ecs_ec2_management" {
   })
 }
 
+# Cloud Watch logs
+resource "aws_iam_policy" "ecs_cloudwatch_logs" {
+  name   = "ecs_${var.name}_cloudwatch_logs"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:CreateLogGroup"
+        ]
+        Resource = "*"
+        Effect   = "Allow"
+      }
+    ]
+  })
+}
+
+# Cloud Watch Log Group
+resource "aws_cloudwatch_log_group" "ecs_log_group" {
+  name = "/ecs/${var.ecr_image_name}"
+}
+
 resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
   role       = aws_iam_role.ecs_task_execution_role.name
 
@@ -49,6 +73,12 @@ resource "aws_iam_role_policy_attachment" "ecs_ec2_management_role_policy" {
   role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = aws_iam_policy.ecs_ec2_management.arn
 }
+
+resource "aws_iam_role_policy_attachment" "ecs_cloudwatch_logs_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = aws_iam_policy.ecs_cloudwatch_logs.arn
+}
+
 
 ########################
 #         ECS          #
