@@ -39,6 +39,37 @@ variable "discord_token_name" {
 }
 
 ########################
+#         ECR          #
+########################
+variable "ecr_repo_name" {
+  description = "ECR Repo Name"
+  type        = string
+  default     = "mc_infra_runner"
+}
+
+variable "ecr_image_name" {
+  description = "ECR Repo Name"
+  type        = string
+  default     = "mc_infra_runner"
+}
+
+
+########################
+#         ECS          #
+########################
+variable "ecs_cpu_limit" {
+  description = "CPU Resource limit for container level and task level"
+  type        = string
+  default     = "256"
+}
+
+variable "ecs_memory_limit" {
+  description = "Memory Resource limit for container and task level"
+  type        = string
+  default     = "512"
+}
+
+########################
 #         Tags         #
 ########################
 variable "name" {
