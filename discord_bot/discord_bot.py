@@ -3,7 +3,48 @@
 import discord
 from discord.ext import commands
 import os
+import requests
+import json
+import tempfile
 
+######################################################################
+#                    Helper Functions                                #
+######################################################################
+file_path = None
+# helper function
+def write_to_file(content):
+    with tempfile.NamedTemporaryFile(mode='w+', delete=False) as temp:
+        temp.write(content)
+        temp_path = temp.name
+    
+    return temp_path
+
+def read_and_delete_file(temp_path):
+    if os.path.exists(temp_path):
+        with open(temp_path, 'r') as temp:  # Open the file in text mode
+            content = temp.read()
+    else:
+        content = None
+        print(f"{temp_path} doesn't exist")
+
+    return content
+
+
+
+def send_to_api(data):
+    # API Gateway URL
+    url = "https://jnw8kkz82l.execute-api.eu-west-2.amazonaws.com"
+    url = f"{url}/minecraft-prod/command"
+    print(url)
+    headers = {'Content-Type': 'application/json'}
+    print(f"Sending Data to API: {data}")
+    response = requests.post(url, headers=headers, data=json.dumps(data))
+    print(f"Data: {data} \nResponse: \n{response.json()}")  # To print the response from server
+    return response
+
+######################################################################
+#                       Discord Bot                                  #
+######################################################################
 # Discord bot Token
 TOKEN = os.environ["DISCORD_TOKEN"]
 
@@ -34,13 +75,32 @@ async def on_message(message):
 # Start minecraft server
 @bot.command()
 async def start(context):
-    await context.send("starting minecraft server")
+    global file_path
+    try:
+        data = { "command": "start" }
+        response = send_to_api(data)
+        file_path = write_to_file(response.json())
+        await context.send(f"starting minecraft server: {response.json()}")
+    except Exception as e:
+        print(str(e))
+        await context.send(f"starting minecraft server: \n{e}")
 
 @bot.command(name='status')
 async def get_server_status(context):
-    # get server ver, 
-    # get if online
-    await context.send("server status")
+    try:
+        task_arn = read_and_delete_file(file_path)
+        data = { "command": "status", "task_arn": f"{task_arn}"}
+        status = send_to_api(data)
+        last_status = status.json()["tasks"][0]["lastStatus"]
+        if last_status == "STOPPED":
+            os.remove(temp_path)  # Delete the temp file
+        await context.send(f"server status: {last_status}")
+    except Exception as e:
+        print(str(e))
+        await context.send(f"server status: \n{e}")
+
+
+    
 
 # Start the discord bot
 bot.run(TOKEN)
@@ -54,3 +114,4 @@ bot.run(TOKEN)
 # send message to all players
 # get server discord usage
 # display serve rlogs
+
