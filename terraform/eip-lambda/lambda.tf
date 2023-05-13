@@ -100,7 +100,8 @@ resource "aws_lambda_function" "lambda_function" {
   environment {
     variables = {
       DISCORD_TOKEN = var.discord_token_name
-      # PATH = "/var/task/bin:/usr/local/bin:/usr/bin/:/bin:/opt/bin"
+      DEFAULT_SUBNET_ID = local.subnet_id
+      DEFAULT_SECURITY_GROUP_ID = local.security_group_id
     }
   }
 
