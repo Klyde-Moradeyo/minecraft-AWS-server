@@ -9,6 +9,7 @@ set -e
 # Go to the run_locally.sh directory
 scripts_dir="$(dirname "$(realpath "$0")")"
 cd $scripts_dir
+dos2unix *
 
 source $scripts_dir/helper_functions.sh
 
@@ -29,12 +30,13 @@ function run_mc_infra {
     mc_infra_dir=$2
 
     # Copy Scripts folder to mc infrastructure directory
-    echo "Copying files..."
-    cp -rfv $scripts_dir $mc_infra_dir
-    cp -fv ../terraform/eip/EIP.txt $mc_infra_dir
-    echo -e "\n"
+    # echo "Copying files..."
+    # cp -rfv $scripts_dir $mc_infra_dir
+    # cp -fv ../terraform/eip/EIP.txt $mc_infra_dir
+    # echo -e "\n"
 
     cd $mc_infra_dir
+    dos2unix *
 
     # Private Key Read Only
     sudo chmod 400 ./private-key/terraform-key.pem
