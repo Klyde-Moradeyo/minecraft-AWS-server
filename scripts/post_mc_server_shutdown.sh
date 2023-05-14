@@ -24,8 +24,8 @@ function run {
   git config --global user.name "dark-mango-bot"
 
   # Replace world in minecraft-world git repo
-  rm -rfv $minecraft_world_repo_dir/world
-  cp -rfv $container_world_repo_dir $minecraft_world_repo_dir
+  rm -rf $minecraft_world_repo_dir/world
+  cp -rf $container_world_repo_dir $minecraft_world_repo_dir
 
   # Go To minecraft-world repo
   cd "$minecraft_world_repo_dir"
