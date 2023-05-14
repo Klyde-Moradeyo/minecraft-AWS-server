@@ -141,7 +141,7 @@ resource "null_resource" "post_mc_server_close" {
   provisioner "local-exec" {
     when    = destroy # Only execute on destruction of resource
     command = <<-EOT
-      public_ip=$(cat ../eip/EIP.txt)
+      public_ip=$(cat ${path.module}/../infrastructure_handler/EIP.txt)
       echo $public_ip
       ssh -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@$public_ip "\
         sudo chmod +x /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh && \
@@ -155,7 +155,7 @@ resource "null_resource" "post_mc_server_close" {
 #     EIP for EC2      #
 ########################
 locals {
-  public_ip = trim(file("./EIP.txt"), " \t\n\r")
+  public_ip = trim(file("${path.module}/../infrastructure_handler/EIP.txt"), " \t\n\r")
 }
 
 data "aws_eip" "mc_public_ip" {
