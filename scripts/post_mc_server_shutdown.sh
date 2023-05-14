@@ -6,6 +6,10 @@
 set -e
 source /home/ubuntu/setup/scripts/helper_functions.sh
 
+ec2_log_output_dir="/home/ubuntu/minecraft-AWS-server/docker/minecraft-data/minecraft-world/logs/post_mc_server_shutdown.log"
+exec > $ec2_log_output_dir # directs all stdout to the file
+exec 2>&1 # directs stderr to the same place as stdout
+
 function run {
   home_dir="/home/ubuntu"
   docker_dir="$home_dir/minecraft-AWS-server/docker"
