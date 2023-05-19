@@ -143,7 +143,7 @@ resource "null_resource" "post_mc_server_close" {
     command = <<-EOT
       public_ip=$(cat ${path.module}/../infrastructure_handler/EIP.txt)
       echo $public_ip
-      ssh -v -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@35.177.123.174 "\
+      ssh -v -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@$public_ip "\
         sudo chmod +x /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh && \
         cp /home/ubuntu/setup/logs/* /home/ubuntu/minecraft-AWS-server/docker/minecraft-data/minecraft-world/logs && \
         sudo /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh ; exit"
