@@ -1,4 +1,6 @@
 # Discord Dev Portal: http://discordapp.com/developers/applications
+# https://www.youtube.com/watch?v=GBwNQImv9Ek&t=246s
+# https://www.youtube.com/watch?v=72HZPng3fhM
 
 import discord
 from discord.ext import commands
@@ -6,6 +8,7 @@ import os
 import requests
 import json
 import tempfile
+from webserver import keep_alive
 
 ######################################################################
 #                    Helper Functions                                #
@@ -101,7 +104,7 @@ async def get_server_status(context):
 
 
     
-
+keep_alive() # Keep the discord bot alive
 # Start the discord bot
 bot.run(TOKEN)
 
