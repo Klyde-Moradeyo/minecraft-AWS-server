@@ -1,0 +1,121 @@
+# Doc: https://developer.hashicorp.com/terraform/tutorials/automation/github-actions
+name: TF
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "terraform/infrastructure_handler/***"
+      - "lambda_function/***"
+env:
+  TF_CLOUD_ORGANIZATION: "mango-dev"
+  TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
+  TF_WORKSPACE: "${{ github.repository }}/terraform/infrastructure_handler"
+  CONFIG_DIRECTORY: "./"
+
+jobs:
+  build-lambda:
+    name: "Build Lambda Function"
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Build Docker image
+      run: |
+        docker build -t aws_lambda_img lambda_function/.
+    - name: Run Docker image
+      run: |
+        docker run --name lambda_payload_builder aws_lambda_img
+    - name: Copy lambda_function.zip from Docker container
+      run: |
+        docker cp lambda_payload_builder:/app/lambda_function_payload.zip ./lambda_function/
+    - name: Increment Lambda MCI Tag
+      run: |
+        # MCI means Minecraft Infrastructure Coordinator
+
+        # Get tags, filter those that start with MCI_, sort them and get the last one
+        latest_tag=$(git tag | grep '^MCI_' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)
+
+        if [[ -z "$latest_tag" ]]; then
+          echo "No tags found starting with MCI_"
+          exit 1
+        fi
+
+        # Remove the prefix "MCI_" from the tag
+        version_string=${latest_tag#MCI_}
+
+        # Split the version string into an array
+        version=(${version_string//./ })
+
+        # Increment patch version
+        version[2]=$((version[2] + 1))
+
+        # Construct new tag
+        MCI_TAG="MCI_${version[0]}.${version[1]}.${version[2]}"
+
+        echo "New tag is $MCI_TAG"
+        echo 'MCI_TAG=$MCI_TAG' >> $GITHUB_ENV_FILE
+    - name: Commit and push lambda_function.zip
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add ./lambda_function/lambda_function.zip
+        git commit -m "Add lambda_function.zip"
+        git tag "${{ env.$MCI_TAG }}"
+        git push
+  terraform-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Upload Configuration
+        uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
+        id: plan-upload
+        with:
+          workspace: ${{ env.TF_WORKSPACE }}
+          directory: ${{ env.CONFIG_DIRECTORY }}
+          speculative: true
+      - name: Create Plan Run
+        uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
+        id: plan-run
+        with:
+          workspace: ${{ env.TF_WORKSPACE }}
+          configuration_version: ${{ steps.plan-upload.outputs.configuration_version_id }}
+          plan_only: true
+      - name: Get Plan Output
+        uses: hashicorp/tfc-workflows-github/actions/plan-output@v1.0.0
+        id: plan-output
+        with:
+          plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
+  terraform-apply:
+    name: "Terraform Apply"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Upload Configuration
+        uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
+        id: apply-upload
+        with:
+          workspace: ${{ env.TF_WORKSPACE }}
+          directory: ${{ env.CONFIG_DIRECTORY }}
+      - name: Create Apply Run
+        uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
+        id: apply-run
+        with:
+          workspace: ${{ env.TF_WORKSPACE }}
+          configuration_version: ${{ steps.apply-upload.outputs.configuration_version_id }}
+      - name: Apply
+        uses: hashicorp/tfc-workflows-github/actions/apply-run@v1.0.0
+        if: fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable
+        id: apply
+        with:
+          run: ${{ steps.apply-run.outputs.run_id }}
+          comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
