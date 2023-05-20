@@ -33,5 +33,3 @@ RUN (cd package && zip -r ../lambda_function_payload.zip .)
 
 # Clean up the package directory
 RUN rm -rf "package"
-
-CMD ["tail", "-f", "/dev/null"]
