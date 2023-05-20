@@ -11,11 +11,11 @@ function run {
   home_dir="/home/ubuntu"
   git_private_key_path="$home_dir/.ssh/id_rsa"
 
-  repo="git@github.com:klydem11/minecraft-AWS-server.git"
+  repo="git@github.com:Klyde-Moradeyo/minecraft-AWS-server.git"
   repo_branch="main"
   repo_folder="$home_dir/minecraft-AWS-server"
 
-  mc_map_repo="git@github.com:klydem11/minecraft-world.git"
+  mc_map_repo="git@github.com:Klyde-Moradeyo/minecraft-world.git"
   mc_map_repo_branch="main"
   mc_map_repo_folder="$repo_folder/docker/minecraft-data/minecraft-world"
 

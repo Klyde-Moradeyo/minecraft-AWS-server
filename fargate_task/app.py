@@ -99,7 +99,7 @@ def lambda_handler(event, context):
 
     # Repo containing terraform manifests and scripts
     tf_manifest_repo = { 
-                        "url": "https://github.com/klydem11/minecraft-AWS-server.git", 
+                        "url": "https://github.com/Klyde-Moradeyo/minecraft-AWS-server.git", 
                         "branch": "main",
                         "ssh_key": f"{get_git_ssh_key(ssh_key_name)}"
                         }
@@ -108,7 +108,7 @@ def lambda_handler(event, context):
     # Warn: This is not best practice but due to cost and time it is better to store it here
     # Enhancement: Tf_state files Should be stored in personal onedrive
     miscellaneous_repo = { 
-                        "url": "https://github.com/klydem11/miscellaneous.git", 
+                        "url": "https://github.com/Klyde-Moradeyo/miscellaneous.git", 
                         "branch": "main",
                         "ssh_key": f"{get_git_ssh_key(ssh_key_name)}"
                         }
