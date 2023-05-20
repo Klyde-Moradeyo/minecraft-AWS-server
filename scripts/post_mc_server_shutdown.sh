@@ -3,12 +3,12 @@
 # Post Minecraft Server Container Close
 # Use: Post "terraform destroy" script to be performed on ec2 instance
 
-set -e
+# set -e
 source /home/ubuntu/setup/scripts/helper_functions.sh
 
-ec2_log_output_dir="/home/ubuntu/minecraft-AWS-server/docker/minecraft-data/minecraft-world/logs/post_mc_server_shutdown.log"
-exec > $ec2_log_output_dir # directs all stdout to the file
-exec 2>&1 # directs stderr to the same place as stdout
+# ec2_log_output_dir="/home/ubuntu/minecraft-AWS-server/docker/minecraft-data/minecraft-world/logs/post_mc_server_shutdown.log"
+# exec > $ec2_log_output_dir # directs all stdout to the file
+# exec 2>&1 # directs stderr to the same place as stdout
 
 function run {
   home_dir="/home/ubuntu"
@@ -39,7 +39,7 @@ function run {
   git commit -m "Auto-commit: Update minecraft data"
   git tag $(date +"%Y-%m-%d-%H-%M-%S")
 
-  # Push changes to the remote repository
+  # Push changes to the S3 Bucket
   GIT_SSH_COMMAND="ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git push origin
   GIT_SSH_COMMAND="ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git push origin --tags
 }
