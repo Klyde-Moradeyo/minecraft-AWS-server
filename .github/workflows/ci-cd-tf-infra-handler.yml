@@ -1,41 +1,60 @@
 # Doc: https://developer.hashicorp.com/terraform/tutorials/automation/github-actions
-name: TF
+name: CI/CD Infra handler
 
 on:
   push:
     branches:
       - main
+      - test
     paths:
       - "terraform/infrastructure_handler/**"
       - "lambda_function/**"
 env:
   TF_CLOUD_ORGANIZATION: "mango-dev"
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
-  TF_WORKSPACE: "${{ github.repository }}/terraform/infrastructure_handler"
+  TF_WORKSPACE: "minecraft-aws-server/terraform/infrastructure_handler"
   CONFIG_DIRECTORY: "./"
 
 jobs:
+  filter:
+    runs-on: ubuntu-latest
+    outputs:
+      lambda: ${{ steps.filter.outputs.lambda }}
+      terraform: ${{ steps.filter.outputs.terraform }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            lambda:
+              - 'lambda_function/**'
+            terraform:
+              - 'terraform/infrastructure_handler/**'
   build-lambda:
     name: "Build Lambda Function"
     runs-on: ubuntu-latest
+    needs: filter
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-    - name: Build Docker image
-      run: |
-        docker build -t aws_lambda_img lambda_function/.
-    - name: Run Docker image
-      run: |
-        docker run --name lambda_payload_builder aws_lambda_img
-    - name: Copy lambda_function.zip from Docker container
-      run: |
-        docker cp lambda_payload_builder:/app/lambda_function_payload.zip ./lambda_function/
-    - name: Increment Lambda MCI Tag
+      with:
+        fetch-depth: 0
+    - name: Get Increment Lambda MCI Tag
+      if: needs.filter.outputs.lambda == 'true'
       run: |
         # MCI means Minecraft Infrastructure Coordinator
-
+        echo $(git tag -l -n)
+        ls -l 
         # Get tags, filter those that start with MCI_, sort them and get the last one
         latest_tag=$(git tag | grep '^MCI_' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)
+        echo "Latest Version: $latest_tag"
+        echo "MCI_TAG=$latest_tag" >> $GITHUB_ENV
+    - name: Increment Lambda MCI Tag
+      if: needs.filter.outputs.lambda == 'true'
+      run: |
+        # Get tags, filter those that start with MCI_, sort them and get the last one
+        latest_tag=${{ env.MCI_TAG }}
 
         if [[ -z "$latest_tag" ]]; then
           echo "No tags found starting with MCI_"
@@ -55,24 +74,44 @@ jobs:
         MCI_TAG="MCI_${version[0]}.${version[1]}.${version[2]}"
 
         echo "New tag is $MCI_TAG"
-        echo 'MCI_TAG=$MCI_TAG' >> $GITHUB_ENV_FILE
+        echo "MCI_TAG=$MCI_TAG" >> $GITHUB_ENV
+    - name: Build Docker image
+      run: |
+        ls -l
+        docker build -t aws_lambda_img lambda_function/. --build-arg version=${{ env.MCI_TAG }}
+    - name: Run Docker image
+      run: |
+        docker run --name lambda_payload_builder aws_lambda_img
+    - name: Copy lambda_function.zip from Docker container
+      run: |
+        docker cp lambda_payload_builder:/app/lambda_function_payload.zip ./lambda_function/
     - name: Commit and push lambda_function.zip
+      if: needs.filter.outputs.lambda == 'true'
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add ./lambda_function/lambda_function.zip
-        git commit -m "Add lambda_function.zip"
         git tag "${{ env.MCI_TAG }}"
         git push
+    - name: Upload lambda function payload
+      uses: actions/upload-artifact@v2
+      with:
+        name: lambda-artifact
+        path: ./lambda_function/lambda_function_payload.zip
   terraform-plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
+    needs: build-lambda
     permissions:
       contents: read
       pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Download lambda function payload
+        uses: actions/download-artifact@v2
+        with:
+          name: lambda-artifact
+          path: ./lambda_function/
       - name: Upload Configuration
         uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
         id: plan-upload
@@ -95,6 +134,7 @@ jobs:
   terraform-apply:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
+    needs: terraform-plan
     permissions:
       contents: read
     steps:
