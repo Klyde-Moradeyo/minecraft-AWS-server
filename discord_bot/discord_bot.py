@@ -1,4 +1,7 @@
 # Discord Dev Portal: http://discordapp.com/developers/applications
+# Requires Environment variables
+#   - DISCORD_TOKEN
+#   - API_URL
 
 import discord
 from discord.ext import commands
@@ -29,12 +32,9 @@ def read_and_delete_file(temp_path):
 
     return content
 
-
-
 def send_to_api(data):
     # API Gateway URL
-    url = "https://jnw8kkz82l.execute-api.eu-west-2.amazonaws.com"
-    url = f"{url}/minecraft-prod/command"
+    url = os.environ["API_URL"]
     print(url)
     headers = {'Content-Type': 'application/json'}
     print(f"Sending Data to API: {data}")
