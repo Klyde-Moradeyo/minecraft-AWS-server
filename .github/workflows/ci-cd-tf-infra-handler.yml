@@ -6,8 +6,8 @@ on:
     branches:
       - main
     paths:
-      - "terraform/infrastructure_handler/***"
-      - "lambda_function/***"
+      - "terraform/infrastructure_handler/**"
+      - "lambda_function/**"
 env:
   TF_CLOUD_ORGANIZATION: "mango-dev"
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
