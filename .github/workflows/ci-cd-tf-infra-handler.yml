@@ -13,6 +13,7 @@ env:
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
   TF_WORKSPACE: "minecraft-infra-handler"
   CONFIG_DIRECTORY: "./terraform/infrastructure_handler"
+  GIT_TAG_PREFIX: "MCI" # MCI means Minecraft Infrastructure Coordinator
 
 jobs:
   filter:
@@ -43,11 +44,10 @@ jobs:
     - name: Get Lambda MCI Tag
       if: needs.filter.outputs.lambda == 'true'
       run: |
-        # MCI means Minecraft Infrastructure Coordinator
         echo $(git tag -l -n)
         ls -l 
         # Get tags, filter those that start with MCI_, sort them and get the last one
-        latest_tag=$(git tag | grep '^MCI_' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)
+        latest_tag=$(git tag | grep '^${{ env.GIT_TAG_PREFIX }}_' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)
         echo "Latest Version: $latest_tag"
         echo "MCI_TAG=$latest_tag" >> $GITHUB_ENV
     - name: Increment Lambda MCI Tag
@@ -62,7 +62,7 @@ jobs:
         fi
 
         # Remove the prefix "MCI_" from the tag
-        version_string=${latest_tag#MCI_}
+        version_string=${latest_tag#${{ env.GIT_TAG_PREFIX }}_}
 
         # Split the version string into an array
         version=(${version_string//./ })
@@ -71,7 +71,7 @@ jobs:
         version[2]=$((version[2] + 1))
 
         # Construct new tag
-        MCI_TAG="MCI_${version[0]}.${version[1]}.${version[2]}"
+        MCI_TAG="${{ env.GIT_TAG_PREFIX }}_${version[0]}.${version[1]}.${version[2]}"
 
         echo "New tag is $MCI_TAG"
         echo "MCI_TAG=$MCI_TAG" >> $GITHUB_ENV
@@ -105,41 +105,6 @@ jobs:
         git config --local user.name "GitHub Action"
         git tag "${{ env.MCI_TAG }}"
         git push https://dark-mango-bot:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git --tags
-
-  terraform-plan:
-    name: Terraform Plan
-    runs-on: ubuntu-latest
-    needs: build-lambda
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Download lambda function payload
-        uses: actions/download-artifact@v2
-        with:
-          name: lambda-artifact
-          path: ./terraform/minecraft_infrastructure
-      - name: Upload Configuration
-        uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
-        id: plan-upload
-        with:
-          workspace: ${{ env.TF_WORKSPACE }}
-          directory: ${{ env.CONFIG_DIRECTORY }}
-          speculative: true
-      - name: Create Plan Run
-        uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
-        id: plan-run
-        with:
-          workspace: ${{ env.TF_WORKSPACE }}
-          configuration_version: ${{ steps.plan-upload.outputs.configuration_version_id }}
-          plan_only: true
-      - name: Get Plan Output
-        uses: hashicorp/tfc-workflows-github/actions/plan-output@v1.0.0
-        id: plan-output
-        with:
-          plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
 
   terraform-apply:
     name: "Terraform Apply"
