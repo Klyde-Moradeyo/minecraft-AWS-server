@@ -31,6 +31,7 @@ jobs:
               - 'lambda_function/**'
             terraform:
               - 'terraform/infrastructure_handler/**'
+
   build-lambda:
     name: "Build Lambda Function"
     runs-on: ubuntu-latest
@@ -82,21 +83,30 @@ jobs:
     - name: Run Docker image
       run: |
         docker run --name lambda_payload_builder aws_lambda_img
-    - name: Copy lambda_function.zip from Docker container
+    - name: Copy and validate lambda payload
       run: |
-        docker cp lambda_payload_builder:/app/lambda_function_payload.zip ./lambda_function/
-    - name: Commit and push lambda_function.zip
+        lambda_function_payload_dir="./lambda_function/"
+        docker cp lambda_payload_builder:/app/lambda_function_payload.zip $lambda_function_payload_dir
+
+        package_size=$(du -m "$lambda_function_payload_dir" | cut -f1)
+        echo "payload size: $package_size mb"
+        if (( package_size > 50 )); then
+            echo -e "Error: \nThe lambda_function_payload is larger than 50 MB \nDoc: https://docs.aws.amazon.com/lambda/latest/dg/python-package.html"
+            exit 1
+        fi
+    - name: Upload lambda function payload
+      uses: actions/upload-artifact@v2
+      with:
+        name: lambda-artifact
+        path: ./lambda_function/lambda_function_payload.zip
+    - name: Tag Version
       if: needs.filter.outputs.lambda == 'true'
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git tag "${{ env.MCI_TAG }}"
         git push https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-    - name: Upload lambda function payload
-      uses: actions/upload-artifact@v2
-      with:
-        name: lambda-artifact
-        path: ./lambda_function/lambda_function_payload.zip
+
   terraform-plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
@@ -111,7 +121,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: lambda-artifact
-          path: ./lambda_function/
+          path: ./terraform/minecraft_infrastructure
       - name: Upload Configuration
         uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
         id: plan-upload
@@ -131,31 +141,31 @@ jobs:
         id: plan-output
         with:
           plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
-  # terraform-apply:
-  #   name: "Terraform Apply"
-  #   runs-on: ubuntu-latest
-  #   needs: terraform-plan
-  #   permissions:
-  #     contents: read
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v3
-  #     - name: Upload Configuration
-  #       uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
-  #       id: apply-upload
-  #       with:
-  #         workspace: ${{ env.TF_WORKSPACE }}
-  #         directory: ${{ env.CONFIG_DIRECTORY }}
-  #     - name: Create Apply Run
-  #       uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
-  #       id: apply-run
-  #       with:
-  #         workspace: ${{ env.TF_WORKSPACE }}
-  #         configuration_version: ${{ steps.apply-upload.outputs.configuration_version_id }}
-  #     - name: Apply
-  #       uses: hashicorp/tfc-workflows-github/actions/apply-run@v1.0.0
-  #       if: fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable
-  #       id: apply
-  #       with:
-  #         run: ${{ steps.apply-run.outputs.run_id }}
-  #         comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
+
+  terraform-apply:
+    name: "Terraform Apply"
+    runs-on: ubuntu-latest
+    needs: terraform-plan
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Download lambda function payload
+        uses: actions/download-artifact@v2
+        with:
+          name: lambda-artifact
+          path: ./terraform/minecraft_infrastructure
+      - name: Create Apply Run
+        uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
+        id: apply-run
+        with:
+          workspace: ${{ env.TF_WORKSPACE }}
+          configuration_version: ${{ steps.apply-upload.outputs.configuration_version_id }}
+      - name: Apply
+        uses: hashicorp/tfc-workflows-github/actions/apply-run@v1.0.0
+        if: fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable
+        id: apply
+        with:
+          run: ${{ steps.apply-run.outputs.run_id }}
+          comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
