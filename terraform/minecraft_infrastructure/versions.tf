@@ -7,6 +7,13 @@ terraform {
       version = "~> 4.0"
     }
   }
+  cloud {
+    organization = "mango-dev"
+    
+    workspaces {
+      name = "minecraft-infrastructure"
+    }
+  }
 }
 
 # Provider Block

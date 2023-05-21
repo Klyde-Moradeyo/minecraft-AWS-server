@@ -129,37 +129,42 @@ resource "null_resource" "setup_ec2" {
 }
 
 # Ec2 before destroy 
-resource "null_resource" "post_mc_server_close" {
-  depends_on = [ module.ec2_instance ]
+# resource "null_resource" "post_mc_server_close" {
+#   depends_on = [ module.ec2_instance ]
 
-  # Use a trigger to recreate the null_resource 
-  # when the EC2 instance is replaced
-  triggers = {
-    instance_id = module.ec2_instance.id
-  }
+#   # Use a trigger to recreate the null_resource 
+#   # when the EC2 instance is replaced
+#   triggers = {
+#     instance_id = module.ec2_instance.id
+#   }
 
-  provisioner "local-exec" {
-    when    = destroy # Only execute on destruction of resource
-    command = <<-EOT
-      public_ip=$(cat ${path.module}/../infrastructure_handler/EIP.txt)
-      echo $public_ip
-      ssh -v -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@$public_ip "\
-        sudo chmod +x /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh && \
-        cp /home/ubuntu/setup/logs/* /home/ubuntu/minecraft-AWS-server/docker/minecraft-data/minecraft-world/logs && \
-        sudo /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh ; exit"
-    EOT
-  }
-}
+#   provisioner "local-exec" {
+#     when    = destroy # Only execute on destruction of resource
+#     command = <<-EOT
+#       ssh -v -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@${data.terraform_remote_state.infra_handler_state.outputs.eip} "\
+#         sudo chmod +x /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh && \
+#         cp /home/ubuntu/setup/logs/* /home/ubuntu/minecraft-AWS-server/docker/minecraft-data/minecraft-world/logs && \
+#         sudo /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh ; exit"
+#     EOT
+#   }
+# }
 
 ########################
 #     EIP for EC2      #
 ########################
-locals {
-  public_ip = trim(file("${path.module}/../infrastructure_handler/EIP.txt"), " \t\n\r")
+data "terraform_remote_state" "infra_handler_state" {
+  backend = "remote"
+
+  config = {
+    organization = var.tf_cloud_org
+    workspaces = {
+      name = var.tf_cloud_infra_handler_workspace
+    }
+  }
 }
 
 data "aws_eip" "mc_public_ip" {
-  public_ip = local.public_ip
+  public_ip = data.terraform_remote_state.infra_handler_state.outputs.eip
 }
 
 resource "aws_eip_association" "mc_public_ip_to_ec2" {
