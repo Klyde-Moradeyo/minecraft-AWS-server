@@ -31,25 +31,25 @@ resource "aws_eip" "mc_server_eip" {
   tags = module.label.tags
 }
 
-resource "null_resource" "EIP_to_txt_file" {
-  depends_on = [ aws_eip.mc_server_eip ]
+# resource "null_resource" "EIP_to_txt_file" {
+#   depends_on = [ aws_eip.mc_server_eip ]
 
-  provisioner "local-exec" {
-    command = "echo '${aws_eip.mc_server_eip.public_ip}' > EIP.txt"
-  }
-}
+#   provisioner "local-exec" {
+#     command = "echo '${aws_eip.mc_server_eip.public_ip}' > EIP.txt"
+#   }
+# }
 
-resource "null_resource" "delete_EIP_to_txt_file" {
-  depends_on = [ aws_eip.mc_server_eip ]
+# resource "null_resource" "delete_EIP_to_txt_file" {
+#   depends_on = [ aws_eip.mc_server_eip ]
 
-  triggers = {
-    before_destroy_timestamp = timestamp()
-  }
+#   triggers = {
+#     before_destroy_timestamp = timestamp()
+#   }
 
-  provisioner "local-exec" {
-    when    = destroy # Only execute on destruction of resource
-    command = "rm -f EIP.txt"
-  }
-}
+#   provisioner "local-exec" {
+#     when    = destroy # Only execute on destruction of resource
+#     command = "rm -f EIP.txt"
+#   }
+# }
 
 

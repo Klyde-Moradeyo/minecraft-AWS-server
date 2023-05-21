@@ -38,6 +38,12 @@ variable "discord_token_name" {
   default     = "discord-mango-machine-bot"
 }
 
+variable "terraform_token_name" {
+  description = "Terraform token name in Systems Manager Parameter Store"
+  type        = string
+  default     = "terraform-cloud-user-api"
+}
+
 ########################
 #         ECR          #
 ########################
