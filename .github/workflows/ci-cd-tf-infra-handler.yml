@@ -12,8 +12,8 @@ on:
 env:
   TF_CLOUD_ORGANIZATION: "mango-dev"
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
-  TF_WORKSPACE: "minecraft-aws-server/terraform/infrastructure_handler"
-  CONFIG_DIRECTORY: "./"
+  TF_WORKSPACE: "minecraft-infra-handler"
+  CONFIG_DIRECTORY: "./terraform/infrastructure_handler"
 
 jobs:
   filter:
