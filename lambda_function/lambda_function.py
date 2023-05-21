@@ -69,7 +69,7 @@ def lambda_handler(event, context):
         # ECS Fargate Config
         ecs_client = boto3.client("ecs")
         task_definition = "minecraft_task_definition"
-        cluster = "minecraft_cluster"
+        cluster = os.getenv("CLUSTER")
         container_name = os.getenv("CONTAINER_NAME")
         subnet_id = os.getenv("DEFAULT_SUBNET_ID")
         security_group_id = os.getenv("DEFAULT_SECURITY_GROUP_ID")
