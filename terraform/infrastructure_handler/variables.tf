@@ -1,11 +1,23 @@
 
 ########################
-#     General AWS      #
+#        General       #
 ########################
 variable "aws_region" {
   description = "Region in which AWS Resources to be created"
   type = string
   default = "eu-west-2"
+}
+
+variable "tf_cloud_org" {
+  description = "Terraform Cloud organization name"
+  type = string
+  default = "mango-dev"
+}
+
+variable "tf_cloud_workspace" {
+  description = "Terraform Cloud workspace name"
+  type = string
+  default = "minecraft-infra-handler"
 }
 
 ########################
