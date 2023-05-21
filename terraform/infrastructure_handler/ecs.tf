@@ -86,6 +86,7 @@ resource "aws_iam_role_policy_attachment" "ecs_cloudwatch_logs_role_policy" {
 ########################
 resource "aws_ecs_cluster" "my_cluster" {
   name = "${var.name}_cluster"
+  tags = module.label.tags
 }
 
 resource "aws_ecs_task_definition" "my_task" {
@@ -124,6 +125,8 @@ resource "aws_ecs_task_definition" "my_task" {
     }
   ]
   DEFINITION
+
+  tags = module.label.tags
 }
 
 ########################
@@ -138,4 +141,6 @@ resource "aws_ecr_repository" "mc_repository" {
   image_scanning_configuration {
     scan_on_push = true
   }
+
+  tags = module.label.tags
 }
