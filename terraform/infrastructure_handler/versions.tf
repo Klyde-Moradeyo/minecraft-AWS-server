@@ -9,10 +9,10 @@ terraform {
   }
 
   cloud {
-    organization = var.tf_cloud_org
+    organization = "mango-dev"
 
     workspaces {
-      name = var.tf_cloud_workspace
+      name = "minecraft-infra-handler"
     }
   }
 }
