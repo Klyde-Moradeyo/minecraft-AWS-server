@@ -118,6 +118,8 @@ resource "aws_iam_role_policy_attachment" "fargate_access" {
 #    Lambda Function   #
 ########################
 resource "aws_lambda_function" "lambda_function" {
+  depends_on = [ aws_ecs_cluster.my_cluster ]
+
   filename            = "./lambda_function_payload.zip"
   function_name       = "${var.name}-lambda-function"
   role                = aws_iam_role.iam_for_lambda.arn
@@ -137,6 +139,7 @@ resource "aws_lambda_function" "lambda_function" {
       DEFAULT_SECURITY_GROUP_ID = local.security_group_id
       CONTAINER_NAME = var.ecr_repo_name
       TF_USER_TOKEN = var.terraform_token_name
+      CLUSTER = aws_ecs_cluster.my_cluster.name
     }
   }
 

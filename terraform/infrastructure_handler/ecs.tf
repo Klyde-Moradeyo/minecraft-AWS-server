@@ -125,3 +125,17 @@ resource "aws_ecs_task_definition" "my_task" {
   ]
   DEFINITION
 }
+
+########################
+#         ECR          #
+########################
+# Minecraft Python infra runner image
+resource "aws_ecr_repository" "mc_repository" {
+  name                 = var.ecr_repo_name
+  image_tag_mutability = "MUTABLE"
+  force_delete = true
+  
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}

@@ -56,9 +56,8 @@ variable "ecr_repo_name" {
 variable "ecr_image_name" {
   description = "ECR Repo Name"
   type        = string
-  default     = "mc_infra_runner"
+  default     = "mc_infra_runner_img"
 }
-
 
 ########################
 #         ECS          #
