@@ -61,6 +61,7 @@ def check_task_status(ecs_client, cluster, task):
 #                       Lambda Handler                               #
 ######################################################################
 def lambda_handler(event, context):
+    response = None
     try:
         # Extract request body
         command = json.loads(event["body"]).get("command")
@@ -91,9 +92,9 @@ def lambda_handler(event, context):
             }, 
         ]
         
-        if ( command != "status"):
+        if (command == "start"):
             response = create_fargate_container(ecs_client, task_definition, cluster, container_name, network_configuration, environment_variables)
-        else:
+        elif (command == "status"):
             # Check if task_arn is not null
             if not task_arn:
                 print("Error: task_arn must not be null when checking task status")
@@ -103,6 +104,8 @@ def lambda_handler(event, context):
                 }
             
             response = check_task_status(ecs_client, cluster, task_arn)
+        else:
+            raise ValueError("Invalid command: " + command)
 
     except (BotoCoreError, ClientError) as error:
         # If there was an error, return an HTTP 500 response with the error message
@@ -110,6 +113,14 @@ def lambda_handler(event, context):
         return {
             "statusCode": 500,
             "body": json.dumps(f"Error running Fargate task: {error}", cls=DateTimeEncoder)
+        }
+    
+    except ValueError as error:
+        # Handle the ValueError here
+        error_message = str(error)
+        return {
+            "statusCode": 400,
+            "body": json.dumps(error_message, cls=DateTimeEncoder)
         }
 
     return {
