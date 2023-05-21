@@ -110,6 +110,7 @@ jobs:
   terraform-apply:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
+    needs: build-lambda
     permissions:
       contents: read
     steps:
