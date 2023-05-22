@@ -9,8 +9,7 @@ ENV AWSCLI_VERSION=2.7.31
 RUN apt-get update && apt-get install -y \
     unzip \
     curl \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+    git
 
 # Install Terraform
 RUN curl https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -o /tmp/terraform.zip \
