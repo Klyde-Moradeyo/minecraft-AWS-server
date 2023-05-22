@@ -34,7 +34,7 @@ def read_and_delete_file(temp_path):
 
 def send_to_api(data):
     # API Gateway URL
-    url = os.environ["API_URL"]
+    url = f"{os.environ['API_URL']}/minecraft-prod/command"
     print(url)
     headers = {'Content-Type': 'application/json'}
     print(f"Sending Data to API: {data}")
