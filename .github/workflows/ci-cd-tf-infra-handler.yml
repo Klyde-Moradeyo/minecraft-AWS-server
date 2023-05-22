@@ -8,6 +8,7 @@ on:
     paths:
       - "terraform/infrastructure_handler/**"
       - "lambda_function/**"
+      - "fargate_task/**"
 env:
   TF_CLOUD_ORGANIZATION: "mango-dev"
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
@@ -21,6 +22,7 @@ jobs:
     outputs:
       lambda: ${{ steps.filter.outputs.lambda }}
       terraform: ${{ steps.filter.outputs.terraform }}
+      fargate: ${{ steps.filter.outputs.fargate }}
     steps:
       - uses: actions/checkout@v3
       - uses: dorny/paths-filter@v2
@@ -31,11 +33,14 @@ jobs:
               - 'lambda_function/**'
             terraform:
               - 'terraform/infrastructure_handler/**'
+            fargate:
+              - 'fargate_task/**'
 
   build-lambda:
     name: "Build Lambda Function"
     runs-on: ubuntu-latest
     needs: filter
+    if: needs.filter.outputs.lambda == 'true'
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -43,7 +48,6 @@ jobs:
         fetch-depth: 0
         token: ${{ secrets.GH_PAT }}
     - name: Get Lambda MCI Tag
-      if: needs.filter.outputs.lambda == 'true'
       run: |
         echo $(git tag -l -n)
         ls -l 
@@ -52,7 +56,6 @@ jobs:
         echo "Latest Version: $latest_tag"
         echo "MCI_TAG=$latest_tag" >> $GITHUB_ENV
     - name: Increment Lambda MCI Tag
-      if: needs.filter.outputs.lambda == 'true'
       run: |
         # Get tags, filter those that start with MCI_, sort them and get the last one
         latest_tag=${{ env.MCI_TAG }}
@@ -100,17 +103,128 @@ jobs:
         name: lambda-artifact
         path: ./lambda_function/lambda_function_payload.zip
     - name: Tag Version
-      if: needs.filter.outputs.lambda == 'true'
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git tag "${{ env.MCI_TAG }}"
         git push https://dark-mango-bot:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git --tags
 
+  build-fargate:
+    name: "Build fargate task"
+    runs-on: ubuntu-latest
+    needs: filter
+    if: needs.filter.outputs.fargate == 'true'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GH_PAT }}
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.4.4
+        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+    - name: Set Env Vars
+      working-directory: ./terraform/minecraft_infrastructure
+      run: |
+        echo "ECR_REPO_URL=$(terraform output ecr_repository_url)" >> $GITHUB_ENV
+    - name: Build Fargate Image
+      working-directory: ./fargate_task
+      run: |
+        docker build -t ${{ env.IMAGE_NAME }}  .
+        docker tag ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} ${{ env.ECR_REPO_URL }}:${{ env.IMAGE_TAG }}
+    - name: Push Fargate Image
+      working-directory: ./fargate_task
+      run: |
+        aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REPO_URL }}
+        docker push ${{ env.ECR_REPO_URL }}:${{ env.IMAGE_TAG }}
+    - name: Tag Git
+      run: |
+        latest_tag=$(git tag | grep '^${{ env.GIT_TAG_PREFIX }}_' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)
+        if [[ -z "$latest_tag" ]]; then
+          echo "No tags found starting with ${{ env.GIT_TAG_PREFIX }}_"
+          exit 1
+        fi
+
+        # Remove the prefix from the tag
+        version_string=${latest_tag#${{ env.GIT_TAG_PREFIX }}_}
+
+        # Split the version string into an array
+        version=(${version_string//./ })
+
+        # Increment patch version
+        version[2]=$((version[2] + 1))
+
+        # Construct new tag
+        FARGATE_TAG="${{ env.GIT_TAG_PREFIX }}_${version[0]}.${version[1]}.${version[2]}"
+
+        echo "New tag is $FARGATE_TAG"
+
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git tag "${{ env.GIT_TAG_PREFIX }}"
+        git push https://dark-mango-bot:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git --tags
+
+        build-fargate:
+          name: "Build fargate task"
+          runs-on: ubuntu-latest
+          steps:
+          - name: Checkout code
+            uses: actions/checkout@v3
+            with:
+              fetch-depth: 0
+              token: ${{ secrets.GH_PAT }}
+          - name: Setup Terraform
+            uses: hashicorp/setup-terraform@v2
+            with:
+              terraform_version: 1.4.4
+              cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+          - name: Set Env Vars
+            working-directory: ./terraform/minecraft_infrastructure
+            run: |
+              echo "ECR_REPO_URL=$(terraform output ecr_repository_url)" >> $GITHUB_ENV
+          - name: Build Fargate Image
+            working-directory: ./fargate_task
+            run: |
+              docker build -t ${{ env.IMAGE_NAME }}  .
+              docker tag ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} ${{ env.ECR_REPO_URL }}:${{ env.IMAGE_TAG }}
+          - name: Push Fargate Image
+            working-directory: ./fargate_task
+            run: |
+              aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REPO_URL }}
+              docker push ${{ env.ECR_REPO_URL }}:${{ env.IMAGE_TAG }}
+          - name: Tag Git
+            run: |
+              latest_tag=$(git tag | grep '^${{ env.GIT_TAG_PREFIX }}_' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)
+              if [[ -z "$latest_tag" ]]; then
+                echo "No tags found starting with ${{ env.GIT_TAG_PREFIX }}_"
+                exit 1
+              fi
+      
+              # Remove the prefix from the tag
+              version_string=${latest_tag#${{ env.GIT_TAG_PREFIX }}_}
+      
+              # Split the version string into an array
+              version=(${version_string//./ })
+      
+              # Increment patch version
+              version[2]=$((version[2] + 1))
+      
+              # Construct new tag
+              FARGATE_TAG="${{ env.GIT_TAG_PREFIX }}_${version[0]}.${version[1]}.${version[2]}"
+      
+              echo "New tag is $FARGATE_TAG"
+      
+              git config --local user.email "action@github.com"
+              git config --local user.name "GitHub Action"
+              git tag "${{ env.GIT_TAG_PREFIX }}"
+              git push https://dark-mango-bot:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git --tags
+
   terraform-apply:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
-    needs: build-lambda
+    needs: [build-lambda, build-fargate]
     permissions:
       contents: read
     steps:
