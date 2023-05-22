@@ -1,10 +1,11 @@
 # Table of Contents
-1. [minecraft-AWS-server](#minecraft-aws-server)
-2. [Overview](#overview)
-3. [Languages and Technologies](#languages-and-technologies)
-4. [File Structure](#file-structure)
-5. [File Structure Tree](#file-structure-tree)
-6. [Enhancements](#enhancements)
+- [Table of Contents](#table-of-contents)
+- [Overview](#overview)
+- [Languages and Technologies](#languages-and-technologies)
+- [File Structure](#file-structure)
+- [File Structure Tree](#file-structure-tree)
+- [Enhancements](#enhancements)
+  - [Notes](#notes)
 
 # Overview
 This repo is for provisioning a minecraft server on Amazon Web Services (AWS). It contains the necessary scripts and configurations to set up a Minecraft server on AWS. The server utilizes AWS Fargate for serverless compute and integrates with a Discord bot to manage server requests.
@@ -96,3 +97,6 @@ The Minecraft server has the following enhancements:
 - Utilizes m5.large instance type
 - Includes json datapack for vanilla tweaks
 - Kubernetes cluster to manage the servers
+
+## Notes
+- To get cross workspace access in terraform cloud, you need to give a workspace permision to view another.
