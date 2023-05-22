@@ -40,7 +40,7 @@ jobs:
     uses: ./.github/workflows/reusable-ci-lambda_func.yml
     needs: filter
     with:
-      filter: ${{ steps.filter.outputs.lambda }}
+      filter: ${{ needs.filter.outputs.lambda }}
     secrets:
       gh_pat_token: ${{ secrets.GH_PAT }}
 
@@ -48,7 +48,7 @@ jobs:
     uses: ./.github/workflows/reusable-ci-fargate-task.yml
     needs: filter
     with:
-      filter: ${{ steps.filter.outputs.fargate }}
+      filter: ${{ needs.filter.outputs.fargate }}
     secrets:
       gh_pat_token: ${{ secrets.GH_PAT }}
       aws_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
