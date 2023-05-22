@@ -59,7 +59,6 @@ jobs:
           working-directory: ./fargate_task
           env:
             REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-            # IMAGE_TAG: ${{ github.sha }}
           run: |
             docker build -t ${{ env.REGISTRY }}/${{ env.ECR_REPO_NAME }}:${{ env.IMAGE_TAG }} .
 
@@ -67,7 +66,6 @@ jobs:
           working-directory: ./fargate_task
           env:
             REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-            # IMAGE_TAG: ${{ github.sha }}
           run: |
             docker push  ${{ env.REGISTRY }}/${{ env.ECR_REPO_NAME }}:${{ env.IMAGE_TAG }}
             

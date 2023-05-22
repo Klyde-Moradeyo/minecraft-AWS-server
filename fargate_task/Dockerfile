@@ -30,3 +30,5 @@ RUN terraform -v \
 
 # Clean up
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN echo "test"
