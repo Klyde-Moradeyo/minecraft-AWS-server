@@ -2,6 +2,11 @@ name: Reusable CI Lambda Function
 
 on:
   workflow_call:
+    inputs:
+      filter:
+        description: 'Filter'
+        type: boolean
+        required: true
     secrets:
       gh_pat_token:
         required: true
@@ -30,6 +35,7 @@ jobs:
           echo "MCI_TAG=$latest_tag" >> $GITHUB_ENV
 
       - name: Increment Lambda MCI Tag
+        if: inputs.filter == 'true'
         run: |
           # Get tags, filter those that start with MCI_, sort them and get the last one
           latest_tag=${{ env.MCI_TAG }}
@@ -82,6 +88,7 @@ jobs:
           path: ./lambda_function/lambda_function_payload.zip
           
       - name: Tag Version
+        if: inputs.filter == 'true'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"

@@ -17,13 +17,38 @@ env:
   GIT_TAG_PREFIX: "MCI" # MCI means Minecraft Infrastructure Coordinator
 
 jobs:
+  filter:
+    runs-on: ubuntu-latest
+    outputs:
+      lambda: ${{ steps.filter.outputs.lambda }}
+      terraform: ${{ steps.filter.outputs.terraform }}
+      fargate: ${{ steps.filter.outputs.fargate }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            lambda:
+              - 'lambda_function/**'
+            terraform:
+              - 'terraform/infrastructure_handler/**'
+            fargate:
+              - 'fargate_task/**'
+
   ci-lambda:
     uses: ./.github/workflows/reusable-ci-lambda_func.yml
+    needs: filter
+    with:
+      filter: ${{ steps.filter.outputs.lambda }}
     secrets:
       gh_pat_token: ${{ secrets.GH_PAT }}
 
   ci-fargate:
     uses: ./.github/workflows/reusable-ci-fargate-task.yml
+    needs: filter
+    with:
+      filter: ${{ steps.filter.outputs.fargate }}
     secrets:
       gh_pat_token: ${{ secrets.GH_PAT }}
       aws_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
