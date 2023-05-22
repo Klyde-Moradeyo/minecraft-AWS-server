@@ -15,7 +15,7 @@ on:
 env:
     AWS_REGION: "eu-west-2"
     IMAGE_NAME: "mc_infra_runner_img"
-    # IMAGE_TAG: "latest"
+    IMAGE_TAG: "latest"
     GIT_TAG_PREFIX: "TEC" # TEC means Terraform Execution Container 
 
 jobs:
@@ -59,7 +59,7 @@ jobs:
           working-directory: ./fargate_task
           env:
             REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-            IMAGE_TAG: ${{ github.sha }}
+            # IMAGE_TAG: ${{ github.sha }}
           run: |
             docker build -t ${{ env.REGISTRY }}/${{ env.ECR_REPO_NAME }}:${{ env.IMAGE_TAG }} .
 
@@ -67,7 +67,7 @@ jobs:
           working-directory: ./fargate_task
           env:
             REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-            IMAGE_TAG: ${{ github.sha }}
+            # IMAGE_TAG: ${{ github.sha }}
           run: |
             docker push  ${{ env.REGISTRY }}/${{ env.ECR_REPO_NAME }}:${{ env.IMAGE_TAG }}
             

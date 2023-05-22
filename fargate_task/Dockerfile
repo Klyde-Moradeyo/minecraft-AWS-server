@@ -26,7 +26,7 @@ RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI_VERSION}
 # Verify installations
 RUN terraform -v \
     aws --version \
-    git --version \
+    git --version
 
 # Clean up
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
