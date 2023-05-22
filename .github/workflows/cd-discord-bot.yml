@@ -13,8 +13,29 @@ jobs:
     runs-on: ubuntu-latest
     steps: 
       - uses: actions/checkout@v3
-      - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --remote-only
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.4.4
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+          terraform_wrapper: false
+        
+      - name: Initialize Terraform Env
+        working-directory: ./terraform/infrastructure_handler
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
+        run: |
+          terraform init
+          echo "API_URL=$(terraform output -raw api_gateway_url)" >> $GITHUB_ENV
+      
+      - name: Set up FLY CTL
+        uses: superfly/flyctl-actions/setup-flyctl@master
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}  
+
+      - name: Deploy Discord Bot
+        run: |
+          flyctl secrets set API_URL=${{ env.API_URL }}
+          flyctl deploy --remote-only
         working-directory: discord_bot
