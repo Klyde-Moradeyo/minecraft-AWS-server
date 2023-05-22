@@ -93,5 +93,5 @@ jobs:
     
             git config --local user.email "action@github.com"
             git config --local user.name "GitHub Action"
-            git tag "${{ env.GIT_TAG_PREFIX }}"
+            git tag "$FARGATE_TAG"
             git push https://dark-mango-bot:${{ secrets.gh_pat_token }}@github.com/${{ github.repository }}.git --tags
