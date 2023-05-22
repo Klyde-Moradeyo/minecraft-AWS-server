@@ -15,7 +15,11 @@ jobs:
     name: Deploy app
     runs-on: ubuntu-latest
     steps: 
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
       
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
