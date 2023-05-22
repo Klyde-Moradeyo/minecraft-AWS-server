@@ -59,6 +59,9 @@ jobs:
     needs: [ ci-fargate, ci-lambda ]
     uses: ./.github/workflows/reusable-cd-terraform-apply.yml
     with:
-      tf_workspace: ${{ env.TF_WORKSPACE }}
+      tf_workspace: "minecraft-infra-handler"
+      tf_cloud_org: "mango-dev"
+      config_dir: "./terraform/infrastructure_handler"
     secrets:
       gh_pat_token: ${{ secrets.GH_PAT }}
+      tf_api_token: ${{ secrets.TF_API_TOKEN }}

@@ -7,9 +7,21 @@ on:
         description: 'Terraform Workspace Directory'
         type: string
         required: true
+      tf_cloud_org:
+        description: 'Terraform Cloud Organization'
+        type: string
+        required: true
+      config_dir:
+        description: 'Terraform Config Directory'
+        type: string
+        required: true
     secrets:
       gh_pat_token:
         required: true
+      tf_api_token:
+        required: true
+  
+  
 
 env:
     GIT_TAG_PREFIX: "SIOS" # Serverless Infrastructure Orchestration System
@@ -21,21 +33,31 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: Set Environment vars
+        run: |
+          echo "TF_WORKSPACE=${{ inputs.tf_workspace }}" >> $GITHUB_ENV
+          echo "TF_CLOUD_ORGANIZATION=${{ inputs.tf_cloud_org }}" >> $GITHUB_ENV
+          echo "CONFIG_DIRECTORY=${{ inputs.config_dir }}" >> $GITHUB_ENV
+          echo "TF_API_TOKEN=${{ secrets.tf_api_token }}" >> $GITHUB_ENV
+
       - name: Checkout
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.gh_pat_token }}
+
       - name: Download lambda function payload
         uses: actions/download-artifact@v2
         with:
           name: lambda-artifact
           path: ${{ inputs.tf_workspace }}
+
       - name: Create Apply Run
         uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
         id: apply-run
         with:
           workspace: ${{ inputs.tf_workspace }}
           configuration_version: ${{ steps.apply-upload.outputs.configuration_version_id }}
+
       - name: Apply
         uses: hashicorp/tfc-workflows-github/actions/apply-run@v1.0.0
         if: fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable
@@ -43,6 +65,7 @@ jobs:
         with:
           run: ${{ steps.apply-run.outputs.run_id }}
           comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
+          
       - name: Tag Git
         run: |
           latest_tag=$(git tag | grep '^${{ env.GIT_TAG_PREFIX }}_' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)
