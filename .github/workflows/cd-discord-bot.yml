@@ -31,11 +31,12 @@ jobs:
       
       - name: Set up FLY CTL
         uses: superfly/flyctl-actions/setup-flyctl@master
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}  
 
       - name: Deploy Discord Bot
+        working-directory: discord_bot
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}  
         run: |
           flyctl secrets set API_URL=${{ env.API_URL }}
           flyctl deploy --remote-only
-        working-directory: discord_bot
+        
