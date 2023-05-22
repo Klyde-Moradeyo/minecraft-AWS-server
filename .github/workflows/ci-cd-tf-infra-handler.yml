@@ -56,31 +56,9 @@ jobs:
       tf_api_token: ${{ secrets.TF_API_TOKEN }}
 
   terraform-apply:
-    name: "Terraform Apply"
-    runs-on: ubuntu-latest
     needs: [ ci-fargate, ci-lambda ]
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GH_PAT }}
-      - name: Download lambda function payload
-        uses: actions/download-artifact@v2
-        with:
-          name: lambda-artifact
-          path: ${{ env.TF_WORKSPACE }}
-      - name: Create Apply Run
-        uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
-        id: apply-run
-        with:
-          workspace: ${{ env.TF_WORKSPACE }}
-          configuration_version: ${{ steps.apply-upload.outputs.configuration_version_id }}
-      - name: Apply
-        uses: hashicorp/tfc-workflows-github/actions/apply-run@v1.0.0
-        if: fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable
-        id: apply
-        with:
-          run: ${{ steps.apply-run.outputs.run_id }}
-          comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
+    uses: ./.github/workflows/reusable-cd-terraform-apply.yml
+    with:
+      tf_workspace: ${{ env.TF_WORKSPACE }}
+    secrets:
+      gh_pat_token: ${{ secrets.GH_PAT }}

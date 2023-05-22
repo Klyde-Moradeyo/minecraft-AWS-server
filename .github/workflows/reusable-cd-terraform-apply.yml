@@ -1,0 +1,72 @@
+name: Reusable CI Lambda Function
+
+on:
+  workflow_call:
+    inputs:
+      tf_workspace:
+        description: 'Terraform Workspace Directory'
+        type: string
+        required: true
+    secrets:
+      gh_pat_token:
+        required: true
+
+env:
+    GIT_TAG_PREFIX: "SIOS" # Serverless Infrastructure Orchestration System
+
+jobs:
+  terraform-apply:
+    name: "Terraform Apply"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.gh_pat_token }}
+      - name: Download lambda function payload
+        uses: actions/download-artifact@v2
+        with:
+          name: lambda-artifact
+          path: ${{ inputs.tf_workspace }}
+      - name: Create Apply Run
+        uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
+        id: apply-run
+        with:
+          workspace: ${{ inputs.tf_workspace }}
+          configuration_version: ${{ steps.apply-upload.outputs.configuration_version_id }}
+      - name: Apply
+        uses: hashicorp/tfc-workflows-github/actions/apply-run@v1.0.0
+        if: fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable
+        id: apply
+        with:
+          run: ${{ steps.apply-run.outputs.run_id }}
+          comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
+      - name: Tag Git
+        run: |
+          latest_tag=$(git tag | grep '^${{ env.GIT_TAG_PREFIX }}_' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)
+          if [[ -z "$latest_tag" ]]; then
+            echo "No tags found starting with ${{ env.GIT_TAG_PREFIX }}_"
+            exit 1
+          fi
+  
+          # Remove the prefix from the tag
+          version_string=${latest_tag#${{ env.GIT_TAG_PREFIX }}_}
+  
+          # Split the version string into an array
+          version=(${version_string//./ })
+  
+          # Increment patch version
+          version[2]=$((version[2] + 1))
+  
+          # Construct new tag
+          SIOS_TAG="${{ env.GIT_TAG_PREFIX }}_${version[0]}.${version[1]}.${version[2]}"
+  
+          echo "New tag is $SIOS_TAG"
+  
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag "$SIOS_TAG"
+          git push https://dark-mango-bot:${{ secrets.gh_pat_token }}@github.com/${{ github.repository }}.git --tags
+
