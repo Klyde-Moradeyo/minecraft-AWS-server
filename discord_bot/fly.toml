@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for mango-discord-bot on 2023-05-22T18:58:22+01:00
+# fly.toml app configuration file generated for discord-bot-test on 2023-05-20T11:17:46+01:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = "mango-discord-bot"
+app = "discord-bot-test"
 primary_region = "lhr"
 kill_signal = "SIGINT"
 kill_timeout = "5s"
