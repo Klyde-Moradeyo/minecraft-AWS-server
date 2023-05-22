@@ -5,7 +5,7 @@ on:
     inputs:
       filter:
         description: 'Filter'
-        type: boolean
+        type: string
         required: true
     secrets:
       gh_pat_token:
