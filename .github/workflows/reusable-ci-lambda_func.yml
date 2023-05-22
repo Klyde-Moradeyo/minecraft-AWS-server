@@ -1,0 +1,82 @@
+name: Reusable CI Lambda Function
+
+on:
+  workflow_call:
+    secrets:
+      gh_pat_token:
+        required: true
+
+env:
+    GIT_TAG_PREFIX: "MCI" # MCI means Minecraft Infrastructure Coordinator
+
+jobs:
+    build-lambda:
+      name: "Build Lambda Function"
+      runs-on: ubuntu-latest
+      steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.gh_pat_token }}
+      - name: Get Lambda MCI Tag
+        run: |
+          echo $(git tag -l -n)
+          ls -l 
+          # Get tags, filter those that start with MCI_, sort them and get the last one
+          latest_tag=$(git tag | grep '^${{ env.GIT_TAG_PREFIX }}_' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)
+          echo "Latest Version: $latest_tag"
+          echo "MCI_TAG=$latest_tag" >> $GITHUB_ENV
+      - name: Increment Lambda MCI Tag
+        run: |
+          # Get tags, filter those that start with MCI_, sort them and get the last one
+          latest_tag=${{ env.MCI_TAG }}
+  
+          if [[ -z "$latest_tag" ]]; then
+            echo "No tags found starting with MCI_"
+            exit 1
+          fi
+  
+          # Remove the prefix "MCI_" from the tag
+          version_string=${latest_tag#${{ env.GIT_TAG_PREFIX }}_}
+  
+          # Split the version string into an array
+          version=(${version_string//./ })
+  
+          # Increment patch version
+          version[2]=$((version[2] + 1))
+  
+          # Construct new tag
+          MCI_TAG="${{ env.GIT_TAG_PREFIX }}_${version[0]}.${version[1]}.${version[2]}"
+  
+          echo "New tag is $MCI_TAG"
+          echo "MCI_TAG=$MCI_TAG" >> $GITHUB_ENV
+      - name: Build Docker image
+        run: |
+          ls -l
+          docker build -t aws_lambda_img lambda_function/. --build-arg version=${{ env.MCI_TAG }}
+      - name: Run Docker image
+        run: |
+          docker run --name lambda_payload_builder aws_lambda_img
+      - name: Copy and validate lambda payload
+        run: |
+          lambda_function_payload_dir="./lambda_function/"
+          docker cp lambda_payload_builder:/app/lambda_function_payload.zip $lambda_function_payload_dir
+  
+          package_size=$(du -m "$lambda_function_payload_dir" | cut -f1)
+          echo "payload size: $package_size mb"
+          if (( package_size > 50 )); then
+              echo -e "Error: \nThe lambda_function_payload is larger than 50 MB \nDoc: https://docs.aws.amazon.com/lambda/latest/dg/python-package.html"
+              exit 1
+          fi
+      - name: Upload lambda function payload
+        uses: actions/upload-artifact@v2
+        with:
+          name: lambda-artifact
+          path: ./lambda_function/lambda_function_payload.zip
+      - name: Tag Version
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git tag "${{ env.MCI_TAG }}"
+          git push https://dark-mango-bot:${{ secrets.gh_pat_token }}@github.com/${{ github.repository }}.git --tags
