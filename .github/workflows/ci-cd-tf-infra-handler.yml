@@ -55,7 +55,7 @@ jobs:
       aws_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       tf_api_token: ${{ secrets.TF_API_TOKEN }}
 
-  terraform-apply:
+  cd-terraform-apply:
     needs: [ ci-fargate, ci-lambda ]
     uses: ./.github/workflows/reusable-cd-terraform-apply.yml
     with:
