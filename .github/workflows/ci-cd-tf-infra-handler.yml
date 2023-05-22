@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - test
     paths:
       - "terraform/infrastructure_handler/**"
       - "lambda_function/**"
@@ -36,26 +37,27 @@ jobs:
             fargate:
               - 'fargate_task/**'
 
-  build-lambda:
+  ci-lambda:
     uses: ./.github/workflows/reusable-ci-lambda_func.yml
     needs: filter
     if: needs.filter.outputs.lambda == 'true'
     secrets:
       gh_pat_token: ${{ secrets.GH_PAT }}
 
-  build-fargate:
+  ci-fargate:
     uses: ./.github/workflows/reusable-ci-fargate-task.yml
     needs: filter
     if: needs.filter.outputs.fargate == 'true'
     secrets:
       gh_pat_token: ${{ secrets.GH_PAT }}
-      aws_id: ${{ secrets.GH_PAT }}
-      aws_key: ${{ secrets.GH_PAT }}
+      aws_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      tf_api_token: ${{ secrets.TF_API_TOKEN }}
 
   terraform-apply:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
-    needs: [build-lambda, build-fargate]
+    needs: [ ci-fargate, ci-lambda ]
     permissions:
       contents: read
     steps:
@@ -67,7 +69,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: lambda-artifact
-          path: ./terraform/minecraft_infrastructure
+          path: ${{ env.TF_WORKSPACE }}
       - name: Create Apply Run
         uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
         id: apply-run
