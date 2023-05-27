@@ -1,6 +1,9 @@
 # Use an official Python runtime as a parent image
 FROM python:3.9-slim
 
+WORKDIR /app
+COPY . .
+
 # Set environment variables
 ENV TERRAFORM_VERSION=1.4.4
 ENV AWSCLI_VERSION=2.7.31
@@ -29,3 +32,7 @@ RUN terraform -v \
 
 # Clean up
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN pip install -r requirements.txt 
+
+CMD ["python", "app.py"]
