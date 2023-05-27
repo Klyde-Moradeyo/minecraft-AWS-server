@@ -59,6 +59,11 @@ jobs:
           workspace: ${{ inputs.tf_workspace }}
           configuration_version: ${{ steps.apply-upload.outputs.configuration_version_id }}
 
+      - name: Debug Payload
+        run: |
+          echo "without json ${{ steps.apply-run.outputs.payload }}"
+          echo "with json: ${{ fromJSON(steps.apply-run.outputs.payload) }}"
+
       - name: Apply
         uses: hashicorp/tfc-workflows-github/actions/apply-run@v1.0.0
         if: fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable
