@@ -44,18 +44,18 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.gh_pat_token }}
 
+      - name: Download lambda function payload
+        uses: actions/download-artifact@v2
+        with:
+          name: lambda-artifact
+          path: ${{ inputs.tf_workspace }}
+
       - name: Upload Configuration
         uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
         id: apply-upload
         with:
           workspace: ${{ inputs.tf_workspace }}
           directory: ${{ inputs.config_dir }}
-
-      - name: Download lambda function payload
-        uses: actions/download-artifact@v2
-        with:
-          name: lambda-artifact
-          path: ${{ inputs.tf_workspace }}
 
       - name: Create Apply Run
         uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
