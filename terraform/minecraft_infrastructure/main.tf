@@ -78,10 +78,10 @@ module "ec2_instance" {
 // Set-up Ec2 Pre-reqs
 locals {
   ec2_scripts = {
-    helper_functions            = "${path.module}/../../scripts/helper_functions.sh"
-    ec2_install                 = "${path.module}/../../scripts/ec2_install.sh"
-    prepare_ec2_env             = "${path.module}/../../scripts/prepare_ec2_env.sh"
-    post_mc_server_shutdown     = "${path.module}/../../scripts/post_mc_server_shutdown.sh"
+    helper_functions            = "./scripts/helper_functions.sh"
+    ec2_install                 = "./scripts/ec2_install.sh"
+    prepare_ec2_env             = "./scripts/prepare_ec2_env.sh"
+    post_mc_server_shutdown     = "./scripts/post_mc_server_shutdown.sh"
   }
 }
 
