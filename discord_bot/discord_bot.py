@@ -83,8 +83,9 @@ async def start(context):
         await context.send(f"starting minecraft server: {response.json()}")
     except Exception as e:
         print(str(e))
-        await context.send(f"starting minecraft server: \n{e}")
+        await context.send(f"Error: \n{e}")
 
+# Check Server Status
 @bot.command(name='status')
 async def get_server_status(context):
     try:
@@ -97,9 +98,19 @@ async def get_server_status(context):
         await context.send(f"server status: {last_status}")
     except Exception as e:
         print(str(e))
-        await context.send(f"server status: \n{e}")
+        await context.send(f"Error: \n{e}")
 
-
+# stop minecraft server
+@bot.command()
+async def stop(context):
+    global file_path
+    try:
+        data = { "command": "stop" }
+        response = send_to_api(data)
+        await context.send(f"Stopping Minecraft server: {response}")
+    except Exception as e:
+        print(str(e))
+        await context.send(f"Error: \n{e}")
     
 
 # Start the discord bot
