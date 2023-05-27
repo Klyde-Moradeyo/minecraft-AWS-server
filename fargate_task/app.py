@@ -19,18 +19,20 @@ logger.setLevel(logging.INFO)
 #                           Functions                                #
 ######################################################################
 # Fetch the SSH key from the Parameter Store
-def get_git_ssh_key(param_name):
+def get_ssm_param(param_name):
     ssm_client = boto3.client("ssm")
 
     param = ssm_client.get_parameter(Name=param_name, WithDecryption=True)
-    ssh_key = param["Parameter"]["Value"]
-
-    with tempfile.NamedTemporaryFile(mode='w', delete=False) as ssh_key_file:
-        ssh_key_file.write(ssh_key.strip())
-        ssh_key_file.flush() # Ensure any buffered data is written to the file
-        ssh_key_dir = ssh_key_file.name
+    contents = param["Parameter"]["Value"]
         
-    return ssh_key_dir
+    return contents
+
+def write_to_tmp_file(content):
+    with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
+        temp_file.write(content.strip())
+        temp_file.flush() # Ensure any buffered data is written to the file
+        dir = temp_file.name
+    return dir
 
 def create_private_key(file_name, directory):
     # Generate an RSA key pair
@@ -70,7 +72,7 @@ def create_private_key(file_name, directory):
 def git_clone(repo_url, dir, branch, ssh_key):
     # Set the SSH key environment variable and disable host key checking
     custom_ssh_env = os.environ.copy()
-    custom_ssh_env["GIT_SSH_COMMAND"] = f"ssh -i {ssh_key} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+    custom_ssh_env["GIT_SSH_COMMAND"] = f"ssh -v -i {ssh_key} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
     
     try:
         repo = Repo.clone_from(repo_url, dir, branch=branch, env=custom_ssh_env)
@@ -87,7 +89,7 @@ def git_commit(repo, commit_message, author_name, author_email):
 def git_push(repo, ssh_key, remote_name="origin", branch="main"):
     # Set the SSH key environment variable and disable host key checking
     custom_ssh_env = os.environ.copy()
-    custom_ssh_env["GIT_SSH_COMMAND"] = f"ssh -i -v {ssh_key} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+    custom_ssh_env["GIT_SSH_COMMAND"] = f"ssh -v -i {ssh_key} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
     
     remote = repo.remote(remote_name)
 
@@ -101,7 +103,7 @@ def git_push(repo, ssh_key, remote_name="origin", branch="main"):
 #     Terraform Functions      #
 ################################
 def terraform_init(tf_obj):
-    return_code, stdout, stderr = tf_obj.init(capture_output=True)
+    return_code, stdout, stderr = tf_obj.init(capture_output=True, reconfigure=False)
 
     if return_code != 0:
         raise Exception(f"Terraform init failed:\n{stderr}")
@@ -128,15 +130,16 @@ def terraform_destroy(tf_obj):
 #                       Server Handler                               #
 ######################################################################
 def server_handler(command):
-    # SSH Key name from system manager parameter store
-    ssh_key_name = "dark-mango-bot-private-key" 
+    
+    ssh_key = get_ssm_param("dark-mango-bot-private-key") # SSH Key name from system manager parameter store
+    tf_api_key = get_ssm_param("terraform-cloud-user-api") # terraform cloud api keyget_ssm_param(ssh_key_name))
 
     # Repo containing terraform manifests and scripts
     tf_manifest_repo = { 
                         "name": "tf_manifests",
                         "url": "git@github.com:Klyde-Moradeyo/minecraft-AWS-server.git", 
                         "branch": "main",
-                        "ssh_key": f"{get_git_ssh_key(ssh_key_name)}",
+                        "ssh_key": f"{write_to_tmp_file(ssh_key)}",
                         }
     
     tf_manifest_paths = {
@@ -153,27 +156,29 @@ def server_handler(command):
                         "name": "miscellaneous",
                         "url": "git@github.com:Klyde-Moradeyo/miscellaneous.git", 
                         "branch": "main",
-                        "ssh_key": f"{get_git_ssh_key(ssh_key_name)}"
+                        "ssh_key": f"{write_to_tmp_file(ssh_key)}"
                         }
     
     miscellaneous_paths = { 
                         "none": None,
                         }
-    print(tf_manifest_repo["ssh_key"])
+    
+    # print(tf_manifest_repo["ssh_key"])
     git_clone(tf_manifest_repo["url"], tf_manifest_repo["name"], tf_manifest_repo["branch"], tf_manifest_repo["ssh_key"])
     git_clone(miscellaneous_repo["url"], miscellaneous_repo["name"], miscellaneous_repo["branch"], miscellaneous_repo["ssh_key"])
 
     # Create a Terraform object in minecraft_infrastrucutre dir 
     tf = Terraform(working_dir=tf_manifest_paths["tf_mc_infra_manifests"])
+    os.environ['TF_TOKEN_app_terraform_io'] = tf_api_key
     
     if command == "start":
-        create_private_key("terraform_key.pem", tf_manifest_repo["tf_private_key_folder"])
+        create_private_key("terraform_key.pem", tf_manifest_paths["tf_private_key_folder"])
         terraform_init(tf)
         print("x is positive")
     elif command == "stop":
         terraform_init(tf)
     else:
-        print("err")
+        print("error command not found")
         
 if __name__ == "__main__":
     server_handler(os.environ["BOT_COMMAND"])
