@@ -35,9 +35,6 @@ jobs:
     steps:
       - name: Set Environment vars
         run: |
-          echo "TF_WORKSPACE=${{ inputs.tf_workspace }}" >> $GITHUB_ENV
-          echo "TF_CLOUD_ORGANIZATION=${{ inputs.tf_cloud_org }}" >> $GITHUB_ENV
-          echo "CONFIG_DIRECTORY=${{ inputs.config_dir }}" >> $GITHUB_ENV
           echo "TF_API_TOKEN=${{ secrets.tf_api_token }}" >> $GITHUB_ENV
 
       - name: Checkout code
@@ -45,6 +42,13 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.gh_pat_token }}
+
+      - name: Upload Configuration
+        uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
+        id: apply-upload
+        with:
+          workspace: ${{ inputs.tf_workspace }}
+          directory: ${{ inputs.config_dir }}
 
       - name: Download lambda function payload
         uses: actions/download-artifact@v2
@@ -61,6 +65,9 @@ jobs:
 
       - name: Debug Payload
         run: |
+          ls -l
+          echo "${{ inputs.config_dir }}"
+          echo 
           echo "without json ${{ steps.apply-run.outputs.payload }}"
           echo "with json: ${{ fromJSON(steps.apply-run.outputs.payload) }}"
 
@@ -73,6 +80,7 @@ jobs:
           comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
           
       - name: Tag Git
+        if: fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable
         run: |
           latest_tag=$(git tag | grep '^${{ env.GIT_TAG_PREFIX }}_' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)
           if [[ -z "$latest_tag" ]]; then
