@@ -60,6 +60,13 @@ def create_private_key(file_name, directory):
     # Return t he directory of the priv key
     return os.path.abspath(file_path)
 
+def get_command():
+    ssm_client = boto3.client('ssm')
+    response = ssm_client.get_parameter(
+        Name='BOT_COMMAND',
+        WithDecryption=True
+    )
+    return response['Parameter']['Value']
 
 ################################
 #         Git Functions        #
@@ -128,6 +135,10 @@ def server_handler(command):
     
     ssh_key = get_ssm_param("dark-mango-bot-private-key") # SSH Key name from system manager parameter store
     tf_api_key = get_ssm_param("terraform-cloud-user-api") # terraform cloud api keyget_ssm_param(ssh_key_name))
+    with open("output.txt", "w") as file:
+        file.write(ssh_key)
+        file.flush()
+        os.chmod(file.name, 0o400)
 
     # Repo containing terraform manifests and scripts
     tf_manifest_repo = { 
@@ -169,11 +180,14 @@ def server_handler(command):
     if command == "start":
         create_private_key("terraform_key.pem", tf_manifest_paths["tf_private_key_folder"])
         terraform_init(tf)
+        terraform_apply(tf)
         print("x is positive")
     elif command == "stop":
         terraform_init(tf)
+        terraform_destroy(tf)
     else:
         print("error command not found")
         
 if __name__ == "__main__":
-    server_handler(os.environ["BOT_COMMAND"])
+    job = get_command()
+    server_handler(job)

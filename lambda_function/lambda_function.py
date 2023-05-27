@@ -12,6 +12,15 @@ class DateTimeEncoder(json.JSONEncoder):
             return o.isoformat()
 
         return super(DateTimeEncoder, self).default(o)
+    
+def send_command(command):
+    ssm_client = boto3.client('ssm')
+    ssm_client.put_parameter(
+        Name='BOT_COMMAND',
+        Value=command,
+        Type='String',
+        Overwrite=True
+    )
 
 
 ######################################################################
@@ -67,6 +76,8 @@ def lambda_handler(event, context):
         command = json.loads(event["body"]).get("command")
         task_arn = json.loads(event["body"]).get("task_arn")
 
+        send_command(command) # sends command to SSM param store
+
         # ECS Fargate Config
         ecs_client = boto3.client("ecs")
         task_definition = "minecraft_task_definition"
@@ -82,10 +93,6 @@ def lambda_handler(event, context):
             }
         }
         environment_variables = [
-            { 
-                "name": "BOT_COMMAND",
-                "value": f"{command}"
-            }, 
             {
                 "name": "task_arn",
                 "value": f"{task_arn}" 
@@ -95,7 +102,7 @@ def lambda_handler(event, context):
                 "value": os.environ["TF_USER_TOKEN"]
             }, 
         ]
-        
+
         if (command == "start"):
             response = create_fargate_container(ecs_client, task_definition, cluster, container_name, network_configuration, environment_variables)
         elif (command == "status"):
