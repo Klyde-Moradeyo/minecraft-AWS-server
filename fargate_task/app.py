@@ -135,10 +135,6 @@ def server_handler(command):
     
     ssh_key = get_ssm_param("dark-mango-bot-private-key") # SSH Key name from system manager parameter store
     tf_api_key = get_ssm_param("terraform-cloud-user-api") # terraform cloud api keyget_ssm_param(ssh_key_name))
-    with open("output.txt", "w") as file:
-        file.write(ssh_key)
-        file.flush()
-        os.chmod(file.name, 0o400)
 
     # Repo containing terraform manifests and scripts
     tf_manifest_repo = { 
