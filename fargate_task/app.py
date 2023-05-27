@@ -24,7 +24,7 @@ def get_ssm_param(param_name):
 
 def write_to_tmp_file(content):
     with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
-        temp_file.write(content.strip())
+        temp_file.write(content)
         temp_file.flush() # Ensure any buffered data is written to the file
         dir = temp_file.name
     return dir
