@@ -4,16 +4,11 @@ import shutil
 import tempfile
 import requests
 import json
-import logging
 from python_terraform import Terraform
 from git import Repo, Actor
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
-
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-
 
 ######################################################################
 #                           Functions                                #
