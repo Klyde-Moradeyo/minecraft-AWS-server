@@ -90,6 +90,10 @@ def lambda_handler(event, context):
                 "name": "task_arn",
                 "value": f"{task_arn}" 
             }, 
+            {
+                "name": "TF_TOKEN_app_terraform_io",
+                "value": os.environ["TF_USER_TOKEN"]
+            }, 
         ]
         
         if (command == "start"):

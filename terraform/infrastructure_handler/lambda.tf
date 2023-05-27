@@ -41,7 +41,7 @@ resource "aws_iam_policy" "ssm_access" {
         Effect   = "Allow"
         Resource = [
           "arn:aws:ssm:*:847399026905:parameter/${var.git_private_key_name}",
-          "arn:aws:ssm:*:847399026905:parameter/${var.discord_token_name}",
+          "arn:aws:ssm:*:847399026905:parameter/${var.tf_api_token}",
         ]
       }
     ]
