@@ -82,7 +82,6 @@ jobs:
           fi
 
       - name: Upload lambda function payload
-        if: inputs.filter == 'true'
         uses: actions/upload-artifact@v2
         with:
           name: lambda-artifact
