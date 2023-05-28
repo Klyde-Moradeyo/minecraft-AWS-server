@@ -1,32 +1,6 @@
 ########################
 #         IAM          #
 ########################
-
-# ECR Pull image
-resource "aws_iam_policy" "ecs_ecr_pull_images" {
-  name   = "ecs_${var.name}_ecr_pull_images"
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = [
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage",
-          "ecr:BatchCheckLayerAvailability"
-        ]
-        Resource = "*"
-        Effect   = "Allow"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "ecs_ecr_pull_images_role_policy" {
-  role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = aws_iam_policy.ecs_ecr_pull_images.arn
-}
-
-
 # Give ecs perms to run its tasks
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "ecs_${var.name}_task_execution_role"
@@ -44,6 +18,31 @@ resource "aws_iam_role" "ecs_task_execution_role" {
       }
     ]
   })
+}
+
+# ECR Pull image
+resource "aws_iam_policy" "ecs_ecr_pull_images" {
+  name   = "ecs_${var.name}_ecr_pull_images"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ecr:GetAuthorizationToken",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ecr:BatchCheckLayerAvailability"
+        ]
+        Resource = "*"
+        Effect   = "Allow"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_ecr_pull_images_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = aws_iam_policy.ecs_ecr_pull_images.arn
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
