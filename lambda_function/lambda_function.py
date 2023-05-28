@@ -16,7 +16,7 @@ class DateTimeEncoder(json.JSONEncoder):
 def send_command(command):
     ssm_client = boto3.client('ssm')
     ssm_client.put_parameter(
-        Name='BOT_COMMAND',
+        Name='/mc_server/BOT_COMMAND',
         Value=command,
         Type='String',
         Overwrite=True
