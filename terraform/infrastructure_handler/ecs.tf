@@ -20,6 +20,13 @@ resource "aws_iam_role" "ecs_task_execution_role" {
   })
 }
 
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+
+  # Attach AWS managed policy to role for necessary ECS task execution permissions
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy" 
+}
+
 # ECR Pull image
 resource "aws_iam_policy" "ecs_ecr_pull_images" {
   name   = "ecs_${var.name}_ecr_pull_images"
@@ -43,13 +50,6 @@ resource "aws_iam_policy" "ecs_ecr_pull_images" {
 resource "aws_iam_role_policy_attachment" "ecs_ecr_pull_images_role_policy" {
   role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = aws_iam_policy.ecs_ecr_pull_images.arn
-}
-
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
-  role       = aws_iam_role.ecs_task_execution_role.name
-
-  # Attach AWS managed policy to role for necessary ECS task execution permissions
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy" 
 }
 
 # Allow Access to EC2
