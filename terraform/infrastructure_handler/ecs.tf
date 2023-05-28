@@ -107,6 +107,32 @@ resource "aws_iam_role_policy_attachment" "ecs_cloudwatch_logs_role_policy" {
   policy_arn = aws_iam_policy.ecs_cloudwatch_logs.arn
 }
 
+# SSM Parameter Access
+resource "aws_iam_policy" "ecs_ssm_access" {
+  name   = "ecs_${var.name}_ssm_access"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ssm:GetParameter"
+        ]
+        Resource = [
+          "arn:aws:ssm:*:847399026905:parameter/BOT_COMMAND",
+          "arn:aws:ssm:*:847399026905:parameter/${var.terraform_token_name}",
+          "arn:aws:ssm:*:847399026905:parameter/${var.git_private_key_name}"
+        ]
+        Effect   = "Allow"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_ssm_access_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = aws_iam_policy.ecs_ssm_access.arn
+}
+
 ########################
 #         ECS          #
 ########################
