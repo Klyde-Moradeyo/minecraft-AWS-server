@@ -3,6 +3,10 @@ name: Reusable CI Lambda Function
 on:
   workflow_call:
     inputs:
+      filter:
+        description: 'Filter'
+        type: string
+        required: true
       tf_workspace:
         description: 'Terraform Workspace Directory'
         type: string
@@ -73,7 +77,7 @@ jobs:
           comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
           
       - name: Tag Git
-        if: fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable
+        if: fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable && inputs.filter == 'true'
         run: |
           latest_tag=$(git tag | grep '^${{ env.GIT_TAG_PREFIX }}_' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)
           if [[ -z "$latest_tag" ]]; then

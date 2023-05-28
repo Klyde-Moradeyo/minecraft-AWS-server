@@ -62,6 +62,7 @@ jobs:
       tf_workspace: "minecraft-infra-handler"
       tf_cloud_org: "mango-dev"
       config_dir: "./terraform/infrastructure_handler"
+      filter: ${{ needs.filter.outputs.terraform }}
     secrets:
       gh_pat_token: ${{ secrets.GH_PAT }}
       tf_api_token: ${{ secrets.TF_API_TOKEN }}
