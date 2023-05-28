@@ -130,7 +130,7 @@ resource "aws_ecs_task_definition" "my_task" {
   [
     {
       "name": "${var.ecr_repo_name}",
-      "image": "${data.aws_caller_identity.aws.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${var.ecr_repo_name}/${var.ecr_image_name}:latest",
+      "image": "${data.aws_caller_identity.aws.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${var.ecr_repo_name}:latest",
       "cpu": ${var.ecs_cpu_limit},
       "memory": ${var.ecs_memory_limit},
       "essential": true,
