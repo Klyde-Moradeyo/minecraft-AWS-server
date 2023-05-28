@@ -44,6 +44,15 @@ resource "aws_iam_policy" "ssm_access" {
           "arn:aws:ssm:*:847399026905:parameter/${var.terraform_token_name}",
           "arn:aws:ssm:*:847399026905:parameter/BOT_COMMAND",
         ]
+      },
+      {
+        Action   = [
+          "ssm:PutParameter",
+        ]
+        Effect   = "Allow"
+        Resource = [
+          "arn:aws:ssm:*:847399026905:parameter/BOT_COMMAND",
+        ]
       }
     ]
   })
