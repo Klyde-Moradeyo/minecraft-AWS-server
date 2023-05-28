@@ -27,7 +27,7 @@ resource "aws_iam_role_policy_attachment" "ecs_ecr_pull_images_role_policy" {
 }
 
 
-# EC
+# Give ecs perms to run its tasks
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "ecs_${var.name}_task_execution_role"
 
@@ -130,7 +130,7 @@ resource "aws_ecs_task_definition" "my_task" {
   [
     {
       "name": "${var.ecr_repo_name}",
-      "image": "${var.ecr_repo_name}/${var.ecr_image_name}:latest",
+      "image": "${data.aws_caller_identity.aws.account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.ecr_repo_name}/${var.ecr_image_name}:latest",
       "cpu": ${var.ecs_cpu_limit},
       "memory": ${var.ecs_memory_limit},
       "essential": true,
