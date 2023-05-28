@@ -26,6 +26,16 @@ def get_ssm_param(param_name):
         
     return contents
 
+def put_ssm_param(param_name, param_value):
+    ssm_client = boto3.client('ssm', region_name='eu-west-2')
+
+    ssm_client.put_parameter(
+        Name=param_name,
+        Value=param_value,
+        Type='SecureString',
+        Overwrite=True
+    )
+
 def write_to_tmp_file(content):
     with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
         temp_file.write(content)
@@ -67,7 +77,7 @@ def create_private_key(file_name, directory):
 def get_command():
     ssm_client = boto3.client('ssm', region_name='eu-west-2')
     response = ssm_client.get_parameter(
-        Name='BOT_COMMAND',
+        Name='/mc_server/BOT_COMMAND',
         WithDecryption=True
     )
     return response['Parameter']['Value']
@@ -174,10 +184,11 @@ def server_handler(command):
 
     # Create a Terraform object in minecraft_infrastrucutre dir 
     tf = Terraform(working_dir=tf_manifest_paths["tf_mc_infra_manifests"])
-    os.environ['TF_TOKEN_app_terraform_io'] = get_ssm_param(tf_api_key)
+    os.environ['TF_TOKEN_app_terraform_io'] = tf_api_key
     
     if command == "start":
-        create_private_key("terraform_key.pem", tf_manifest_paths["tf_private_key_folder"])
+        private_key = create_private_key("terraform_key.pem", tf_manifest_paths["tf_private_key_folder"])
+        put_ssm_param("/mc_server/private_key", private_key)
         terraform_init(tf)
         # terraform_apply(tf)
         print("x is positive")
@@ -188,10 +199,5 @@ def server_handler(command):
         print("error command not found")
         
 if __name__ == "__main__":
-    ssm_client = boto3.client('ssm', region_name='eu-west-2')
-    print(requests.get('http://169.254.170.2/v2/metadata').json())
-    print(f'Container_creds {requests.get("http://169.254.170.2{}".format(os.environ["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]))}')
-    response = ssm_client.get_parameter(Name='/BOT_COMMAND', WithDecryption=True)
-    print(f"response {response}")
     job = get_command()
     server_handler(job)
