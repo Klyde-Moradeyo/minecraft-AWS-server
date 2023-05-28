@@ -15,7 +15,7 @@ from cryptography.hazmat.backends import default_backend
 ######################################################################
 # Fetch the SSH key from the Parameter Store
 def get_ssm_param(param_name):
-    ssm_client = boto3.client("ssm")
+    ssm_client = boto3.client('ssm', region_name='eu-west-2')
 
     param = ssm_client.get_parameter(Name=param_name, WithDecryption=True)
     contents = param["Parameter"]["Value"]
@@ -61,7 +61,7 @@ def create_private_key(file_name, directory):
     return os.path.abspath(file_path)
 
 def get_command():
-    ssm_client = boto3.client('ssm')
+    ssm_client = boto3.client('ssm', region_name='eu-west-2')
     response = ssm_client.get_parameter(
         Name='BOT_COMMAND',
         WithDecryption=True
