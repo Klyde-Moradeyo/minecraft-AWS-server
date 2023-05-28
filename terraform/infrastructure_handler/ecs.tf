@@ -1,6 +1,33 @@
 ########################
 #         IAM          #
 ########################
+
+# ECR Pull image
+resource "aws_iam_policy" "ecs_ecr_pull_images" {
+  name   = "ecs_${var.name}_ecr_pull_images"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ecr:BatchCheckLayerAvailability"
+        ]
+        Resource = "*"
+        Effect   = "Allow"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_ecr_pull_images_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = aws_iam_policy.ecs_ecr_pull_images.arn
+}
+
+
+# EC
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "ecs_${var.name}_task_execution_role"
 
@@ -17,6 +44,13 @@ resource "aws_iam_role" "ecs_task_execution_role" {
       }
     ]
   })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+
+  # Attach AWS managed policy to role for necessary ECS task execution permissions
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy" 
 }
 
 # Allow Access to EC2
@@ -36,6 +70,11 @@ resource "aws_iam_policy" "ecs_ec2_management" {
       }
     ]
   })
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_ec2_management_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = aws_iam_policy.ecs_ec2_management.arn
 }
 
 # Cloud Watch logs
@@ -63,23 +102,10 @@ resource "aws_cloudwatch_log_group" "ecs_log_group" {
   retention_in_days = 1
 }
 
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
-  role       = aws_iam_role.ecs_task_execution_role.name
-
-  # Attach AWS managed policy to role for necessary ECS task execution permissions
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy" 
-}
-
-resource "aws_iam_role_policy_attachment" "ecs_ec2_management_role_policy" {
-  role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = aws_iam_policy.ecs_ec2_management.arn
-}
-
 resource "aws_iam_role_policy_attachment" "ecs_cloudwatch_logs_role_policy" {
   role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = aws_iam_policy.ecs_cloudwatch_logs.arn
 }
-
 
 ########################
 #         ECS          #
