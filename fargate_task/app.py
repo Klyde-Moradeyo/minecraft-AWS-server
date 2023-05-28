@@ -171,16 +171,16 @@ def server_handler(command):
 
     # Create a Terraform object in minecraft_infrastrucutre dir 
     tf = Terraform(working_dir=tf_manifest_paths["tf_mc_infra_manifests"])
-    os.environ['TF_TOKEN_app_terraform_io'] = tf_api_key
+    os.environ['TF_TOKEN_app_terraform_io'] = get_ssm_param(tf_api_key)
     
     if command == "start":
         create_private_key("terraform_key.pem", tf_manifest_paths["tf_private_key_folder"])
         terraform_init(tf)
-        terraform_apply(tf)
+        # terraform_apply(tf)
         print("x is positive")
     elif command == "stop":
         terraform_init(tf)
-        terraform_destroy(tf)
+        # terraform_destroy(tf)
     else:
         print("error command not found")
         
