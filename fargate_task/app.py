@@ -136,8 +136,6 @@ def terraform_destroy(tf_obj):
 #                       Server Handler                               #
 ######################################################################
 def server_handler(command):
-    ssm_client = boto3.client('ssm', region_name='eu-west-2')
-    
     ssh_key = get_ssm_param("dark-mango-bot-private-key") # SSH Key name from system manager parameter store
     tf_api_key = get_ssm_param("terraform-cloud-user-api") # terraform cloud api keyget_ssm_param(ssh_key_name))
 
@@ -190,6 +188,7 @@ def server_handler(command):
         print("error command not found")
         
 if __name__ == "__main__":
+    ssm_client = boto3.client('ssm', region_name='eu-west-2')
     print(requests.get('http://169.254.170.2/v2/metadata').json())
     response = ssm_client.get_parameter(Name='/BOT_COMMAND', WithDecryption=True)
     print(f"response {response}")
