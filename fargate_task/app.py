@@ -190,6 +190,7 @@ def server_handler(command):
 if __name__ == "__main__":
     ssm_client = boto3.client('ssm', region_name='eu-west-2')
     print(requests.get('http://169.254.170.2/v2/metadata').json())
+    print(f'Container_creds {requests.get("http://169.254.170.2{}".format(os.environ["AWS_CONTAINER_CREDENTIALS_RELATIVE_URI"]))}')
     response = ssm_client.get_parameter(Name='/BOT_COMMAND', WithDecryption=True)
     print(f"response {response}")
     job = get_command()
