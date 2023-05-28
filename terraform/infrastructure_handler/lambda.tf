@@ -42,7 +42,7 @@ resource "aws_iam_policy" "ssm_access" {
       #   Resource = [
       #     "arn:aws:ssm:*:847399026905:parameter/${var.git_private_key_name}",
       #     "arn:aws:ssm:*:847399026905:parameter/${var.terraform_token_name}",
-      #     # "arn:aws:ssm:*:847399026905:parameter/BOT_COMMAND",
+      #     # "arn:aws:ssm:*:847399026905:parameter/mc_server/BOT_COMMAND",
       #   ]
       # },
       {
@@ -51,7 +51,7 @@ resource "aws_iam_policy" "ssm_access" {
         ]
         Effect   = "Allow"
         Resource = [
-          "arn:aws:ssm:*:847399026905:parameter/BOT_COMMAND",
+          "arn:aws:ssm:*:847399026905:parameter/mc_server/BOT_COMMAND",
         ]
       }
     ]

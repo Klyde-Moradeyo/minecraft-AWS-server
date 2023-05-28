@@ -117,7 +117,8 @@ resource "aws_iam_policy" "ecs_ssm_access" {
           "ssm:GetParameter"
         ]
         Resource = [
-          "arn:aws:ssm:*:847399026905:parameter/BOT_COMMAND",
+          "arn:aws:ssm:*:847399026905:parameter/mc_server/BOT_COMMAND",
+          "arn:aws:ssm:*:847399026905:parameter/mc_server/private_key",
           "arn:aws:ssm:*:847399026905:parameter/${var.terraform_token_name}",
           "arn:aws:ssm:*:847399026905:parameter/${var.git_private_key_name}"
         ]
