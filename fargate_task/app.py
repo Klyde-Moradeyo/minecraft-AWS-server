@@ -9,6 +9,10 @@ from git import Repo, Actor
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
+import logging
+
+# Enable detailed boto3 logging
+logging.basicConfig(level=logging.DEBUG)
 
 ######################################################################
 #                           Functions                                #
@@ -132,6 +136,12 @@ def terraform_destroy(tf_obj):
 #                       Server Handler                               #
 ######################################################################
 def server_handler(command):
+
+    print(requests.get('http://169.254.170.2/v2/metadata').json())
+
+    ssm_client = boto3.client('ssm', region_name='eu-west-2')
+    response = ssm_client.get_parameter(Name='/BOT_COMMAND', WithDecryption=True)
+    print(f"response {response}")
     
     ssh_key = get_ssm_param("dark-mango-bot-private-key") # SSH Key name from system manager parameter store
     tf_api_key = get_ssm_param("terraform-cloud-user-api") # terraform cloud api keyget_ssm_param(ssh_key_name))
