@@ -170,3 +170,27 @@ resource "aws_ecr_repository" "mc_repository" {
 
   tags = module.label.tags
 }
+
+resource "aws_ecr_lifecycle_policy" "delete_untagged_images" {
+  repository = aws_ecr_repository.mc_repository.name
+
+  policy = <<EOF
+{
+  "rules": [
+    {
+      "rulePriority": 1,
+      "description": "Expire untagged images",
+      "selection": {
+        "tagStatus": "untagged",
+        "countType": "imageCountMoreThan",
+        "countNumber": 0
+      },
+      "action": {
+        "type": "expire"
+      }
+    }
+  ]
+}
+EOF
+}
+
