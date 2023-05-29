@@ -123,6 +123,15 @@ resource "aws_iam_policy" "ecs_ssm_access" {
           "arn:aws:ssm:*:847399026905:parameter/${var.git_private_key_name}"
         ]
         Effect   = "Allow"
+      },
+      {
+        Action   = [
+          "ssm:PutParameter",
+        ]
+        Effect   = "Allow"
+        Resource = [
+          "arn:aws:ssm:*:847399026905:parameter/mc_server/private_key",
+        ]
       }
     ]
   })
