@@ -164,51 +164,35 @@ def server_handler(command):
     tf_api_key = get_ssm_param("terraform-cloud-user-api") # terraform cloud api keyget_ssm_param(ssh_key_name))
 
     # Repo containing terraform manifests and scripts
+    repo_name = "tf_manifests"
     tf_manifest_repo = { 
-                        "name": "tf_manifests",
-                        "url": "git@github.com:Klyde-Moradeyo/minecraft-AWS-server.git", 
-                        "branch": "main",
-                        "ssh_key": f"{write_to_tmp_file(ssh_key)}",
-                        }
+        "name": repo_name,
+        "url": "git@github.com:Klyde-Moradeyo/minecraft-AWS-server.git", 
+        "branch": "main",
+        "ssh_key": f"{write_to_tmp_file(ssh_key)}",
+        "paths": {
+            "tf_mc_infra_manifests": os.path.join(repo_name, "terraform", "minecraft_infrastructure"),
+            "tf_private_key_folder": os.path.join(repo_name, "terraform", "minecraft_infrastructure", "private-key"),
+            "tf_mc_infra_scripts": os.path.join(repo_name, "scripts")
+        }
+    }
     
-    tf_manifest_paths = {
-                        "tf_mc_infra_manifests": os.path.join(tf_manifest_repo["name"], "terraform", "minecraft_infrastructure"),
-                        "tf_private_key_folder": os.path.join(tf_manifest_repo["name"], "terraform", "minecraft_infrastructure", "private-key"),
-                        "tf_mc_infra_scripts": os.path.join(tf_manifest_repo["name"], "scripts")
-                        }
-                          
-    
-    # Repo contains private key of minceraft ec2 instnace
-    # Warn: This is not best practice but due to cost and time it is better to store it here
-    #       Not to big of an issue in this case as the keys a short lived
-    miscellaneous_repo = { 
-                        "name": "miscellaneous",
-                        "url": "git@github.com:Klyde-Moradeyo/miscellaneous.git", 
-                        "branch": "main",
-                        "ssh_key": f"{write_to_tmp_file(ssh_key)}"
-                        }
-    
-    miscellaneous_paths = { 
-                        "none": None,
-                        }
-    
-    # print(tf_manifest_repo["ssh_key"])
-    git_clone(tf_manifest_repo["url"], tf_manifest_repo["name"], tf_manifest_repo["branch"], tf_manifest_repo["ssh_key"])
-    git_clone(miscellaneous_repo["url"], miscellaneous_repo["name"], miscellaneous_repo["branch"], miscellaneous_repo["ssh_key"])
+    # Git Clone and copy files to minecraft_infra directory
+    git_clone(tf_manifest_repo["url"], repo_name, tf_manifest_repo["branch"], tf_manifest_repo["ssh_key"])
+    shutil.copytree(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "scripts")) # Copy tf_mc_infra_scripts folder to tf_mc_infra_manifests folder
 
-    # Create a Terraform object in minecraft_infrastrucutre dir 
     os.environ['TF_TOKEN_app_terraform_io'] = tf_api_key
-    tf = Terraform(working_dir=tf_manifest_paths["tf_mc_infra_manifests"])
+    tf = Terraform(working_dir=tf_manifest_repo["paths"]["tf_mc_infra_manifests"]) # Create a Terraform object in minecraft_infrastrucutre dir 
     
     if command == "start":
         private_key = create_ec2_key_pair("terraform-key")
         put_ssm_param("/mc_server/private_key", private_key)
         terraform_init(tf)
-        # terraform_apply(tf)
+        terraform_apply(tf)
         print("x is positive")
     elif command == "stop":
         terraform_init(tf)
-        # terraform_destroy(tf)
+        terraform_destroy(tf)
     else:
         print("error command not found")
         
