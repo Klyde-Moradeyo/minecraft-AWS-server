@@ -43,7 +43,7 @@ def write_to_tmp_file(content):
         dir = temp_file.name
     return dir
 
-def create_private_key(file_name, directory):
+def create_private_key():
     # Generate an RSA key pair
     # - public_exponent: The public exponent (e) is a value used in the RSA algorithm, usually set to 65537
     # - key_size: The size of the key in bits, here set to 2048 bits
@@ -72,7 +72,6 @@ def create_private_key(file_name, directory):
     # os.chmod(file_path, 0o400)
     # os.path.abspath(file_path) # private key abosolute dir
 
-    # Return t he directory of the priv key
     return private_key_pem
 
 def get_command():
@@ -184,11 +183,11 @@ def server_handler(command):
     git_clone(miscellaneous_repo["url"], miscellaneous_repo["name"], miscellaneous_repo["branch"], miscellaneous_repo["ssh_key"])
 
     # Create a Terraform object in minecraft_infrastrucutre dir 
-    tf = Terraform(working_dir=tf_manifest_paths["tf_mc_infra_manifests"])
     os.environ['TF_TOKEN_app_terraform_io'] = tf_api_key
+    tf = Terraform(working_dir=tf_manifest_paths["tf_mc_infra_manifests"])
     
     if command == "start":
-        private_key = create_private_key("terraform_key.pem", tf_manifest_paths["tf_private_key_folder"])
+        private_key = create_private_key()
         put_ssm_param("/mc_server/private_key", private_key)
         terraform_init(tf)
         # terraform_apply(tf)
