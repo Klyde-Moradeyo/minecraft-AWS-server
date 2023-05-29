@@ -6,5 +6,6 @@ resource "aws_ssm_parameter" "mc_server_private_key" {
 }
 
 data "aws_ssm_parameter" "private_key" {
-  name = "/mc_server/private_key"
+  depends_on = [ aws_ssm_parameter.mc_server_private_key ]
+  name = aws_ssm_parameter.mc_server_private_key.name
 }
