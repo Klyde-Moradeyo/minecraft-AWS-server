@@ -4,7 +4,3 @@ resource "aws_ssm_parameter" "mc_server_private_key" {
   value = "null"
   key_id = "alias/aws/ssm" # Default key for Parameter Store
 }
-
-data "aws_ssm_parameter" "private_key" {
-  name = aws_ssm_parameter.mc_server_private_key.name
-}

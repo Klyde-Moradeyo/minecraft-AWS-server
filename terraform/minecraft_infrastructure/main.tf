@@ -17,6 +17,11 @@ module "label" {
 ########################
 #     EC2 Instance     #
 ########################
+# EC2 private key
+data "aws_ssm_parameter" "private_key" {
+  name = "/mc_server/private_key"
+}
+
 // Get latest Ubuntu 22.04AMI
 data "aws_ami" "ubuntu" {
   most_recent      = true
@@ -97,7 +102,7 @@ resource "null_resource" "copy_scripts" {
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      private_key = file("./private-key/terraform-key.pem")
+      private_key = data.aws_ssm_parameter.private_key.value
       host        = data.aws_eip.mc_public_ip.public_ip
     }
   }
@@ -122,7 +127,7 @@ resource "null_resource" "setup_ec2" {
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      private_key = "${file("./private-key/terraform-key.pem")}"
+      private_key = data.aws_ssm_parameter.private_key.value
       host        = data.aws_eip.mc_public_ip.public_ip
     }
   } 
