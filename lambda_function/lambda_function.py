@@ -103,6 +103,9 @@ def lambda_handler(event, context):
             }, 
         ]
 
+        # Need to add check for if fargate task is running.
+        # if it is running then we cannot send a command to ssm param store
+
         if (command == "start"):
             response = create_fargate_container(ecs_client, task_definition, cluster, container_name, network_configuration, environment_variables)
         elif (command == "status"):

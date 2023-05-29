@@ -64,6 +64,8 @@ def create_private_key():
         encryption_algorithm=serialization.NoEncryption()
     )
 
+    private_key_str = private_key_pem.decode('utf-8')
+
     # Save the serialized private key to a file named "private_key.pem" with write binary mode
     # file_path = os.path.join(directory, file_name)
     # with open(file_path, "wb") as f:
@@ -72,7 +74,7 @@ def create_private_key():
     # os.chmod(file_path, 0o400)
     # os.path.abspath(file_path) # private key abosolute dir
 
-    return private_key_pem
+    return private_key_str
 
 def get_command():
     ssm_client = boto3.client('ssm', region_name='eu-west-2')
