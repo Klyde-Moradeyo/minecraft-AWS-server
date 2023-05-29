@@ -74,11 +74,12 @@ jobs:
         id: apply
         with:
           run: ${{ steps.apply-run.outputs.run_id }}
-          comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
+          comment: "Apply Run from GitHub Actions CI ${{ github.event.head_commit.message }} | ${{ github.sha }}"
           
       - name: Tag Git
-        if: fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable && inputs.filter == 'true'
+        if: fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable
         run: |
+          echo "filter: ${{ inputs.filter }}"
           latest_tag=$(git tag | grep '^${{ env.GIT_TAG_PREFIX }}_' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)
           if [[ -z "$latest_tag" ]]; then
             echo "No tags found starting with ${{ env.GIT_TAG_PREFIX }}_"
