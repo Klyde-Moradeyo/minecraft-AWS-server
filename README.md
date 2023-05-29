@@ -100,3 +100,4 @@ The Minecraft server has the following enhancements:
 
 ## Notes
 - To get cross workspace access in terraform cloud, you need to give a workspace permision to view another.
+- split up fargate execution perms and runtime perms
