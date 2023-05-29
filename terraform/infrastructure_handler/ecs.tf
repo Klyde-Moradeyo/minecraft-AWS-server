@@ -67,6 +67,7 @@ resource "aws_iam_policy" "ecs_ec2_management" {
           "ec2:CreateKeyPair",
           "ec2:DeleteKeyPair",
           "ec2:DescribeKeyPairs",
+          "ec2:ImportKeyPair"
         ]
         Resource = [
           "arn:aws:ec2:*:*:instance/*",
