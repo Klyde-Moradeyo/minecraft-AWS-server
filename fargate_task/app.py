@@ -43,7 +43,7 @@ def write_to_tmp_file(content):
         dir = temp_file.name
     return dir
 
-def create_private_key():
+def create_ec2_key_pair(key_name):
     # Generate an RSA key pair
     # - public_exponent: The public exponent (e) is a value used in the RSA algorithm, usually set to 65537
     # - key_size: The size of the key in bits, here set to 2048 bits
@@ -64,15 +64,27 @@ def create_private_key():
         encryption_algorithm=serialization.NoEncryption()
     )
 
+    # Get the public key and serialize it in OpenSSH format
+    public_key = private_key.public_key()
+    public_key_ssh = public_key.public_bytes(
+        encoding=serialization.Encoding.OpenSSH,
+        format=serialization.PublicFormat.OpenSSH
+    )
+
     private_key_str = private_key_pem.decode('utf-8')
+    public_key_str = public_key_ssh.decode('utf-8')
 
-    # Save the serialized private key to a file named "private_key.pem" with write binary mode
-    # file_path = os.path.join(directory, file_name)
-    # with open(file_path, "wb") as f:
-    #     f.write(private_key_pem)
+    # Create a new key pair on AWS
+    ec2_client = boto3.client('ec2', region_name='eu-west-2')
 
-    # os.chmod(file_path, 0o400)
-    # os.path.abspath(file_path) # private key abosolute dir
+    try:
+        # Delete the existing key pair
+        ec2_client.delete_key_pair(KeyName=key_name)
+    except:
+        pass  # If the key pair doesn't exist, ignore the error
+
+    # Create a new key pair
+    response = ec2_client.import_key_pair(KeyName=key_name, PublicKeyMaterial=public_key_str)
 
     return private_key_str
 
@@ -189,7 +201,7 @@ def server_handler(command):
     tf = Terraform(working_dir=tf_manifest_paths["tf_mc_infra_manifests"])
     
     if command == "start":
-        private_key = create_private_key()
+        private_key = create_ec2_key_pair("terraform-key")
         put_ssm_param("/mc_server/private_key", private_key)
         terraform_init(tf)
         # terraform_apply(tf)

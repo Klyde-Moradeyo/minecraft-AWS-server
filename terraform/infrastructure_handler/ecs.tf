@@ -60,16 +60,24 @@ resource "aws_iam_policy" "ecs_ec2_management" {
     Statement = [
       {
         Action = [
-          "ec2:Create*",
-          "ec2:Delete*",
-          "ec2:Modify*"
+          "ec2:RunInstances",
+          "ec2:StopInstances",
+          "ec2:TerminateInstances",
+          "ec2:DescribeInstances",
+          "ec2:CreateKeyPair",
+          "ec2:DeleteKeyPair",
+          "ec2:DescribeKeyPairs",
         ]
-        Resource = "*"
+        Resource = [
+          "arn:aws:ec2:*:*:instance/*",
+          "arn:aws:ec2:*:*:key-pair/*",
+        ]
         Effect   = "Allow"
       }
     ]
   })
 }
+
 
 resource "aws_iam_role_policy_attachment" "ecs_ec2_management_role_policy" {
   role       = aws_iam_role.ecs_task_execution_role.name
