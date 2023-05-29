@@ -65,14 +65,15 @@ def create_private_key(file_name, directory):
     )
 
     # Save the serialized private key to a file named "private_key.pem" with write binary mode
-    file_path = os.path.join(directory, file_name)
-    with open(file_path, "wb") as f:
-        f.write(private_key_pem)
+    # file_path = os.path.join(directory, file_name)
+    # with open(file_path, "wb") as f:
+    #     f.write(private_key_pem)
 
-    os.chmod(file_path, 0o400)
+    # os.chmod(file_path, 0o400)
+    # os.path.abspath(file_path) # private key abosolute dir
 
     # Return t he directory of the priv key
-    return os.path.abspath(file_path)
+    return private_key_pem
 
 def get_command():
     ssm_client = boto3.client('ssm', region_name='eu-west-2')
