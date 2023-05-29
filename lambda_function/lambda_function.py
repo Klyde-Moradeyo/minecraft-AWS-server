@@ -22,7 +22,6 @@ def send_command(command):
         Overwrite=True
     )
 
-
 ######################################################################
 #                           Fargate                                  #
 ######################################################################
@@ -76,8 +75,6 @@ def lambda_handler(event, context):
         command = json.loads(event["body"]).get("command")
         task_arn = json.loads(event["body"]).get("task_arn")
 
-        send_command(command) # sends command to SSM param store
-
         # ECS Fargate Config
         ecs_client = boto3.client("ecs")
         task_definition = "minecraft_task_definition"
@@ -106,7 +103,8 @@ def lambda_handler(event, context):
         # Need to add check for if fargate task is running.
         # if it is running then we cannot send a command to ssm param store
 
-        if (command == "start"):
+        if (command == "start" or command == "stop"):
+            send_command(command) # sends command to SSM param store
             response = create_fargate_container(ecs_client, task_definition, cluster, container_name, network_configuration, environment_variables)
         elif (command == "status"):
             # Check if task_arn is not null
