@@ -4,12 +4,12 @@ import shutil
 import tempfile
 import requests
 import json
-from python_terraform import Terraform
 from git import Repo, Actor
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
 import logging
+import subprocess
 
 # Enable detailed boto3 logging
 logging.basicConfig(level=logging.DEBUG)
@@ -132,29 +132,33 @@ def git_push(repo, ssh_key, remote_name="origin", branch="main"):
 ################################
 #     Terraform Functions      #
 ################################
-def terraform_init(tf_obj):
-    return_code, stdout, stderr = tf_obj.init(capture_output=True, reconfigure=False)
+class TerraformError(Exception):
+    pass
 
-    if return_code != 0:
-        raise Exception(f"Terraform init failed:\n{stderr}")
+def run_terraform_command(directory, command):
+    # Check if directory exists
+    if not os.path.exists(directory):
+        raise ValueError(f"Directory {directory} does not exist.")
+    if not os.path.isdir(directory):
+        raise ValueError(f"{directory} is not a directory.")
+    
+    # Check Terraform is installed
+    try:
+        subprocess.run(["terraform", "-v"], check=True, capture_output=True)
+    except subprocess.CalledProcessError:
+        raise TerraformError("Terraform is not installed or not in PATH.")
+    
+    # Prepare the command
+    terraform_command = ["terraform", command]
+    if command in ["apply", "destroy"]:
+        terraform_command.append("-auto-approve")
 
-    return stdout
-
-def terraform_apply(tf_obj):
-    return_code, stdout, stderr = tf_obj.apply(skip_plan=True, capture_output=True, auto_approve=True)
-
-    if return_code != 0:
-        raise Exception(f"Terraform apply failed:\n{stderr}")
-
-    return stdout
-
-def terraform_destroy(tf_obj):
-    return_code, stdout, stderr = tf_obj.destroy(capture_output=True, auto_approve=True)
-
-    if return_code != 0:
-        raise Exception(f"Terraform destroy failed:\n{stderr}")
-
-    return stdout
+    # Run the terraform command
+    try:
+        result = subprocess.run(terraform_command, cwd=directory, check=True, capture_output=True, text=True)
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        raise TerraformError(f"Error running terraform {command}: {e.stderr}")
 
 ######################################################################
 #                       Server Handler                               #
@@ -180,21 +184,22 @@ def server_handler(command):
     # Git Clone and copy files to minecraft_infra directory
     git_clone(tf_manifest_repo["url"], repo_name, tf_manifest_repo["branch"], tf_manifest_repo["ssh_key"])
     shutil.copytree(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "scripts")) # Copy tf_mc_infra_scripts folder to tf_mc_infra_manifests folder
-
-    os.environ['TF_TOKEN_app_terraform_io'] = tf_api_key
-    tf = Terraform(working_dir=tf_manifest_repo["paths"]["tf_mc_infra_manifests"]) # Create a Terraform object in minecraft_infrastrucutre dir 
     
+    os.environ['TF_TOKEN_app_terraform_io'] = tf_api_key
+
     if command == "start":
         private_key = create_ec2_key_pair("terraform-key")
         put_ssm_param("/mc_server/private_key", private_key)
-        terraform_init(tf)
-        terraform_apply(tf)
-        print("x is positive")
+        run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "init")
+        run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "apply")
+
     elif command == "stop":
-        terraform_init(tf)
-        terraform_destroy(tf)
+        run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "init")
+        run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "destroy")
     else:
         print("error command not found")
+    
+    print("Server Handler Completed Successfully")
         
 if __name__ == "__main__":
     job = get_command()
