@@ -8,7 +8,7 @@
 #   https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
 set -e
-source /home/ubuntu/setup/scripts/helper_functions.sh
+source helper_functions.sh
 
 # Trap the ERR signal
 trap 'error_handler' ERR
