@@ -4,7 +4,8 @@
 # Use: Post "terraform destroy" script to be performed on ec2 instance
 
 set -e
-source $(pwd)/helper_functions.sh
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source $script_dir/helper_functions.sh
 
 # Trap the ERR signal
 trap 'error_handler' ERR
