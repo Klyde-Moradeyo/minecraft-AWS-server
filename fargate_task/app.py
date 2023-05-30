@@ -155,7 +155,7 @@ def run_terraform_command(directory, command):
 
     # Run the terraform command
     try:
-        result = subprocess.run(terraform_command, cwd=directory, check=True, capture_output=True, text=True)
+        result = subprocess.run(terraform_command, cwd=directory, check=True, capture_output=False, text=True)
         return result.stdout
     except subprocess.CalledProcessError as e:
         raise TerraformError(f"Error running terraform {command}: {e.stderr}")
