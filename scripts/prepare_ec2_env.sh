@@ -4,7 +4,7 @@
 # Use: Sets up workspace
 
 set -e
-source helper_functions.sh
+source $(pwd)/helper_functions.sh
 
 # Trap the ERR signal
 trap 'error_handler' ERR
