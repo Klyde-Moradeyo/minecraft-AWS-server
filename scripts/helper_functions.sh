@@ -17,7 +17,6 @@ function get_current_date() {
     echo "-----------------------------------------------------------------"
 }
 
-
 function calculate_runtime() {
     start=$1
     finish=$2
@@ -29,4 +28,9 @@ function calculate_runtime() {
     echo "-----------------------------------------------------------------"
     echo "Execution time: ${minutes}m ${seconds}s"
     echo "-----------------------------------------------------------------"
+}
+
+function error_handler {
+    # Print an error message
+    echo "An error occurred while executing the script." >&2
 }
