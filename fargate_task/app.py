@@ -4,14 +4,15 @@ import shutil
 import tempfile
 import requests
 import json
-from git import Repo, Actor
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.backends import default_backend
 import logging
 import subprocess
 import sys
 import stat
+import paramiko
+from git import Repo, Actor
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.backends import default_backend
 
 # Enable detailed boto3 logging
 logging.basicConfig(level=logging.DEBUG)
