@@ -9,6 +9,8 @@ import subprocess
 import sys
 import stat
 import paramiko
+from paramiko import SSHClient
+from scp import SCPClient
 from git import Repo, Actor
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -130,6 +132,73 @@ def run_bash_script(script_path, log_file_path, *script_args):
     except Exception as e:
         logging.error(f"Failed to execute script {script_path}: {str(e)}")
         sys.exit(1)
+
+################################
+#            SSH               #
+################################   
+def add_host_key(hostname):
+    try:
+        # Run the ssh-keyscan command
+        result = subprocess.run(['ssh-keyscan', hostname], capture_output=True, text=True, check=True)
+
+        # Write the output to the known_hosts file
+        with open(os.path.expanduser('~/.ssh/known_hosts'), 'a') as file:
+            file.write(result.stdout)
+
+    except subprocess.CalledProcessError as e:
+        print(f"ssh-keyscan failed: {e.stderr}")
+
+def create_ssh_client(ip, username, key_file):
+    add_host_key(ip) # add host ip
+    ssh = SSHClient() # Create an SSH client
+    ssh.set_missing_host_key_policy(paramiko.WarningPolicy())  # WarningPolicy
+
+    # Connect to the server
+    try:
+        ssh.connect(ip, username=username, key_filename=key_file)
+    except Exception as e:
+        logging.error(f"Failed to connect to {ip}: {str(e)}")
+        sys.exit(1)
+
+    return ssh
+
+def scp_to_ec2(ip, username, key_file, local_path, remote_path):
+    ssh = create_ssh_client(ip, username, key_file)
+    if ssh is None:
+        return
+    
+    # Ensure the remote directory exists
+    remote_dir = os.path.dirname(remote_path)
+    stdin, stdout, stderr = ssh.exec_command(f'mkdir -p {remote_dir}')
+    stdout.channel.recv_exit_status()  # Wait for the command to finish
+
+    try:
+        # SCPCLient takes a paramiko transport as its argument
+        with SCPClient(ssh.get_transport()) as scp:
+            scp.put(local_path, remote_path)  # Copy from local to remote
+    except Exception as e:
+        logging.error(f"Failed to copy file to {ip}: {str(e)}")
+        sys.exit(1)
+    
+    ssh.close()
+
+def ssh_and_run_script(ip, username, key_file, script_path, log_file_path):
+    ssh = create_ssh_client(ip, username, key_file)
+    if ssh is None:
+        return
+
+    try:
+        # Run the bash script and redirect its output to a log file
+        stdin, stdout, stderr = ssh.exec_command(f"bash {script_path} > {log_file_path}")
+        
+        # Log the output of the script
+        logging.info(stdout.read().decode())
+        logging.error(stderr.read().decode())
+    except Exception as e:
+        logging.error(f"Failed to execute script on {ip}: {str(e)}")
+        sys.exit(1)
+
+    ssh.close()
 
 ################################
 #         Git Functions        #
