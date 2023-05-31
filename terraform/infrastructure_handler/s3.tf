@@ -69,5 +69,5 @@ resource "aws_s3_bucket" "log_bucket" {
 resource "aws_s3_bucket_acl" "log_bucket_acl" {
   depends_on = [aws_s3_bucket.log_bucket]
   bucket = aws_s3_bucket.log_bucket.id
-  acl    = "log-delivery-write"
+  acl    = "private"
 }
