@@ -214,24 +214,6 @@ def git_clone(repo_url, dir, branch, ssh_key):
         raise Exception(f"Git clone failed:\n{str(e)}")
     
     return repo
-
-def git_commit(repo, commit_message, author_name, author_email):
-    author = Actor(author_name, author_email)
-    repo.git.add(update=True)  # Stage all changes
-    repo.index.commit(commit_message, author=author)
-
-def git_push(repo, ssh_key, remote_name="origin", branch="main"):
-    # Set the SSH key environment variable and disable host key checking
-    custom_ssh_env = os.environ.copy()
-    custom_ssh_env["GIT_SSH_COMMAND"] = f"ssh -v -i {ssh_key} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
-    
-    remote = repo.remote(remote_name)
-
-    try:
-        with repo.git.custom_environment(GIT_SSH_COMMAND=custom_ssh_env["GIT_SSH_COMMAND"]):
-            remote.push(branch)
-    except Exception as e:
-        raise Exception(f"Git push failed:\n{str(e)}")
     
 ################################
 #     Terraform Functions      #
