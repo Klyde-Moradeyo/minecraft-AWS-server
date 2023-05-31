@@ -15,6 +15,7 @@ locals {
 
 ### Minecraft Server Bucket ###
 resource "aws_s3_bucket" "mc_s3" {
+  depends_on = [ aws_s3_bucket.log_bucket ]
   bucket = local.mc_bucket_name
 #   acl    = "private"
 
