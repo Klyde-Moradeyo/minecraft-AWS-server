@@ -41,10 +41,11 @@ resource "aws_s3_bucket_public_access_block" "mc_s3_public_access_block" {
 resource "aws_s3_bucket_versioning" "mc_s3" {
   bucket = local.mc_bucket_name
 
-  versioning {
-    enabled = false
+  versioning_configuration {
+    status    = "Suspended"
   }
 }
+
 
 resource "aws_s3_bucket_ownership_controls" "mc_s3_ownership_control" {
   bucket = aws_s3_bucket.mc_s3.id
