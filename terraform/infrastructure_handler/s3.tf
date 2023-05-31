@@ -17,7 +17,6 @@ locals {
 resource "aws_s3_bucket" "mc_s3" {
   depends_on = [ aws_s3_bucket.log_bucket ]
   bucket = local.mc_bucket_name
-#   acl    = "private"
 
   force_destroy = var.bucket_force_destroy
 
@@ -64,11 +63,11 @@ resource "aws_s3_bucket_acl" "mc_s3_acl" {
 
 ### S3 Log Bucket ###
 resource "aws_s3_bucket" "log_bucket" {
-  bucket = "${var.name}-logs-${random_string.unique_bucket_suffix.result}"
+  bucket = local.log_bucket_name
 }
 
 resource "aws_s3_bucket_acl" "log_bucket_acl" {
-  depends_on = [aws_s3_bucket.log_bucket]
+  depends_on = [ aws_s3_bucket.log_bucket ]
   bucket = aws_s3_bucket.log_bucket.id
-  acl    = "private"
+  acl    = "log-delivery-write"
 }
