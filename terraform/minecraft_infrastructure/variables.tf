@@ -83,16 +83,6 @@ variable "allowed_cidrs" {
   default     = "0.0.0.0/0" // https://cidr.xyz/
 }
 
-
-########################
-#       S3 Bucket      #
-########################
-variable "bucket_force_destroy" {
-  description = "Boolean that indicates all objects should be deleted from the bucket"
-  type        = bool
-  default     = false
-}
-
 ########################
 #        VPC           #
 ########################

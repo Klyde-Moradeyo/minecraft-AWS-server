@@ -26,6 +26,29 @@ output "mc_server_eip_allocation_id" {
 }
 
 ########################
+#       S3 Bucket      #
+########################
+output "mc_s3_bucket_name" {
+  description = "The name of the Minecraft S3 bucket"
+  value       = aws_s3_bucket.mc_s3.id
+}
+
+output "mc_s3_bucket_arn" {
+  description = "The ARN of the Minecraft S3 bucket"
+  value       = aws_s3_bucket.mc_s3.arn
+}
+
+output "log_s3_bucket_name" {
+  description = "The name of the S3 bucket for logs"
+  value       = aws_s3_bucket.log_bucket.id
+}
+
+output "log_s3_bucket_arn" {
+  description = "The ARN of the S3 bucket for logs"
+  value       = aws_s3_bucket.log_bucket.arn
+}
+
+########################
 #        Lambda        #
 ########################
 output "lambda_function_arn" {
@@ -49,6 +72,7 @@ output "iam_policy_arn" {
 output "api_gateway_url" {
   value = aws_apigatewayv2_api.minecraft_http_api.api_endpoint
 }
+
 ########################
 #         ECR          #
 ########################

@@ -24,6 +24,15 @@ variable "subnet_id" {
 }
 
 ########################
+#       S3 Bucket      #
+########################
+variable "bucket_force_destroy" {
+  description = "Boolean that indicates all objects should be deleted from the bucket"
+  type        = bool
+  default     = false
+}
+
+########################
 #    Systems Manager   #
 ########################
 variable "git_private_key_name" {
