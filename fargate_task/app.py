@@ -10,12 +10,14 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
 import logging
 import subprocess
+import sys
+import stat
 
 # Enable detailed boto3 logging
 logging.basicConfig(level=logging.DEBUG)
 
 ######################################################################
-#                           Functions                                #
+#                   General Functions                                #
 ######################################################################
 # Fetch the SSH key from the Parameter Store
 def get_ssm_param(param_name):
@@ -95,6 +97,38 @@ def get_command():
         WithDecryption=True
     )
     return response['Parameter']['Value']
+
+def run_bash_script(script_path, log_file_path, *script_args):
+    try:
+        # Ensure the bash script file has execute permissions
+        st = os.stat(script_path)  # Get the current permissions of the file
+        os.chmod(script_path, st.st_mode | stat.S_IEXEC)  # Add execute permission for the owner
+
+        # Note: It's generally safer to pass the arguments in as a list,
+        # especially if they might be user-provided, to avoid shell injection attacks.
+        process = subprocess.Popen(
+            [script_path] + list(script_args), 
+            stdout=subprocess.PIPE, 
+            stderr=subprocess.PIPE
+        )
+
+        stdout, stderr = process.communicate()
+
+        # Open the log file
+        with open(log_file_path, 'w') as log_file:
+            if stdout:
+                log_file.write(stdout.decode())
+            if stderr:
+                log_file.write(stderr.decode())
+
+        if process.returncode != 0:
+            stderr = stderr.decode()
+            logging.error(f"Script {script_path} failed with error: {stderr}")
+            sys.exit(1)
+        
+    except Exception as e:
+        logging.error(f"Failed to execute script {script_path}: {str(e)}")
+        sys.exit(1)
 
 ################################
 #         Git Functions        #
@@ -186,6 +220,10 @@ def server_handler(command):
     shutil.copytree(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "scripts")) # Copy tf_mc_infra_scripts folder to tf_mc_infra_manifests folder
     
     os.environ['TF_TOKEN_app_terraform_io'] = tf_api_key
+
+    # run_bash_script(os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], "ec2_install.sh"), "./install.log")
+    # run_bash_script(os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], "prepare_ec2_env.sh"), "./prepare_env.log")
+    # run_bash_script(os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], "post_mc_server_shutdown.sh."), "./server_shutdown.log")
 
     if command == "start":
         private_key = create_ec2_key_pair("terraform-key")
