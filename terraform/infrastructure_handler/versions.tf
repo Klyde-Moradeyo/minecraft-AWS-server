@@ -21,3 +21,9 @@ terraform {
 provider "aws" {
   region  = var.aws_region
 }
+
+data "aws_caller_identity" "aws" {}
+
+locals {
+  user_name = split("/", data.aws_caller_identity.aws.arn)[2]
+}
