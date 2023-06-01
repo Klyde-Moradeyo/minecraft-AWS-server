@@ -55,7 +55,7 @@ resource "aws_iam_role_policy" "mc_allow_ec2_to_s3" {
       {
         Effect   = "Allow"
         Action   = ["s3:ListBucket"]
-        Resource = ["${local.server_s3_bucket_arn}/*"]
+        Resource = ["${local.mc_s3_bucket_arn}/*"]
       },
       {
         Effect   = "Allow"
@@ -64,7 +64,7 @@ resource "aws_iam_role_policy" "mc_allow_ec2_to_s3" {
           "s3:GetObject",
           "s3:DeleteObject",
         ]
-        Resource = ["${local.server_s3_bucket_arn}/*"]
+        Resource = ["${local.mc_s3_bucket_arn}/*"]
       },
     ]
   })
