@@ -121,7 +121,7 @@ resource "null_resource" "setup_ec2" {
       "aws ssm get-parameter --name \"${var.git_private_key_name}\" --with-decryption --region \"${var.aws_region}\" --query \"Parameter.Value\" --output text > ~/.ssh/id_rsa", # Get git private key
       "chmod 600 ~/.ssh/id_rsa",
       "ssh-keyscan github.com >> ~/.ssh/known_hosts",
-      "sudo /home/ubuntu/setup/scripts/prepare_ec2_env.sh > /home/ubuntu/setup/logs/prepare_ec2_env.log" # Run Ec2 Prepare Env
+      "sudo /home/ubuntu/setup/scripts/prepare_ec2_env.sh \"${local.server_s3_bucket_arn}\" > /home/ubuntu/setup/logs/prepare_ec2_env.log" # Run Ec2 Prepare Env
     ]
 
     connection {
@@ -134,29 +134,29 @@ resource "null_resource" "setup_ec2" {
 }
 
 # Ec2 before destroy 
-# resource "null_resource" "post_mc_server_close" {
-#   depends_on = [ module.ec2_instance ]
+resource "null_resource" "post_mc_server_close" {
+  depends_on = [ module.ec2_instance ]
 
-#   # Use a trigger to recreate the null_resource 
-#   # when the EC2 instance is replaced
-#   triggers = {
-#     instance_id = module.ec2_instance.id
-#   }
+  # Use a trigger to recreate the null_resource 
+  # when the EC2 instance is replaced
+  triggers = {
+    instance_id = module.ec2_instance.id
+  }
 
-#   provisioner "local-exec" {
-#     when    = destroy # Only execute on destruction of resource
-#     command = <<-EOT
-#       ssh -v -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@${data.terraform_remote_state.infra_handler_state.outputs.eip} "\
-#         sudo chmod +x /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh && \
-#         cp /home/ubuntu/setup/logs/* /home/ubuntu/minecraft-AWS-server/docker/minecraft-data/minecraft-world/logs && \
-#         sudo /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh ; exit"
-#     EOT
-#   }
-# }
+  provisioner "local-exec" {
+    when    = destroy # Only execute on destruction of resource
+    command = <<-EOT
+      ssh -v -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@${data.terraform_remote_state.infra_handler_state.outputs.eip} "\
+        sudo chmod +x /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh && \
+        cp /home/ubuntu/setup/logs/* /home/ubuntu/minecraft-AWS-server/docker/minecraft-data/minecraft-world/logs && \
+        sudo /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh \"${local.server_s3_bucket_arn}\"; exit"
+    EOT
+  }
+}
 
-########################
-#     EIP for EC2      #
-########################
+################################
+#   Infra Handler Outputs      #
+################################
 data "terraform_remote_state" "infra_handler_state" {
   backend = "remote"
 
@@ -166,6 +166,10 @@ data "terraform_remote_state" "infra_handler_state" {
       name = var.tf_cloud_infra_handler_workspace
     }
   }
+}
+
+locals {
+  server_s3_bucket_arn = data.terraform_remote_state.infra_handler_state.outputs.mc_s3_bucket_arn
 }
 
 data "aws_eip" "mc_public_ip" {
