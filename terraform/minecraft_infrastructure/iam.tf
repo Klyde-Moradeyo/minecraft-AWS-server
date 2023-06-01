@@ -3,6 +3,7 @@
 data "aws_caller_identity" "aws" {}
 
 locals {
+  user_name = split("/", data.aws_caller_identity.aws.arn)[1]
   tf_tags = {
     Terraform = true,
     By        = data.aws_caller_identity.aws.arn

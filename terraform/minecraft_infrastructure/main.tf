@@ -121,7 +121,7 @@ resource "null_resource" "setup_ec2" {
       "aws ssm get-parameter --name \"${var.git_private_key_name}\" --with-decryption --region \"${var.aws_region}\" --query \"Parameter.Value\" --output text > ~/.ssh/id_rsa", # Get git private key
       "chmod 600 ~/.ssh/id_rsa",
       "ssh-keyscan github.com >> ~/.ssh/known_hosts",
-      "sudo /home/ubuntu/setup/scripts/prepare_ec2_env.sh \"${local.server_s3_bucket_arn}\" > /home/ubuntu/setup/logs/prepare_ec2_env.log" # Run Ec2 Prepare Env
+      "sudo /home/ubuntu/setup/scripts/prepare_ec2_env.sh \"${local.mc_s3_bucket_uri}\" > /home/ubuntu/setup/logs/prepare_ec2_env.log" # Run Ec2 Prepare Env
     ]
 
     connection {
@@ -146,10 +146,10 @@ resource "null_resource" "post_mc_server_close" {
   provisioner "local-exec" {
     when    = destroy # Only execute on destruction of resource
     command = <<-EOT
-      ssh -v -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@${data.terraform_remote_state.infra_handler_state.outputs.eip} "\
+      ssh -v -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@52.56.39.89"\
         sudo chmod +x /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh && \
         cp /home/ubuntu/setup/logs/* /home/ubuntu/minecraft-AWS-server/docker/minecraft-data/minecraft-world/logs && \
-        sudo /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh \"${local.server_s3_bucket_arn}\"; exit"
+        sudo /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh \"s3://minecraft-log-s3-xclhectq\"; exit"
     EOT
   }
 }
@@ -169,7 +169,8 @@ data "terraform_remote_state" "infra_handler_state" {
 }
 
 locals {
-  server_s3_bucket_arn = data.terraform_remote_state.infra_handler_state.outputs.mc_s3_bucket_arn
+  mc_s3_bucket_arn = data.terraform_remote_state.infra_handler_state.outputs.mc_s3_bucket_arn
+  mc_s3_bucket_uri= data.terraform_remote_state.infra_handler_state.outputs.mc_s3_bucket_uri
 }
 
 data "aws_eip" "mc_public_ip" {
