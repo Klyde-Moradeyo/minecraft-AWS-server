@@ -35,10 +35,10 @@ function run {
 
   # Copy minecraft world
   mc_map_repo_folder="$repo_folder/docker/minecraft-data/minecraft-world"
-  aws s3 cp "$s3_bucket_path" "$home_dir/minecraft-world.tar.gz"  || { echo "Failed to download Minecraft world from S3"; exit 1; }
-  mkdir -p "$mc_map_folder"
-  tar -xzf "$home_dir/minecraft-world.tar.gz" -C "$mc_map_folder"
-  rm "$home_dir/minecraft-world.tar.gz" # Clean up after ourselves
+  aws s3 cp "$s3_bucket_path/minecraft-world.bundle" "$home_dir/minecraft-world.bundle"  || { echo "Failed to download Minecraft world from S3"; exit 1; }
+  mkdir -p "$mc_map_repo_folder"
+  git clone "$home_dir/minecraft-world.bundle" "$mc_map_repo_folder"
+  rm "$home_dir/minecraft-world.bundle" # Clean up after ourselves
 
   # Run Docker Compose
   docker_compose_file="$repo_folder/docker"

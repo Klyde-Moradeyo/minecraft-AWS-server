@@ -42,8 +42,8 @@ function run {
   git tag "minecraft-data-update-$(date +"%Y-%m-%d")-time-$(date +"%H:%M:%S")"
 
   # Push changes to the S3 Bucket
-  tar -czf minecraft-world.tar.gz *
-  aws s3 sync minecraft-world.tar.gz "$s3_bucket_path"
+  git bundle create minecraft-world.bundle --all
+  aws s3 cp minecraft-world.bundle "$s3_bucket_path"
 }
 
 # Call the run function
