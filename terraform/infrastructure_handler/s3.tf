@@ -20,11 +20,6 @@ resource "aws_s3_bucket" "mc_s3" {
 
   force_destroy = var.bucket_force_destroy
 
-  logging {
-    target_bucket = aws_s3_bucket.log_bucket.id
-    target_prefix = "log/${local.mc_bucket_name}-logs"
-  }
-
   tags = module.label.tags
 }
 
@@ -61,13 +56,37 @@ resource "aws_s3_bucket_acl" "mc_s3_acl" {
   acl    = "private"
 }
 
-### S3 Log Bucket ###
+########################
+#     S3 LOG Bucket    #
+########################
 resource "aws_s3_bucket" "log_bucket" {
   bucket = local.log_bucket_name
 }
 
-resource "aws_s3_bucket_acl" "log_bucket_acl" {
-  depends_on = [ aws_s3_bucket.log_bucket ]
+resource "aws_s3_bucket_logging" "mc_s3_logging" {
+  target_bucket = aws_s3_bucket.log_bucket.id
+  target_prefix = "log/${local.mc_bucket_name}-logs"
+  bucket        = aws_s3_bucket.mc_s3.id
+}
+
+data "aws_iam_policy_document" "s3_policy" {
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+    ]
+
+    resources = [
+      "${aws_s3_bucket.log_bucket.arn}/*"
+    ]
+    principals {
+      type        = "AWS"
+      identifiers = [ data.aws_caller_identity.aws.arn ]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "log_bucket_policy" {
   bucket = aws_s3_bucket.log_bucket.id
-  acl    = "log-delivery-write"
+  policy = data.aws_iam_policy_document.s3_policy.json
 }
