@@ -14,6 +14,36 @@ module "label" {
   tags        = merge(var.tags, local.tf_tags)
 }
 
+################################
+#   Infra Handler Outputs      #
+################################
+data "terraform_remote_state" "infra_handler_state" {
+  backend = "remote"
+
+  config = {
+    organization = var.tf_cloud_org
+    workspaces = {
+      name = var.tf_cloud_infra_handler_workspace
+    }
+  }
+}
+
+locals {
+  mc_s3_bucket_arn = data.terraform_remote_state.infra_handler_state.outputs.mc_s3_bucket_arn
+  mc_s3_bucket_uri= data.terraform_remote_state.infra_handler_state.outputs.mc_s3_bucket_uri
+}
+
+data "aws_eip" "mc_public_ip" {
+  public_ip = data.terraform_remote_state.infra_handler_state.outputs.eip
+}
+
+resource "aws_eip_association" "mc_public_ip_to_ec2" {
+  depends_on = [ module.ec2_instance ]
+
+  instance_id   = module.ec2_instance.id
+  allocation_id = data.aws_eip.mc_public_ip.id
+}
+
 ########################
 #     EC2 Instance     #
 ########################
@@ -153,37 +183,6 @@ resource "null_resource" "post_mc_server_close" {
     EOT
   }
 }
-
-################################
-#   Infra Handler Outputs      #
-################################
-data "terraform_remote_state" "infra_handler_state" {
-  backend = "remote"
-
-  config = {
-    organization = var.tf_cloud_org
-    workspaces = {
-      name = var.tf_cloud_infra_handler_workspace
-    }
-  }
-}
-
-locals {
-  mc_s3_bucket_arn = data.terraform_remote_state.infra_handler_state.outputs.mc_s3_bucket_arn
-  mc_s3_bucket_uri= data.terraform_remote_state.infra_handler_state.outputs.mc_s3_bucket_uri
-}
-
-data "aws_eip" "mc_public_ip" {
-  public_ip = data.terraform_remote_state.infra_handler_state.outputs.eip
-}
-
-resource "aws_eip_association" "mc_public_ip_to_ec2" {
-  depends_on = [ module.ec2_instance ]
-
-  instance_id   = module.ec2_instance.id
-  allocation_id = data.aws_eip.mc_public_ip.id
-}
-
 
 ########################
 #   Security Groups    #
