@@ -136,22 +136,9 @@ def run_bash_script(script_path, log_file_path, *script_args):
 ################################
 #            SSH               #
 ################################   
-def add_host_key(hostname):
-    try:
-        # Run the ssh-keyscan command
-        result = subprocess.run(['ssh-keyscan', hostname], capture_output=True, text=True, check=True)
-
-        # Write the output to the known_hosts file
-        with open(os.path.expanduser('~/.ssh/known_hosts'), 'a') as file:
-            file.write(result.stdout)
-
-    except subprocess.CalledProcessError as e:
-        print(f"ssh-keyscan failed: {e.stderr}")
-
 def create_ssh_client(ip, username, key_file):
-    add_host_key(ip) # add host ip
     ssh = SSHClient() # Create an SSH client
-    ssh.set_missing_host_key_policy(paramiko.WarningPolicy())  # WarningPolicy
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     # Connect to the server
     try:
