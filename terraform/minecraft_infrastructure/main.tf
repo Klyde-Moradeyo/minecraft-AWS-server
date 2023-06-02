@@ -111,77 +111,77 @@ module "ec2_instance" {
 }
 
 // Set-up Ec2 Pre-reqs
-locals {
-  ec2_scripts = {
-    helper_functions            = "./scripts/helper_functions.sh"
-    ec2_install                 = "./scripts/ec2_install.sh"
-    prepare_ec2_env             = "./scripts/prepare_ec2_env.sh"
-    post_mc_server_shutdown     = "./scripts/post_mc_server_shutdown.sh"
-  }
-}
+# locals {
+#   ec2_scripts = {
+#     helper_functions            = "./scripts/helper_functions.sh"
+#     ec2_install                 = "./scripts/ec2_install.sh"
+#     prepare_ec2_env             = "./scripts/prepare_ec2_env.sh"
+#     post_mc_server_shutdown     = "./scripts/post_mc_server_shutdown.sh"
+#   }
+# }
 
-resource "null_resource" "copy_scripts" {
-  for_each = local.ec2_scripts
+# resource "null_resource" "copy_scripts" {
+#   for_each = local.ec2_scripts
 
-  depends_on = [ aws_eip_association.mc_public_ip_to_ec2 ]
+#   depends_on = [ aws_eip_association.mc_public_ip_to_ec2 ]
 
-  provisioner "file" {
-    source      = each.value
-    destination = "/home/ubuntu/${each.key}.sh"
+#   provisioner "file" {
+#     source      = each.value
+#     destination = "/home/ubuntu/${each.key}.sh"
 
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = data.aws_ssm_parameter.private_key.value
-      host        = data.aws_eip.mc_public_ip.public_ip
-    }
-  }
-}
+#     connection {
+#       type        = "ssh"
+#       user        = "ubuntu"
+#       private_key = data.aws_ssm_parameter.private_key.value
+#       host        = data.aws_eip.mc_public_ip.public_ip
+#     }
+#   }
+# }
 
-resource "null_resource" "setup_ec2" {
-  depends_on = [ null_resource.copy_scripts ]
+# resource "null_resource" "setup_ec2" {
+#   depends_on = [ null_resource.copy_scripts ]
 
-  provisioner "remote-exec" {
-    inline = [
-      "#!/bin/bash",
-      "mkdir -p /home/ubuntu/setup/scripts /home/ubuntu/setup/logs",
-      "mv /home/ubuntu/{ec2_install,helper_functions,prepare_ec2_env,post_mc_server_shutdown}.sh /home/ubuntu/setup/scripts",
-      "chmod +x /home/ubuntu/setup/scripts/{ec2_install,helper_functions,prepare_ec2_env,post_mc_server_shutdown}.sh",
-      "sudo /home/ubuntu/setup/scripts/ec2_install.sh > /home/ubuntu/setup/logs/install.log", # Run Ec2 Install
-      "aws ssm get-parameter --name \"${var.git_private_key_name}\" --with-decryption --region \"${var.aws_region}\" --query \"Parameter.Value\" --output text > ~/.ssh/id_rsa", # Get git private key
-      "chmod 600 ~/.ssh/id_rsa",
-      "ssh-keyscan github.com >> ~/.ssh/known_hosts",
-      "sudo /home/ubuntu/setup/scripts/prepare_ec2_env.sh \"${local.mc_s3_bucket_uri}\" > /home/ubuntu/setup/logs/prepare_ec2_env.log" # Run Ec2 Prepare Env
-    ]
+#   provisioner "remote-exec" {
+#     inline = [
+#       "#!/bin/bash",
+#       "mkdir -p /home/ubuntu/setup/scripts /home/ubuntu/setup/logs",
+#       "mv /home/ubuntu/{ec2_install,helper_functions,prepare_ec2_env,post_mc_server_shutdown}.sh /home/ubuntu/setup/scripts",
+#       "chmod +x /home/ubuntu/setup/scripts/{ec2_install,helper_functions,prepare_ec2_env,post_mc_server_shutdown}.sh",
+#       "sudo /home/ubuntu/setup/scripts/ec2_install.sh > /home/ubuntu/setup/logs/install.log", # Run Ec2 Install
+#       "aws ssm get-parameter --name \"${var.git_private_key_name}\" --with-decryption --region \"${var.aws_region}\" --query \"Parameter.Value\" --output text > ~/.ssh/id_rsa", # Get git private key
+#       "chmod 600 ~/.ssh/id_rsa",
+#       "ssh-keyscan github.com >> ~/.ssh/known_hosts",
+#       "sudo /home/ubuntu/setup/scripts/prepare_ec2_env.sh \"${local.mc_s3_bucket_uri}\" > /home/ubuntu/setup/logs/prepare_ec2_env.log" # Run Ec2 Prepare Env
+#     ]
 
-    connection {
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = data.aws_ssm_parameter.private_key.value
-      host        = data.aws_eip.mc_public_ip.public_ip
-    }
-  } 
-}
+#     connection {
+#       type        = "ssh"
+#       user        = "ubuntu"
+#       private_key = data.aws_ssm_parameter.private_key.value
+#       host        = data.aws_eip.mc_public_ip.public_ip
+#     }
+#   } 
+# }
 
-# Ec2 before destroy 
-resource "null_resource" "post_mc_server_close" {
-  depends_on = [ module.ec2_instance ]
+# # Ec2 before destroy 
+# resource "null_resource" "post_mc_server_close" {
+#   depends_on = [ module.ec2_instance ]
 
-  # Use a trigger to recreate the null_resource 
-  # when the EC2 instance is replaced
-  triggers = {
-    instance_id = module.ec2_instance.id
-  }
+#   # Use a trigger to recreate the null_resource 
+#   # when the EC2 instance is replaced
+#   triggers = {
+#     instance_id = module.ec2_instance.id
+#   }
 
-  provisioner "local-exec" {
-    when    = destroy # Only execute on destruction of resource
-    command = <<-EOT
-      ssh -v -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@52.56.39.89 "\
-        sudo chmod +x /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh && \
-        sudo /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh \"s3://minecraft-s3-xclhectq\"; exit"
-    EOT
-  }
-}
+#   provisioner "local-exec" {
+#     when    = destroy # Only execute on destruction of resource
+#     command = <<-EOT
+#       ssh -v -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@52.56.39.89 "\
+#         sudo chmod +x /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh && \
+#         sudo /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh \"s3://minecraft-s3-xclhectq\"; exit"
+#     EOT
+#   }
+# }
 
 ########################
 #   Security Groups    #
