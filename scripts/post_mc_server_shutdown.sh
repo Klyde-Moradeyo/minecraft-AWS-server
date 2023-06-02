@@ -39,7 +39,7 @@ function run {
   # Add and commit changes
   git add .
   git commit -m "Auto-commit: Update minecraft data"
-  git tag "minecraft-data-update-$(date +"%Y-%m-%d")-time-$(date +"%H:%M:%S")"
+  git tag "minecraft-data-update-$(date +"%Y-%m-%d")-time-$(date +"%H-%M-%S")"
 
   # Push changes to the S3 Bucket
   git bundle create minecraft-world.bundle --all
