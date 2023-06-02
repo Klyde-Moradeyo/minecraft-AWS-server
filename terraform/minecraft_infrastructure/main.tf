@@ -176,10 +176,9 @@ resource "null_resource" "post_mc_server_close" {
   provisioner "local-exec" {
     when    = destroy # Only execute on destruction of resource
     command = <<-EOT
-      ssh -v -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@52.56.39.89"\
+      ssh -v -i ./private-key/terraform-key.pem -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ubuntu@52.56.39.89 "\
         sudo chmod +x /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh && \
-        cp /home/ubuntu/setup/logs/* /home/ubuntu/minecraft-AWS-server/docker/minecraft-data/minecraft-world/logs && \
-        sudo /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh \"s3://minecraft-log-s3-xclhectq\"; exit"
+        sudo /home/ubuntu/setup/scripts/post_mc_server_shutdown.sh \"s3://minecraft-s3-xclhectq\"; exit"
     EOT
   }
 }
