@@ -1,7 +1,7 @@
 version: "3.9"
 
 services:
-  minecraft:
+  mc-server:
     image: itzg/minecraft-server:latest
     volumes:
       # attach a directory relative to the directory containing this compose file
@@ -13,7 +13,7 @@ services:
       VERSION: "1.19.2"
       WORLD: "./minecraft-world/world"
       DIFFICULTY: "hard"
-      MODE: "creative" # creative, survival, adventure, spectator 
+      MODE: "survival" # creative, survival, adventure, spectator 
       MAX_PLAYERS: "20"
       VIEW_DISTANCE: "25"
       SIMULATION_DISTANCE: "25"
@@ -31,6 +31,19 @@ services:
     tty: true
     stdin_open: true
     restart: unless-stopped
+
+  server-monitoring:
+    image: python:3.10-slim
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: /bin/bash -c "pip install -r requirements.txt && python monitoring.py"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 256M
 volumes:
   minecraftdata:
     external: true
