@@ -24,7 +24,7 @@ function run {
   $(cd $docker_dir && docker compose down)
 
   # Use rsync to delete everything in docker directory except for the minecraft world
-  rsync -a --delete --exclude="minecraft-data/world" /tmp/empty-dir/ $docker_dir/ 
+  rsync -a --delete --exclude="minecraft-data/world" --exclude=".git" /tmp/empty-dir/ $docker_dir/ 
 
   ########################
   # Save MC world in Git #
