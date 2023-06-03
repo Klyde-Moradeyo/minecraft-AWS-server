@@ -33,6 +33,7 @@ function run {
   # Replace world in minecraft-world git repo
   rm -rf $minecraft_world_repo_dir/world
   cp -rf $container_world_repo_dir $minecraft_world_repo_dir
+  rm -rf $container_world_repo_dir # save space
 
   # Go To minecraft-world repo
   cd "$minecraft_world_repo_dir"
@@ -45,6 +46,10 @@ function run {
   # Push changes to the S3 Bucket
   git bundle create minecraft-world.bundle --all
   aws s3 cp minecraft-world.bundle "$s3_bucket_path"
+
+  # Zip logs and push to S3 bucket
+  zip -r setup_logs.zip "$home_dir/setup/logs"
+  aws s3 cp setup_logs.zip "$s3_bucket_path"
 }
 
 # Call the run function
