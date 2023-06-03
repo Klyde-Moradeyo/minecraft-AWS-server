@@ -10,7 +10,7 @@ import requests
 import json
 import tempfile
 
-channel_name = "Mango-Minecraft"
+channel_name = "mango-minecraft"
 
 ######################################################################
 #                    Helper Functions                                #
