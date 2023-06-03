@@ -10,6 +10,8 @@ import requests
 import json
 import tempfile
 
+channel_name = "Mango-Minecraft"
+
 ######################################################################
 #                    Helper Functions                                #
 ######################################################################
@@ -61,16 +63,20 @@ async def on_ready():
     for guild in bot.guilds:
         print(f"    - {guild.name}")
 
+        await guild.create_text_channel(channel_name)
+
 # On Message Event
 @bot.event
 async def on_message(message):
     if message.author == bot.user:
         return
 
-    if message.content.startswith("Hello"):
-        await message.channel.send("Hello!")
+    # Only process commands in the Mango-Minecraft channel
+    if message.channel.name == channel_name:
+        if message.content.startswith("Hello"):
+            await message.channel.send("Hello!")
 
-    await bot.process_commands(message)  # Add this line to allow command processing
+        await bot.process_commands(message)
 
 # Start minecraft server
 @bot.command()
