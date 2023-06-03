@@ -65,7 +65,7 @@ def create_ec2_key_pair(key_name):
     # - encryption_algorithm: The algorithm used to encrypt the key, here no encryption is used
     private_key_pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.PKCS8,
+        format=serialization.PrivateFormat.TraditionalOpenSSL,
         encryption_algorithm=serialization.NoEncryption()
     )
 
