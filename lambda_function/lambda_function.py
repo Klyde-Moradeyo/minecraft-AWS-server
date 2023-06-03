@@ -177,7 +177,7 @@ def lambda_handler(event, context):
                 }
             
             send_command(command) # sends command to SSM param store
-            response = create_fargate_container(ecs_client, task_definition, cluster, container_name, network_configuration, environment_variables)
+            response = create_fargate_container(ecs_client, task_definition, cluster, container_name, network_configuration, environment_variables, task_tags)
         elif (command == "status"):
             status = check_task_status(ecs_client, cluster, task_tags)
             
