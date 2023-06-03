@@ -12,7 +12,7 @@ RCON_PASS = 'your_rcon_password'
 API_GATEWAY_URL = 'https://your-api-gateway.url'
 INACTIVE_TIME = 60  # 3600  # Time in seconds for inactive players check
 CHECK_INTERVAL = 5  # Time in seconds for the check interval
-LOG_FILE = '/home/ubuntu/setup/logs/monitoring.log'  # Log file name
+LOG_FILE = 'monitoring.log'  # Log file name
 
 minecraft_server = JavaServer.lookup(f"{RCON_IP}:{RCON_PORT}")
 
