@@ -17,11 +17,14 @@ function run {
   home_dir="/home/ubuntu"
   docker_dir="$home_dir/minecraft-AWS-server/docker"
   git_private_key_path="$home_dir/.ssh/id_rsa"
-  mc_map_repo_folder="$docker_dir/minecraft-data/minecraft-world"
+  mc_map_repo_folder="$docker_dir/minecraft-data"
   container_world_folder="$docker_dir/minecraft-data/world"
 
   # Stop the docker container
   $(cd $docker_dir && docker compose down)
+
+  # Use rsync to delete everything in docker directory except for the minecraft world
+  rsync -a --delete --exclude="minecraft-data/world" /tmp/empty-dir/ $docker_dir/ 
 
   ########################
   # Save MC world in Git #
@@ -30,17 +33,7 @@ function run {
   git config --global user.email "darkmango444@gmail.com"
   git config --global user.name "dark-mango-bot"
 
-  aws s3 cp "$s3_bucket_path/minecraft-world.bundle" "$home_dir/minecraft-world.bundle" || { echo "Failed to download Minecraft world from S3"; exit 1; }
-  mkdir -p "$mc_map_repo_folder"
-  git clone "$home_dir/minecraft-world.bundle" "$mc_map_repo_folder"
-  rm "$home_dir/minecraft-world.bundle"
-  
-  # Replace world in minecraft-world git repo
-  rm -rf $mc_map_repo_folder/world
-  cp -rf $container_world_folder $mc_map_repo_folder
-
-  # Go To minecraft-world repo
-  cd "$mc_map_repo_folder"
+  cd $mc_map_repo_folder
 
   # Add and commit changes
   git add .
