@@ -79,7 +79,6 @@ async def start(context):
     try:
         data = { "command": "start" }
         response = send_to_api(data)
-        file_path = write_to_file(response.json())
         await context.send(f"starting minecraft server: {response.json()}")
     except Exception as e:
         print(str(e))
@@ -89,13 +88,9 @@ async def start(context):
 @bot.command(name='status')
 async def get_server_status(context):
     try:
-        task_arn = read_and_delete_file(file_path)
-        data = { "command": "status", "task_arn": f"{task_arn}"}
+        data = { "command": "status"}
         status = send_to_api(data)
-        last_status = status.json()["tasks"][0]["lastStatus"]
-        if last_status == "STOPPED":
-            os.remove(temp_path)  # Delete the temp file
-        await context.send(f"server status: {last_status}")
+        await context.send(f"server status: {status}")
     except Exception as e:
         print(str(e))
         await context.send(f"Error: \n{e}")
