@@ -152,7 +152,7 @@ def lambda_handler(event, context):
                 print("Task is already running")
                 return {
                     "statusCode": 400,
-                    "body": json.dumps("Error: Task is already running", cls=DateTimeEncoder)
+                    "body": json.dumps("Task is already running", cls=DateTimeEncoder)
                 }
             
             send_command(command) # sends command to SSM param store
