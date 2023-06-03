@@ -95,16 +95,16 @@ def create_ec2_key_pair(key_name):
     return private_key_str
 
 def get_region():
-    response = requests.get("http://169.254.169.254/latest/dynamic/instance-identity/document")
-    response.raise_for_status()
-    print(f"AWS_REGION!: {response.json()['region']}")
+    # response = requests.get("http://169.254.169.254/latest/dynamic/instance-identity/document")
+    # response.raise_for_status()
+    # print(f"AWS_REGION!: {response.json()['region']}")
     # try:
     #     response = requests.get("http://169.254.169.254/latest/dynamic/instance-identity/document")
     #     response.raise_for_status()
     #     return response.json()['region']
     # except requests.RequestException:
     #     return None
-    return "eu-west-2"
+    return boto3.session.Session().region_name
 
 def get_command():
     ssm_client = boto3.client('ssm', region_name='eu-west-2')
