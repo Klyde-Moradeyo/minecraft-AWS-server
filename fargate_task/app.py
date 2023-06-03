@@ -368,7 +368,7 @@ def server_handler(command):
         remote_prepare_logs_path = "setup/logs/prepare.log"
 
         # Some params for prepare_ec2_env.sh
-        mc_port = read_from_tf_vars("mc_port", os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "scripts"))
+        mc_port = read_from_tf_vars("mc_port", os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "variables.tf"))
         rcon_pass = None
         api_url = run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_handler"], "output", "api_gateway_url")
 

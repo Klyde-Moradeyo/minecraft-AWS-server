@@ -92,8 +92,8 @@ if __name__ == "__main__":
                 inactive_players_timer_start = None
 
         except Exception as e:
-            error_message = f"Connection Unsuccessful: Server is offline or unreachable: {e}"
-            log_to_console_and_file({'Error': error_message})
+            print(f"Error: {e}")
+            log_to_console_and_file({'Error': e})
 
         # Wait for the check interval before checking again
         time.sleep(CHECK_INTERVAL)
