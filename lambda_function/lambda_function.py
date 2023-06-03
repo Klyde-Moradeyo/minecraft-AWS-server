@@ -55,6 +55,9 @@ def destroy_fargate_container(ecs_client, cluster, task_arn):
     return response
 
 def check_task_status(ecs_client, cluster, tags):
+    # Convert tags to a dictionary for easier comparison
+    tags_dict = {tag['key']: tag['value'] for tag in tags}
+
     # List all tasks in the cluster
     list_tasks_response = ecs_client.list_tasks(cluster=cluster)
 
@@ -65,7 +68,7 @@ def check_task_status(ecs_client, cluster, tags):
 
         # Check if the task has the specified tags
         task_tags = {tag["key"]: tag["value"] for tag in task.get("tags", [])}
-        if all(item in task_tags.items() for item in tags.items()):
+        if all(item in task_tags.items() for item in tags_dict.items()):
             # If the task has the specified tags, return its status
             return task["lastStatus"]
 
