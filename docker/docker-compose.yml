@@ -11,7 +11,7 @@ services:
     environment:
       EULA: "TRUE"
       VERSION: "1.19.2"
-      WORLD: "./minecraft-world/world"
+      WORLD: "./data/world"
       DIFFICULTY: "hard"
       MODE: "survival" # creative, survival, adventure, spectator 
       MAX_PLAYERS: "20"
