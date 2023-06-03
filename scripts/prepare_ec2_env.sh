@@ -8,6 +8,11 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source $script_dir/helper_functions.sh
 
 s3_bucket_path="$1"
+git_private_key_name="$2"
+aws_region="$3"
+
+echo $s3_bucket_path
+echo $git_private_key_name
 
 # Trap the ERR signal
 trap 'error_handler' ERR
@@ -22,6 +27,11 @@ function check_install {
 }
 
 function run {
+  # Set up git creds
+  aws ssm get-parameter --name "$git_private_key_name" --with-decryption --region "$aws_region" --query "Parameter.Value" --output text > ~/.ssh/id_rsa
+  chmod 600 ~/.ssh/id_rsa
+  ssh-keyscan github.com >> ~/.ssh/known_hosts
+
   # Variables
   home_dir="/home/ubuntu"
   git_private_key_path="$home_dir/.ssh/id_rsa"
