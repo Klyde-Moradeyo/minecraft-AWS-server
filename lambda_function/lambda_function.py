@@ -25,7 +25,7 @@ def send_command(command):
 ######################################################################
 #                           Fargate                                  #
 ######################################################################
-def create_fargate_container(ecs_client, task_definition, cluster, container_name, network_configuration, environment_variables):
+def create_fargate_container(ecs_client, task_definition, cluster, container_name, network_configuration, environment_variables, tags):
     response = ecs_client.run_task(
         cluster=cluster,
         launchType="FARGATE",
@@ -38,7 +38,8 @@ def create_fargate_container(ecs_client, task_definition, cluster, container_nam
                 "name": container_name,
                 "environment": environment_variables
             }]
-        }
+        },
+        tags=tags
     )
     task_arn = response["tasks"][0]["taskArn"]
     print(f"Created Fargate container with ARN: {task_arn}")
@@ -97,11 +98,13 @@ def check_task_status(ecs_client, cluster, tags):
 
 #     return False
 
-def is_task_with_tags_exists(ecs_client, cluster, tags):
-    print(f"PARAMS: {ecs_client}, {cluster}, {tags}")
+def is_task_with_tags_exists(ecs_client, cluster, task_tags):
+    print(f"PARAMS: {ecs_client}, {cluster}, {task_tags}")
+
     response = ecs_client.list_tasks(
         cluster=cluster,
     )
+    print(f"RESPONSE: {response}")
 
     for task_arn in response['taskArns']:
         print(f"TASK ARNS: {task_arn}")
@@ -112,15 +115,9 @@ def is_task_with_tags_exists(ecs_client, cluster, tags):
 
         for task in task_details['tasks']:
             print(f"task_details: {task}")
-            for tag in task['tags']:
-                print(f"tag: {tag}")
-                if tag['key'] == 'Name' and tag['value'] == tags['Name']:
-                    print(f"Checked Name: {tag['key']} | {tag['value']}")
-                    if tag['key'] == 'Namespace' and tag['value'] == tags['Namespace']:
-                        print(f"Checked Namespace: {tag['key']} | {tag['value']}")
-                        if tag['key'] == 'Stage' and tag['value'] == tags['Stage']:
-                            print(f"Checked Stage: {tag['key']} | {tag['value']}")
-                            return True
+            if all(tag in task['tags'] for tag in task_tags):
+                print("PASS")
+                return True
 
     return False
 
@@ -153,13 +150,21 @@ def lambda_handler(event, context):
                 "value": os.environ["TF_USER_TOKEN"]
             }, 
         ]
+        task_tags = [
+            {
+                "key": "Name",
+                "value": os.environ["TAG_NAME"]
+            },
+            {
+                "key": "Namespace",
+                "value": os.environ["TAG_NAMESPACE"]
+            },
+            {
+                "key": "Stage",
+                "value": os.environ["TAG_ENVIRONMENT"]
+            }
+        ]
 
-        # Task Tags allows us to search for the task
-        task_tags = {
-            'Name': os.environ["TAG_NAME"],
-            'Namespace': os.environ["TAG_NAMESPACE"],
-            'Stage': os.environ["TAG_ENVIRONMENT"],
-        }
         task_running = is_task_with_tags_exists(ecs_client, cluster, task_tags)
 
         if (command == "start" or command == "stop"):
