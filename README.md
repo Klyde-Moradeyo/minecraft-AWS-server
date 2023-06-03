@@ -97,7 +97,8 @@ The Minecraft server has the following enhancements:
 - Utilizes m5.large instance type
 - Includes json datapack for vanilla tweaks
 - Kubernetes cluster to manage the servers
+- split up fargate execution perms and runtime perms
+- use python tenacity module to add retries to the fargate task 
 
 ## Notes
 - To get cross workspace access in terraform cloud, you need to give a workspace permision to view another.
-- split up fargate execution perms and runtime perms
