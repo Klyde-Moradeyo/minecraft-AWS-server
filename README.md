@@ -99,6 +99,9 @@ The Minecraft server has the following enhancements:
 - Kubernetes cluster to manage the servers
 - split up fargate execution perms and runtime perms
 - use python tenacity module to add retries to the fargate task 
+- Add check for github connection to fargate app.py
+- Minecraft Container should run outside of minecraft-world/world dir rather than copy it (save space on ec2 machine)
+- Add Check for API URL ACCESS in discord bot
 
 ## Notes
 - To get cross workspace access in terraform cloud, you need to give a workspace permision to view another.
