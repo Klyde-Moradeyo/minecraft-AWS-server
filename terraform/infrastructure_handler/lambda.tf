@@ -151,6 +151,11 @@ resource "aws_lambda_function" "lambda_function" {
       CONTAINER_NAME = var.ecr_repo_name
       TF_USER_TOKEN = var.terraform_token_name
       CLUSTER = aws_ecs_cluster.my_cluster.name
+
+      # Tags
+      TAG_NAME = "${var.environment}-${var.name}"
+      TAG_NAMESPACE = var.namespace
+      TAG_ENVIRONMENT = var.environment
     }
   }
 
