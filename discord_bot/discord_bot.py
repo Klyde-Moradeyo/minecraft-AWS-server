@@ -90,7 +90,7 @@ async def get_server_status(context):
     try:
         data = { "command": "status"}
         status = send_to_api(data)
-        await context.send(f"server status: {status}")
+        await context.send(f"server status: {status.json()}")
     except Exception as e:
         print(str(e))
         await context.send(f"Error: \n{e}")
@@ -102,7 +102,7 @@ async def stop(context):
     try:
         data = { "command": "stop" }
         response = send_to_api(data)
-        await context.send(f"Stopping Minecraft server: {response}")
+        await context.send(f"Stopping Minecraft server: {response.json()}")
     except Exception as e:
         print(str(e))
         await context.send(f"Error: \n{e}")
