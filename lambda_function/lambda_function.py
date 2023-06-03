@@ -71,23 +71,55 @@ def check_task_status(ecs_client, cluster, tags):
     # If no task with the specified tags is found, return None
     return None
 
-def is_task_running(ecs_client, cluster, tags):
+# def is_task_running(ecs_client, cluster, tags):
+#     print(f"PARAMS: {ecs_client}, {cluster}, {tags}")
+#     response = ecs_client.list_tasks(cluster=cluster)
+
+#     response = ecs_client.list_tasks(
+#         cluster=cluster,
+#         desiredStatus='RUNNING',
+#     )
+#     print(f"PARAMS: {ecs_client}, {cluster}, {tags}")
+
+#     for task_arn in response['taskArns']:
+#         print()
+#         task_details = ecs_client.describe_tasks(
+#             cluster=cluster,
+#             tasks=[task_arn],
+#         )
+
+#         for task in task_details['tasks']:
+#             for tag in task['tags']:
+#                 if tag['key'] == 'Name' and tag['value'] == tags['Name']:
+#                     if tag['key'] == 'Namespace' and tag['value'] == tags['Namespace']:
+#                         if tag['key'] == 'Stage' and tag['value'] == tags['Stage']:
+#                             return True
+
+#     return False
+
+def is_task_with_tags_exists(ecs_client, cluster, tags):
+    print(f"PARAMS: {ecs_client}, {cluster}, {tags}")
     response = ecs_client.list_tasks(
         cluster=cluster,
-        desiredStatus='RUNNING',
     )
 
     for task_arn in response['taskArns']:
+        print(f"TASK ARNS: {task_arn}")
         task_details = ecs_client.describe_tasks(
             cluster=cluster,
             tasks=[task_arn],
         )
 
         for task in task_details['tasks']:
+            print(f"task_details: {task}")
             for tag in task['tags']:
+                print(f"tag: {tag}")
                 if tag['key'] == 'Name' and tag['value'] == tags['Name']:
+                    print(f"Checked Name: {tag['key']} | {tag['value']}")
                     if tag['key'] == 'Namespace' and tag['value'] == tags['Namespace']:
+                        print(f"Checked Namespace: {tag['key']} | {tag['value']}")
                         if tag['key'] == 'Stage' and tag['value'] == tags['Stage']:
+                            print(f"Checked Stage: {tag['key']} | {tag['value']}")
                             return True
 
     return False
@@ -128,7 +160,7 @@ def lambda_handler(event, context):
             'Namespace': os.environ["TAG_NAMESPACE"],
             'Stage': os.environ["TAG_ENVIRONMENT"],
         }
-        task_running = is_task_running(ecs_client, cluster, task_tags)
+        task_running = is_task_with_tags_exists(ecs_client, cluster, task_tags)
 
         if (command == "start" or command == "stop"):
             # Check if task is running
