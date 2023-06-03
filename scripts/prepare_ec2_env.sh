@@ -53,7 +53,7 @@ function run {
   mkdir -p "$mc_map_repo_folder"
   git clone "$home_dir/minecraft-world.bundle" "$mc_map_repo_folder"
   mv "$repo_world_folder" "$container_world_folder"
-  rm "$home_dir/minecraft-world.bundle" "$mc_map_repo_folder" # Clean up after ourselves
+  rm -rf "$home_dir/minecraft-world.bundle" "$mc_map_repo_folder" # Clean up after ourselves
 
   # Run Docker Compose
   docker_compose_file="$repo_folder/docker"
