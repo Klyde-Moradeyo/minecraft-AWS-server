@@ -13,6 +13,7 @@ aws_region="$3"
 
 echo $s3_bucket_path
 echo $git_private_key_name
+echo $aws_region
 
 # Trap the ERR signal
 trap 'error_handler' ERR
@@ -53,6 +54,15 @@ function run {
   # Run Docker Compose
   docker_compose_file="$repo_folder/docker"
   docker compose -f "$docker_compose_file/docker-compose.yml" --project-directory "$docker_compose_file" up -d
+
+  # clean up unused files
+  mkdir /tmp/empty-dir
+  rsync -a --delete --exclude=docker /tmp/empty-dir/ $repo_folder/ # Use rsync to delete everything in $repo_folder except for $repo_folder/docker
+
+  # clean packages
+  apt-get clean
+  apt autoremove
+  rm -rf /var/lib/apt/lists/*
 }
 
 # Call the run function
