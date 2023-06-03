@@ -24,7 +24,7 @@ function run {
   $(cd $docker_dir && docker compose down)
 
   # Get Monitoring log to scripts folder
-  mv "$docker_dir/monitoring.log" "$home_dir/setup/logs"
+  mv "$docker_dir/server_monitoring.log" "$home_dir/setup/logs"
 
   # Use rsync to delete everything in docker directory except for the minecraft world
   rsync -a --delete --exclude="minecraft-data/world" --exclude=".git" /tmp/empty-dir/ $docker_dir/ 

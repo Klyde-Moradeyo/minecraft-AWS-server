@@ -10,6 +10,7 @@ import sys
 import stat
 import paramiko
 import time
+import hcl
 from paramiko import SSHClient
 from scp import SCPClient
 from git import Repo, Actor
@@ -95,15 +96,6 @@ def create_ec2_key_pair(key_name):
     return private_key_str
 
 def get_region():
-    # response = requests.get("http://169.254.169.254/latest/dynamic/instance-identity/document")
-    # response.raise_for_status()
-    # print(f"AWS_REGION!: {response.json()['region']}")
-    # try:
-    #     response = requests.get("http://169.254.169.254/latest/dynamic/instance-identity/document")
-    #     response.raise_for_status()
-    #     return response.json()['region']
-    # except requests.RequestException:
-    #     return None
     return boto3.session.Session().region_name
 
 def get_command():
@@ -375,6 +367,11 @@ def server_handler(command):
         remote_prepare_script_path = "setup/scripts/prepare_ec2_env.sh"
         remote_prepare_logs_path = "setup/logs/prepare.log"
 
+        # Some params for prepare_ec2_env.sh
+        mc_port = read_from_tf_vars("mc_port", os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "scripts"))
+        rcon_pass = None
+        api_url = run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_handler"], "output", "api_gateway_url")
+
         # Helper Function Script paths
         local_helper_script_path = os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], "helper_functions.sh")
         remote_helper_script_path = "setup/scripts/helper_functions.sh"
@@ -396,7 +393,7 @@ def server_handler(command):
 
         # Run Scripts in EC2 Instance
         ssh_and_run_script(machine_ip, username, key_file, remote_install_script_path, remote_install_logs_path)
-        ssh_and_run_script(machine_ip, username, key_file, remote_prepare_script_path, remote_prepare_logs_path, s3_uri, "dark-mango-bot-private-key", aws_region)
+        ssh_and_run_script(machine_ip, username, key_file, remote_prepare_script_path, remote_prepare_logs_path, s3_uri, "dark-mango-bot-private-key", aws_region, api_url, mc_port)
 
     elif command == "stop":
         private_key = get_ssm_param(ec2_private_key_name)

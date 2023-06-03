@@ -1,5 +1,6 @@
 import time
 import json
+import os
 from datetime import datetime
 from mcrcon import MCRcon
 from mcstatus import JavaServer
@@ -7,12 +8,12 @@ import requests
 
 # These are placeholders, replace with your actual details
 RCON_IP = 'mc-server'
-RCON_PORT = 25565
-RCON_PASS = 'your_rcon_password'
-API_GATEWAY_URL = 'https://your-api-gateway.url'
-INACTIVE_TIME = 60  # 3600  # Time in seconds for inactive players check
+RCON_PORT = os.environ["RCON_PORT"]
+RCON_PASS = None # os.environ["RCON_PASS"]
+API_GATEWAY_URL = os.environ["API_URL"]
+INACTIVE_TIME = 180  # 3600  # Time in seconds for inactive players check
 CHECK_INTERVAL = 5  # Time in seconds for the check interval
-LOG_FILE = 'monitoring.log'  # Log file name
+LOG_FILE = 'server_monitoring.log'  # Log file name
 
 minecraft_server = JavaServer.lookup(f"{RCON_IP}:{RCON_PORT}")
 

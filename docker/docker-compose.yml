@@ -32,12 +32,14 @@ services:
     stdin_open: true
     restart: unless-stopped
 
-  server-monitoring:
+  mc-monitoring:
     image: python:3.10-slim
     volumes:
       - .:/app
     working_dir: /app
     command: /bin/bash -c "pip install -r requirements.txt && python monitoring.py"
+    env_file:
+      - .env
     restart: unless-stopped
     deploy:
       resources:

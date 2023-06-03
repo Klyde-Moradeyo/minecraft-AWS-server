@@ -10,10 +10,14 @@ source $script_dir/helper_functions.sh
 s3_bucket_path="$1"
 git_private_key_name="$2"
 aws_region="$3"
+api_url="$4"
+rcon_port="$5"
 
 echo $s3_bucket_path
 echo $git_private_key_name
 echo $aws_region
+echo $api_url
+echo $rcon_port
 
 # Trap the ERR signal
 trap 'error_handler' ERR
@@ -25,6 +29,26 @@ function check_install {
       exit 1
     fi
   done
+}
+
+create_env_file() {
+    local directory=$1
+    local api_url=$2
+    local rcon_port=$3
+    local env_file_path="$directory/.env"
+
+    # Define the environment variables
+    declare -A env_variables
+    env_variables["API_URL"]="$api_url"
+    env_variables["rcon_port"]="$rcon_port"
+
+    # Create the .env file
+    echo "# Generated .env file" > "$env_file_path"
+    for key in "${!env_variables[@]}"; do
+        echo "$key=${env_variables[$key]}" >> "$env_file_path"
+    done
+
+    echo ".env file created at $env_file_path"
 }
 
 function run {
@@ -48,14 +72,18 @@ function run {
   mkdir /tmp/empty-dir
   rsync -a --delete --exclude=docker /tmp/empty-dir/ $repo_folder/ # Use rsync to delete everything in $repo_folder except for $repo_folder/docker
 
-  mc_map_repo_folder="$repo_folder/docker/minecraft-data"
-  repo_world_folder="$repo_folder/docker/minecraft-data/minecraft-world/world"
+  docker_folder="$repo_folder/docker"
+  mc_map_repo_folder="$docker_folder/minecraft-data"
+  repo_world_folder="$docker_folder/minecraft-data/minecraft-world/world"
 
   # Copy minecraft world from S3
   aws s3 cp "$s3_bucket_path/minecraft-world.bundle" "$home_dir/minecraft-world.bundle" || { echo "Failed to download Minecraft world from S3"; exit 1; }
   mkdir -p "$mc_map_repo_folder"
   git clone "$home_dir/minecraft-world.bundle" "$mc_map_repo_folder"
   rm -rf "$home_dir/minecraft-world.bundle" # Clean up after ourselves
+
+  # Create .env file for server monitoring
+  create_env_file "$docker_folder" "$api_url" "$rcon_port"
 
   # Run Docker Compose
   docker_compose_file="$repo_folder/docker"
