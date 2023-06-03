@@ -40,7 +40,7 @@ create_env_file() {
     # Define the environment variables
     declare -A env_variables
     env_variables["API_URL"]="$api_url"
-    env_variables["rcon_port"]="$rcon_port"
+    env_variables["RCON_PORT"]="$rcon_port"
 
     # Create the .env file
     echo "# Generated .env file" > "$env_file_path"
