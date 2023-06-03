@@ -103,6 +103,7 @@ data "aws_iam_policy_document" "fargate_access" {
       "ecs:RunTask",
       "ecs:StopTask",
       "ecs:DescribeTasks",
+      "ecs:ListTasks",
       "iam:PassRole",
       "logs:CreateLogStream",
       "logs:PutLogEvents"
