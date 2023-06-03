@@ -9,6 +9,7 @@ import subprocess
 import sys
 import stat
 import paramiko
+import time
 from paramiko import SSHClient
 from scp import SCPClient
 from git import Repo, Actor
@@ -92,6 +93,18 @@ def create_ec2_key_pair(key_name):
     response = ec2_client.import_key_pair(KeyName=key_name, PublicKeyMaterial=public_key_str)
 
     return private_key_str
+
+def get_region():
+    response = requests.get("http://169.254.169.254/latest/dynamic/instance-identity/document")
+    response.raise_for_status()
+    print(f"AWS_REGION!: {response.json()['region']}")
+    # try:
+    #     response = requests.get("http://169.254.169.254/latest/dynamic/instance-identity/document")
+    #     response.raise_for_status()
+    #     return response.json()['region']
+    # except requests.RequestException:
+    #     return None
+    return "eu-west-2"
 
 def get_command():
     ssm_client = boto3.client('ssm', region_name='eu-west-2')
@@ -260,7 +273,7 @@ def git_clone(repo_url, dir, branch, ssh_key):
 class TerraformError(Exception):
     pass
 
-def run_terraform_command(directory, command):
+def run_terraform_command(directory, *commands):
     # Check if directory exists
     if not os.path.exists(directory):
         raise ValueError(f"Directory {directory} does not exist.")
@@ -271,19 +284,26 @@ def run_terraform_command(directory, command):
     try:
         subprocess.run(["terraform", "-v"], check=True, capture_output=True)
     except subprocess.CalledProcessError:
+        raise TerraformError("Terraform command failed.")
+    except FileNotFoundError:
         raise TerraformError("Terraform is not installed or not in PATH.")
-    
+
     # Prepare the command
-    terraform_command = ["terraform", command]
-    if command in ["apply", "destroy"]:
-        terraform_command.append("-auto-approve")
+    terraform_command = ["terraform"] + list(commands)
+    if terraform_command[1] in ["apply", "destroy"]:
+        terraform_command.append("--auto-approve")
 
     # Run the terraform command
     try:
-        result = subprocess.run(terraform_command, cwd=directory, check=True, capture_output=False, text=True)
-        return result.stdout
+        if terraform_command[1] == "output":
+            output = subprocess.run(terraform_command, cwd=directory, check=True, capture_output=True, text=True)
+            result = output.stdout.strip().strip('"')
+            return result
+        else:
+            result = subprocess.run(terraform_command, cwd=directory, check=True, capture_output=False, text=True)
+            return result.stdout
     except subprocess.CalledProcessError as e:
-        raise TerraformError(f"Error running terraform {command}: {e.stderr}")
+        raise TerraformError(f"Error running terraform {commands}: {e.stderr}")
 
 ######################################################################
 #                       Server Handler                               #
@@ -291,6 +311,10 @@ def run_terraform_command(directory, command):
 def server_handler(command):
     ssh_key = get_ssm_param("dark-mango-bot-private-key") # SSH Key name from system manager parameter store
     tf_api_key = get_ssm_param("terraform-cloud-user-api") # terraform cloud api keyget_ssm_param(ssh_key_name))
+    ec2_private_key_name = "/mc_server/private_key"
+
+    # aws region
+    aws_region = get_region()
 
     # Repo containing terraform manifests and scripts
     repo_name = "tf_manifests"
@@ -301,6 +325,7 @@ def server_handler(command):
         "ssh_key": f"{write_to_tmp_file(ssh_key)}",
         "paths": {
             "tf_mc_infra_manifests": os.path.join(repo_name, "terraform", "minecraft_infrastructure"),
+            "tf_mc_infra_handler": os.path.join(repo_name, "terraform", "infrastructure_handler"),
             "tf_private_key_folder": os.path.join(repo_name, "terraform", "minecraft_infrastructure", "private-key"),
             "tf_mc_infra_scripts": os.path.join(repo_name, "scripts")
         }
@@ -309,20 +334,80 @@ def server_handler(command):
     # Git Clone and copy files to minecraft_infra directory
     git_clone(tf_manifest_repo["url"], repo_name, tf_manifest_repo["branch"], tf_manifest_repo["ssh_key"])
     shutil.copytree(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "scripts")) # Copy tf_mc_infra_scripts folder to tf_mc_infra_manifests folder
-    
     os.environ['TF_TOKEN_app_terraform_io'] = tf_api_key
 
-    # run_bash_script(os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], "ec2_install.sh"), "./install.log")
-    # run_bash_script(os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], "prepare_ec2_env.sh"), "./prepare_env.log")
-    # run_bash_script(os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], "post_mc_server_shutdown.sh."), "./server_shutdown.log")
-
+    run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_handler"], "init")
+    machine_ip = run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_handler"], "output", "eip")
+    s3_uri = run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_handler"], "output", "mc_s3_bucket_uri")
+    username = "ubuntu"
+    print(f"EIP: {machine_ip} | S3_URI: {s3_uri}")
+    
     if command == "start":
         private_key = create_ec2_key_pair("terraform-key")
-        put_ssm_param("/mc_server/private_key", private_key)
+
+        # Put private key in SSM and to Tmp file
+        put_ssm_param(ec2_private_key_name, private_key)
+        key_file = write_to_tmp_file(private_key)
+        os.chmod(key_file, 0o600)
+        print(f"key_file: {key_file}")
+        
+        # Install Script Paths
+        local_install_script_path = os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], "ec2_install.sh")
+        remote_install_script_path = "setup/scripts/ec2_install.sh"
+        remote_install_logs_path = "setup/logs/install.log"
+
+        # Prepare Env Script Paths
+        local_prepare_script_path = os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], "prepare_ec2_env.sh")
+        remote_prepare_script_path = "setup/scripts/prepare_ec2_env.sh"
+        remote_prepare_logs_path = "setup/logs/prepare.log"
+
+        # Helper Function Script paths
+        local_helper_script_path = os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], "helper_functions.sh")
+        remote_helper_script_path = "setup/scripts/helper_functions.sh"
+
+        # Terraform commands
         run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "init")
         run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "apply")
 
+        # Check for connection to ec2 instance
+        print(key_file)
+        establish_ssh_connection(machine_ip, username, key_file)
+
+        ssh_and_run_command(machine_ip, username, key_file, "mkdir -p", "setup/logs", "setup/scripts")
+
+        # Copy Scripts to EC2 Instance
+        scp_to_ec2(machine_ip, username, key_file, local_helper_script_path, remote_helper_script_path)
+        scp_to_ec2(machine_ip, username, key_file, local_install_script_path, remote_install_script_path)
+        scp_to_ec2(machine_ip, username, key_file, local_prepare_script_path, remote_prepare_script_path)
+
+        # Run Scripts in EC2 Instance
+        ssh_and_run_script(machine_ip, username, key_file, remote_install_script_path, remote_install_logs_path)
+        ssh_and_run_script(machine_ip, username, key_file, remote_prepare_script_path, remote_prepare_logs_path, s3_uri, "dark-mango-bot-private-key", aws_region)
+
     elif command == "stop":
+        private_key = get_ssm_param(ec2_private_key_name)
+        key_file = write_to_tmp_file(private_key)
+
+        # Server Shutdown Script Paths
+        local_shutdown_script_path = os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], "post_mc_server_shutdown.sh")
+        remote_shutdown_script_path = "setup/scripts/post_mc_server_shutdown.sh"
+        remote_shutdown_logs_path = "setup/logs/shutdown.log"
+
+        # Helper Function Script paths
+        local_helper_script_path = os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], "helper_functions.sh")
+        remote_helper_script_path = "setup/scripts/helper_functions.sh"
+
+        # Check for connection to ec2 instance
+        establish_ssh_connection(machine_ip, username, key_file)
+
+        # Copy Scripts to EC2 Instance
+        scp_to_ec2(machine_ip, username, key_file, local_helper_script_path, remote_helper_script_path)
+        scp_to_ec2(machine_ip, username, key_file, local_shutdown_script_path, remote_shutdown_script_path)
+
+        # Run Scripts in EC2 Instance
+        ssh_and_run_script(machine_ip, username, key_file, remote_shutdown_script_path, remote_shutdown_logs_path, s3_uri)
+
+        # Terraform commands
         run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "init")
         run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "destroy")
     else:
