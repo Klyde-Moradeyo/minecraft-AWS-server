@@ -8,6 +8,7 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source $script_dir/helper_functions.sh
 
 s3_bucket_path="$1"
+echo $s3_bucket_path
 
 # Trap the ERR signal
 trap 'error_handler' ERR
