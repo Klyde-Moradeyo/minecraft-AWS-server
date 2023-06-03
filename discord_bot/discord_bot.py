@@ -63,16 +63,15 @@ async def on_ready():
     for guild in bot.guilds:
         print(f"    - {guild.name}")
 
-        
-        category_name = "Bot" # Text Channel Category name
+        category_name = "BOT" # Specify the category name here:
         category = discord.utils.get(guild.categories, name=category_name) # Get the category
- 
+
         # If the category doesn't exist, create it 
         if category is None:
             category = await guild.create_category(category_name)
 
         # Check if the channel already exists before creating it
-        channel = discord.utils.get(guild.channels, name=channel_name)
+        channel = discord.utils.get(category.text_channels, name=channel_name)
         if channel is None:
             await category.create_text_channel(channel_name)
 
