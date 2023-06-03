@@ -64,7 +64,8 @@ function run {
     #    AWS CLI Install   #
     ########################
     sudo apt-get install -y \
-        unzip 
+        unzip \
+        zip
 
     # Download the latest version of the AWS CLI
     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
