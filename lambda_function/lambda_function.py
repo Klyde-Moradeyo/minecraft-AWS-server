@@ -60,7 +60,7 @@ def check_task_status(ecs_client, cluster, tags):
 
     for task_arn in list_tasks_response["taskArns"]:
         # Describe each task to get its tags
-        describe_task_response = ecs_client.describe_tasks(cluster=cluster, tasks=[task_arn])
+        describe_task_response = ecs_client.describe_tasks(cluster=cluster, tasks=[task_arn], include=['TAGS'])
         task = describe_task_response["tasks"][0]
 
         # Check if the task has the specified tags
@@ -71,32 +71,6 @@ def check_task_status(ecs_client, cluster, tags):
 
     # If no task with the specified tags is found, return None
     return None
-
-# def is_task_running(ecs_client, cluster, tags):
-#     print(f"PARAMS: {ecs_client}, {cluster}, {tags}")
-#     response = ecs_client.list_tasks(cluster=cluster)
-
-#     response = ecs_client.list_tasks(
-#         cluster=cluster,
-#         desiredStatus='RUNNING',
-#     )
-#     print(f"PARAMS: {ecs_client}, {cluster}, {tags}")
-
-#     for task_arn in response['taskArns']:
-#         print()
-#         task_details = ecs_client.describe_tasks(
-#             cluster=cluster,
-#             tasks=[task_arn],
-#         )
-
-#         for task in task_details['tasks']:
-#             for tag in task['tags']:
-#                 if tag['key'] == 'Name' and tag['value'] == tags['Name']:
-#                     if tag['key'] == 'Namespace' and tag['value'] == tags['Namespace']:
-#                         if tag['key'] == 'Stage' and tag['value'] == tags['Stage']:
-#                             return True
-
-#     return False
 
 def is_task_with_tags_exists(ecs_client, cluster, task_tags):
     print(f"PARAMS: {ecs_client}, {cluster}, {task_tags}")
@@ -111,6 +85,7 @@ def is_task_with_tags_exists(ecs_client, cluster, task_tags):
         task_details = ecs_client.describe_tasks(
             cluster=cluster,
             tasks=[task_arn],
+            include=['TAGS'],  # Include tags in the response
         )
 
         for task in task_details['tasks']:
@@ -166,6 +141,7 @@ def lambda_handler(event, context):
         ]
 
         task_running = is_task_with_tags_exists(ecs_client, cluster, task_tags)
+        print(f"TASK_RUNNING: {task_running}")
 
         if (command == "start" or command == "stop"):
             # Check if task is running
@@ -179,7 +155,9 @@ def lambda_handler(event, context):
             send_command(command) # sends command to SSM param store
             response = create_fargate_container(ecs_client, task_definition, cluster, container_name, network_configuration, environment_variables, task_tags)
         elif (command == "status"):
-            status = check_task_status(ecs_client, cluster, task_tags)
+            status = None
+            if task_running:
+                status = check_task_status(ecs_client, cluster, task_tags)
             
             if status is None:
                 print("Error: No task with the specified tags was found")
