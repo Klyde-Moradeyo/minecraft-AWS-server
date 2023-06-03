@@ -137,7 +137,7 @@ def run_bash_script(script_path, log_file_path, *script_args):
 #            SSH               #
 ################################   
 def create_ssh_client(ip, username, key_file):
-    ssh = SSHClient() # Create an SSH client
+    ssh = paramiko.SSHClient() # Create an SSH client
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     # Connect to the server
@@ -169,15 +169,26 @@ def scp_to_ec2(ip, username, key_file, local_path, remote_path):
     
     ssh.close()
 
-def ssh_and_run_script(ip, username, key_file, script_path, log_file_path):
+def ssh_and_run_script(ip, username, key_file, script_path, log_file_path, *args):
     ssh = create_ssh_client(ip, username, key_file)
     if ssh is None:
         return
 
+    # Convert args to a string
+    args_str = ' '.join(args)
+
     try:
         # Run the bash script and redirect its output to a log file
-        stdin, stdout, stderr = ssh.exec_command(f"bash {script_path} > {log_file_path}")
+        stdin, stdout, stderr = ssh.exec_command(f"sudo bash {script_path} {args_str} > {log_file_path} 2>&1")
+        exit_status = stdout.channel.recv_exit_status()
+
+        # Wait for the command to finish
+        exit_status = stdout.channel.recv_exit_status()
         
+        if exit_status != 0:
+            logging.error(f"Script exited with status code {exit_status}")
+            raise
+
         # Log the output of the script
         logging.info(stdout.read().decode())
         logging.error(stderr.read().decode())
@@ -186,6 +197,47 @@ def ssh_and_run_script(ip, username, key_file, script_path, log_file_path):
         sys.exit(1)
 
     ssh.close()
+
+def ssh_and_run_command(ip, username, key_file, command, *args):
+    ssh = create_ssh_client(ip, username, key_file)
+    if ssh is None:
+        return
+
+    # Convert args to a string
+    args_str = ' '.join(args)
+
+    try:
+        # Run the command and redirect its output to a log file
+        stdin, stdout, stderr = ssh.exec_command(f"{command} {args_str}")
+        
+        # Log the output of the script
+        logging.info(stdout.read().decode())
+        logging.error(stderr.read().decode())
+    except Exception as e:
+        logging.error(f"Failed to execute command on {ip}: {str(e)}")
+        sys.exit(1)
+
+    ssh.close()
+
+
+def establish_ssh_connection(machine_ip, username, key_file, max_retries=10, retry_delay=5):
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    for attempt in range(max_retries):
+        try:
+            ssh.connect(machine_ip, username=username, key_filename=key_file)
+            print(f"Successfully connected to the instance on attempt {attempt + 1}.")
+            return ssh
+        except Exception as e:
+            print(f"Failed to connect to the instance on attempt {attempt + 1}: {e}")
+            if attempt + 1 < max_retries:
+                print(f"Retrying after {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            else:
+                print("Exceeded maximum number of retries. Exiting.")
+                raise
+
 
 ################################
 #         Git Functions        #
