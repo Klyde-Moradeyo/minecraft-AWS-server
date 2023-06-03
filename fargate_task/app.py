@@ -146,6 +146,20 @@ def run_bash_script(script_path, log_file_path, *script_args):
         logging.error(f"Failed to execute script {script_path}: {str(e)}")
         sys.exit(1)
 
+def read_from_tf_vars(var, file_path):
+    try:
+        with open(file_path, 'r') as f:
+            obj = hcl.load(f)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Cannot open {file_path}")
+    except Exception as e:
+        raise ValueError(f"Error parsing HCL: {e}")
+        
+    if var not in obj['variable']:
+        raise ValueError(f"Cannot find {var} in {file_path}")
+
+    return obj['variable'][var]["default"]
+
 ################################
 #            SSH               #
 ################################   

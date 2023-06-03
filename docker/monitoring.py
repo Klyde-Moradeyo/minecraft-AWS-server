@@ -16,6 +16,16 @@ LOG_FILE = 'monitoring.log'  # Log file name
 
 minecraft_server = JavaServer.lookup(f"{RCON_IP}:{RCON_PORT}")
 
+def send_to_api(data):
+    # API Gateway URL
+    url = f"{os.environ['API_URL']}/minecraft-prod/command"
+    print(url)
+    headers = {'Content-Type': 'application/json'}
+    print(f"Sending Data to API: {data}")
+    response = requests.post(url, headers=headers, data=json.dumps(data))
+    print(f"Data: {data} \nResponse: \n{response.json()}")  # To print the response from server
+    return response
+
 def get_timestamp():
     return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
@@ -48,10 +58,6 @@ def get_detailed_server_info():
         'latency': latency
     }
 
-def send_to_api_gateway(data):
-    response = requests.post(API_GATEWAY_URL, json=data)
-    return response.status_code
-
 def log_to_file(data):
     with open(LOG_FILE, 'a') as f:
         f.write(json.dumps(data, indent=4))
@@ -80,8 +86,8 @@ if __name__ == "__main__":
                 inactive_players_timer_start = time.time()
             elif inactive_players_timer_start and time.time() - inactive_players_timer_start >= INACTIVE_TIME:
                 # Send to API Gateway if no players for INACTIVE_TIME
-                print("sending to gateway")
-                send_to_api_gateway(server_info)
+                data = { "command": "stop" }
+                send_to_api(data)
                 inactive_players_timer_start = None
 
         except Exception as e:
