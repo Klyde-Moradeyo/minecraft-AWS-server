@@ -47,9 +47,9 @@ def state_bot_reply(command, state):
     ]
 
     RUNNING_REPLIES = [
-        "Your Minecraft server is up and running. Enjoy your adventure!",
-        "Success! Your Minecraft server is live. Start playing!",
-        "Your Minecraft server is ready and waiting. Time to dive in!"
+        "Your Minecraft server is being prepared. Please wait while we set up the infrastructure for your adventure!",
+        "Great news! We're currently setting up your Minecraft server. Get ready to embark on your journey soon!",
+        "Your Minecraft server is currently being provisioned. It won't be long before you can start your exciting adventure!"
     ]
 
     STOPPING_REPLIES = [
