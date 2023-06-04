@@ -196,6 +196,8 @@ def lambda_handler(event, context):
     try:
         # Extract request body
         command = json.loads(event["body"]).get("command")
+        if not isinstance(command, str):
+            raise ValueError('Command must be a string')
 
         # ECS Fargate Config
         ecs_client = boto3.client("ecs")
@@ -249,10 +251,11 @@ def lambda_handler(event, context):
                 bot_reply = "Your Minecraft server is under construction! Please hang in there, it should be ready in about 6-7 minutes."
             if command == "stop":
                 bot_reply = "We're preparing to take your Minecraft server offline, please wait."
-                
+
             response = { "TASK_ARN": task_arn, "BOT_REPLY": bot_reply }
         elif (command == "status"):
             previous_command = get_ssm_command()
+            print(f"previous_command {previous_command}")
             status = None
 
             if task_running:

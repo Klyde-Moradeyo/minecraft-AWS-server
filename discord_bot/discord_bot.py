@@ -9,6 +9,9 @@ import os
 import requests
 import json
 import tempfile
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 ######################################################################
 #                    Helper Functions                                #
@@ -28,7 +31,7 @@ def read_and_delete_file(temp_path):
             content = temp.read()
     else:
         content = None
-        print(f"{temp_path} doesn't exist")
+        logging.error(f"{temp_path} doesn't exist")
 
     return content
 
@@ -43,16 +46,16 @@ def send_to_api(data):
     
     headers = {'Content-Type': 'application/json'}
     
-    print(f"Sending Data to API: {data}")
+    logging.info(f"Sending Data to API: {data}")
     
     try:
         response = requests.post(url, headers=headers, json=data)
         response.raise_for_status()  # Raises a HTTPError if the response status is 4xx, 5xx
     except requests.exceptions.RequestException as err:
-        print(f"Error occurred: {err}")
+        logging.error(f"Error occurred: {err}")
         return None
 
-    print(f"Data: {data} \nResponse: \n{response.json()}")  # To print the response from server
+    logging.info(f"Data: {data} \nResponse: \n{response.json()}")  # To print the response from server
     
     return response
 
@@ -79,14 +82,14 @@ class MinecraftCommand:
             await bot_message.edit(content=f"User {self.context.author.name} used `{self.command}` command...")
             data = { "command": self.command }
             response = send_to_api(data)
-            print(f"response: {response}")
+            logging.info(f"response: {response.json()}")
             BOT_REPLY = response.json().get("BOT_REPLY", f"@{self.context.author}, we're sorry but we encountered a problem while processing your request. Please try again in a moment.\nIf the problem persists, don't hesitate to reach out to @The Black Mango for assistance.")
             if response is not None:
                 await bot_message.edit(content=BOT_REPLY)
             else:
                 await bot_message.edit(content=f"Error: Couldn't {self.command} server.")
         except Exception as e:
-            print(str(e))
+            logging.exception(str(e))
             await self.on_error(str(e))
 
     async def on_error(self, error_message):
