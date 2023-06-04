@@ -122,14 +122,15 @@ class CustomHelpCommand(commands.MinimalHelpCommand):
     def get_command_signature(self, command):
         return f'!{command.name}'
 
-    # Override send_bot_help method to customize help command format
     async def send_bot_help(self, mapping):
         destination = self.get_destination()
+        help_content = 'Command:\n'
         for cog, commands in mapping.items():
             if commands:
                 filtered = await self.filter_commands(commands, sort=True)
                 for command in filtered:
-                    await destination.send(f'Command:\n- {command.name}: {command.help}')
+                    help_content += f'- `{command.name}`: {command.help}\n'
+        await destination.send(help_content)
 
     async def send_pages(self):
         destination = self.get_destination()
@@ -173,36 +174,33 @@ async def on_ready():
         category_name = "BOT"  # Specify the category name here:
         category = discord.utils.get(guild.categories, name=category_name)  # Get the category
 
-        # If the category doesn't exist, create it 
-        if category is None:
+        if category is None:  # If the category doesn't exist, create it 
             category = await guild.create_category(category_name)
 
-        # Fetch all channels from the guild
-        all_channels = await guild.fetch_channels()
+        all_channels = await guild.fetch_channels()  # Fetch all channels from the guild
 
-        # Filter for the category
-        category_channels = [channel for channel in all_channels if channel.category == category]
+        category_channels = [channel for channel in all_channels if channel.category == category]  # Filter for the category
 
-        # Check if the channel already exists before creating it
-        channel = discord.utils.get(category_channels, name=channel_name)
+        channel = discord.utils.get(category_channels, name=channel_name)  # Check if the channel already exists before creating it
         if channel is None:
             channel = await category.create_text_channel(channel_name)
 
-        # Clear all messages in the designated channel
-        await channel.purge(limit=None)
+        await channel.purge(limit=None)  # Clear all messages in the designated channel
 
-        # Create help channel
-        help_channel = discord.utils.get(category_channels, name=help_channel_name)
+        help_channel = discord.utils.get(category_channels, name=help_channel_name)  # Create help channel
         if help_channel is None:
-            # create channel and allow only bot to send messages
             overwrites = {
-               guild.default_role: discord.PermissionOverwrite(send_messages=False),
+                guild.default_role: discord.PermissionOverwrite(send_messages=False),
                 bot.user: discord.PermissionOverwrite(send_messages=True)
             }
             help_channel = await category.create_text_channel(help_channel_name, overwrites=overwrites)
 
-        # Clear all messages in the help channel
-        await help_channel.purge(limit=None)
+        await help_channel.purge(limit=None)  # Clear all messages in the help channel
+
+        # Get help command context
+        help_context = commands.Context(bot=bot, prefix='!', guild=guild, channel=help_channel)
+        help_context.command = bot.help_command
+        bot.help_command.context = help_context  # Set the context for the help command
 
         # Send help command to the help channel
         await bot.help_command.send_bot_help(mapping=bot.help_command.get_bot_mapping())
