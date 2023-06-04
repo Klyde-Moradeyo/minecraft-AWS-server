@@ -6,6 +6,7 @@
 - [File Structure Tree](#file-structure-tree)
 - [Enhancements](#enhancements)
   - [Notes](#notes)
+- [Adding minecraft world to server](#adding-minecraft-world-to-server)
 
 # Overview
 This repo is for provisioning a minecraft server on Amazon Web Services (AWS). It contains the necessary scripts and configurations to set up a Minecraft server on AWS. The server utilizes AWS Fargate for serverless compute and integrates with a Discord bot to manage server requests.
@@ -102,6 +103,20 @@ The Minecraft server has the following enhancements:
 - Add check for github connection to fargate app.py
 - Minecraft Container should run outside of minecraft-world/world dir rather than copy it (save space on ec2 machine)
 - Add Check for API URL ACCESS in discord bot
+- Add alert from minecraft world size on ec2 instance - maybe mechanism that archives a repo in s3 and starts a new one from the head of a commit
 
 ## Notes
 - To get cross workspace access in terraform cloud, you need to give a workspace permision to view another.
+
+
+# Adding minecraft world to server
+1. create a new directory called `temp`
+2. copy your world into `temp`
+3. initilize a git repo in the `temp` folder
+4. Commit your files into the new repo
+5. Run the command to archive your git repo: `git bundle create minecraft-world.bundle --all`
+6. And then run the following command replacing s3_bucket_path with your s3 bucket URI
+   ```
+   s3_bucket_uri="s3://<your_bucket_name>"
+   aws s3 cp minecraft-world.bundle "$s3_bucket_uri"
+   ```
