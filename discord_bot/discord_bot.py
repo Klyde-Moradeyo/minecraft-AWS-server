@@ -119,6 +119,7 @@ class MinecraftCommand:
 TOKEN = os.environ["DISCORD_TOKEN"]
 
 channel_name = "mango-minecraft"
+category_name = "BOT"  # Specify the category name here:
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -133,7 +134,6 @@ async def on_ready():
     print("Servers:")
     for guild in bot.guilds:
         print(f"    - {guild.name}")
-        category_name = "BOT"  # Specify the category name here:
         category = discord.utils.get(guild.categories, name=category_name)  # Get the category
 
         # If the category doesn't exist, create it 
@@ -154,6 +154,15 @@ async def on_ready():
         # Clear all messages in the designated channel
         await channel.purge(limit=None)
 
+        # Create initial help message
+        help_message_content = "Commands:\n"
+        for command, help_message in HELP_MESSAGES.items():
+            help_message_content += f"`{command}`: {help_message}\n"
+        bot_message = await channel.send(help_message_content)
+
+        bot_message_id = bot_message.id
+        save_bot_message_id(bot_message_id)
+        
         if bot_message_id is not None:
             bot_message = await channel.fetch_message(bot_message_id)
 
