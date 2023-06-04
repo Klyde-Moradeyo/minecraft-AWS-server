@@ -36,12 +36,26 @@ def read_and_delete_file(temp_path):
 
 def send_to_api(data):
     # API Gateway URL
-    url = f"{os.environ['API_URL']}/minecraft-prod/command"
-    print(url)
+    url = os.getenv('API_URL')
+    if url is None:
+        print("API_URL is not set in the environment variables")
+        return None
+
+    url += "/minecraft-prod/command"
+    
     headers = {'Content-Type': 'application/json'}
+    
     print(f"Sending Data to API: {data}")
-    response = requests.post(url, headers=headers, data=json.dumps(data))
+    
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()  # Raises a HTTPError if the response status is 4xx, 5xx
+    except requests.exceptions.RequestException as err:
+        print(f"Error occurred: {err}")
+        return None
+
     print(f"Data: {data} \nResponse: \n{response.json()}")  # To print the response from server
+    
     return response
 
 ######################################################################
