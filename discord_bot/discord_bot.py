@@ -9,6 +9,7 @@ import os
 import requests
 import json
 import tempfile
+import embeds
 
 channel_name = "mango-minecraft"
 
@@ -130,7 +131,10 @@ async def get_server_status(context):
         await context.message.delete()
         data = { "command": "status"}
         status = send_to_api(data)
-        await bot_message.edit(content=f"Server status: {status.json()}")
+        if status is not None:
+            await bot_message.edit(content=f"Server status: {status.json()}")
+        else:
+            await bot_message.edit(content="Error: Couldn't retrieve server status.")
     except Exception as e:
         print(str(e))
         await bot_message.edit(content=f"Error: \n{e}")
