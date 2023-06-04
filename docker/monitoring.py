@@ -11,7 +11,7 @@ RCON_IP = 'mc-server'
 RCON_PORT = os.environ["RCON_PORT"]
 RCON_PASS = None # os.environ["RCON_PASS"]
 API_GATEWAY_URL = os.environ["API_URL"]
-INACTIVE_TIME =  1800  # 30 minutes |  Time in seconds for inactive players check
+INACTIVE_TIME =  600 # 1800  # 30 minutes |  Time in seconds for inactive players check
 CHECK_INTERVAL = 60  # Time in seconds for the check interval
 LOG_FILE = 'server_monitoring.log'  # Log file name
 
@@ -81,7 +81,9 @@ def log_to_file(data):
 def log_to_console_and_file(data):
     timestamped_data = {**data, 'timestamp': get_timestamp()}
     print(timestamped_data)
-    log_to_file(timestamped_data)
+    with open(LOG_FILE, 'a') as f:
+        f.write('SERVER_INFO: ' + ', '.join([f"{k}: {v}" for k, v in timestamped_data.items()]))
+        f.write('\n')
 
 if __name__ == "__main__":
     inactive_players_timer_start = None
@@ -91,7 +93,6 @@ if __name__ == "__main__":
             basic_info = get_basic_server_info()
             # detailed_info = get_detailed_server_info() if basic_info['online'] else {}
 
-            # server_info = {**basic_info, **detailed_info}
             server_info = {**basic_info}
 
             # Log the server info
@@ -100,16 +101,22 @@ if __name__ == "__main__":
             if server_info.get('players_online', 0) == 0:
                 if inactive_players_timer_start is None:
                     inactive_players_timer_start = time.time()
+                    log_to_console_and_file({"status": "No players online, starting timer."})
                 elif time.time() - inactive_players_timer_start >= INACTIVE_TIME:
                     # Send to API Gateway if no players for INACTIVE_TIME
+                    log_to_console_and_file({"status": "No players online for 30 minutes, sending API request."})
                     data = { "command": "stop" }
                     send_to_api(data)
                     inactive_players_timer_start = None
+                else:
+                    elapsed_time = time.time() - inactive_players_timer_start
+                    log_to_console_and_file({"status": f"No players online, elapsed time: {elapsed_time} seconds."})
             else:
                 inactive_players_timer_start = None
+                log_to_console_and_file({"status": "Players online, timer reset."})
 
         except Exception as e:
-            log_to_console_and_file({'Error': e})
+            log_to_console_and_file({'Error': str(e)})
 
         # Wait for the check interval before checking again
         time.sleep(CHECK_INTERVAL)
