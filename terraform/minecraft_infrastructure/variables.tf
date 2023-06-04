@@ -46,7 +46,7 @@ variable "tf_cloud_infra_handler_workspace" {
 variable "instance_type" {
   description = "EC2 Instnace Type"
   type = string
-  default = "t2.medium"	// "t3.micro"
+  default = "m6a.xlarge"	// For tests: "t2.medium" | https://amazon-aws-ec2-pricing-comparison.pcapps.com/
 }
 
 variable "ami" {
