@@ -18,28 +18,36 @@ LOG_FILE = 'server_monitoring.log'  # Log file name
 minecraft_server = JavaServer.lookup(f"{RCON_IP}:{RCON_PORT}")
 
 def send_to_api(data):
-    # API Gateway URL
+    MAX_RETRIES = 3
+    TIMEOUT = 5  # seconds
+
     url = os.getenv('API_URL')
     if url is None:
         log_to_console_and_file("API_URL is not set in the environment variables")
         return None
 
     url += "/minecraft-prod/command"
-    
     headers = {'Content-Type': 'application/json'}
-    
     log_to_console_and_file(f"Sending Data to API: {data}")
     
-    try:
-        response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()  # Raises a HTTPError if the response status is 4xx, 5xx
-    except requests.exceptions.RequestException as err:
-        log_to_console_and_file(f"Error occurred: {err}")
-        raise
+    for i in range(MAX_RETRIES):
+        try:
+            response = requests.post(url, headers=headers, json=data, timeout=TIMEOUT)
+            response.raise_for_status()
+            log_to_console_and_file(f"Data: {data} \nResponse: \n{response.json()}")
+            return response
+        except requests.exceptions.HTTPError as http_err:
+            log_to_console_and_file(f"HTTP error occurred: {http_err}")
+        except requests.exceptions.Timeout:
+            log_to_console_and_file("Request timed out")
+        except requests.exceptions.RequestException as req_err:
+            log_to_console_and_file(f"Error occurred: {req_err}")
 
-    log_to_console_and_file(f"Data: {data} \nResponse: \n{response.json()}")  # To print the response from server
+        wait_time = (2 ** i)  # exponential backoff
+        time.sleep(wait_time)
     
-    return response
+    log_to_console_and_file("Max retries exceeded with no successful response from API")
+    return None
 
 def get_timestamp():
     return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -75,15 +83,25 @@ def get_detailed_server_info():
 
 def log_to_file(data):
     with open(LOG_FILE, 'a') as f:
-        f.write(json.dumps(data, indent=4))
+        if isinstance(data, dict):
+            f.write(json.dumps(data, indent=4))
+        else:
+            f.write(data)
         f.write('\n')
 
 def log_to_console_and_file(data):
-    timestamped_data = {**data, 'timestamp': get_timestamp()}
-    print(timestamped_data)
-    with open(LOG_FILE, 'a') as f:
-        f.write('SERVER_INFO: ' + ', '.join([f"{k}: {v}" for k, v in timestamped_data.items()]))
-        f.write('\n')
+    timestamp = get_timestamp()
+    if isinstance(data, dict):
+        timestamped_data = {**data, 'timestamp': timestamp}
+        print(timestamped_data)
+        log_to_file('SERVER_INFO: ' + ', '.join([f"{k}: {v}" for k, v in timestamped_data.items()]))
+    else:
+        print(f"{timestamp}: {data}")
+        log_to_file(f"{timestamp}: {data}")
+
+def get_inactive_time_string():
+    minutes, seconds = divmod(INACTIVE_TIME, 60)
+    return f"{minutes} minutes {seconds} seconds" 
 
 if __name__ == "__main__":
     inactive_players_timer_start = None
@@ -104,7 +122,7 @@ if __name__ == "__main__":
                     log_to_console_and_file({"status": "No players online, starting timer."})
                 elif time.time() - inactive_players_timer_start >= INACTIVE_TIME:
                     # Send to API Gateway if no players for INACTIVE_TIME
-                    log_to_console_and_file({"status": "No players online for 30 minutes, sending API request."})
+                    log_to_console_and_file({"status": f"No players online for {get_inactive_time_string()}, sending API request."})
                     data = { "command": "stop" }
                     send_to_api(data)
                     inactive_players_timer_start = None
