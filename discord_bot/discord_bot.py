@@ -122,15 +122,6 @@ class CustomHelpCommand(commands.MinimalHelpCommand):
     def get_command_signature(self, command):
         return f'!{command.name}'
 
-    # Override send_bot_help method to customize help command format
-    async def send_bot_help(self, mapping):
-        destination = self.get_destination()
-        for cog, commands in mapping.items():
-            if commands:
-                filtered = await self.filter_commands(commands, sort=True)
-                for command in filtered:
-                    await destination.send(f'Command:\n- {command.name}: {command.help}')
-
     async def send_pages(self):
         destination = self.get_destination()
         for page in self.paginator.pages:
@@ -153,7 +144,6 @@ class CustomHelpCommand(commands.MinimalHelpCommand):
 TOKEN = os.environ["DISCORD_TOKEN"]
 
 channel_name = "mango-minecraft"
-help_channel_name = "help"
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -190,22 +180,6 @@ async def on_ready():
 
         # Clear all messages in the designated channel
         await channel.purge(limit=None)
-
-        # Create help channel
-        help_channel = discord.utils.get(category_channels, name=help_channel_name)
-        if help_channel is None:
-            # create channel and allow only bot to send messages
-            overwrites = {
-               guild.default_role: discord.PermissionOverwrite(send_messages=False),
-                bot.user: discord.PermissionOverwrite(send_messages=True)
-            }
-            help_channel = await category.create_text_channel(help_channel_name, overwrites=overwrites)
-
-        # Clear all messages in the help channel
-        await help_channel.purge(limit=None)
-
-        # Send help command to the help channel
-        await bot.help_command.send_bot_help(mapping=bot.help_command.get_bot_mapping())
 
         if bot_message_id is not None:
             bot_message = await channel.fetch_message(bot_message_id)
