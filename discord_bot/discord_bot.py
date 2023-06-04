@@ -17,12 +17,25 @@ logging.basicConfig(level=logging.DEBUG)
 #                    Helper Functions                                #
 ######################################################################
 file_path = None
+
+def load_bot_message_id():
+    try:
+        with open("bot_message_id.txt", "r") as f:
+            return int(f.read())
+    except FileNotFoundError:
+        return None
+
+def save_bot_message_id(message_id):
+    with open("bot_message_id.txt", "w") as f:
+        f.write(str(message_id))
+
+bot_message_id = load_bot_message_id()
+
 # helper function
 def write_to_file(content):
     with tempfile.NamedTemporaryFile(mode='w+', delete=False) as temp:
         temp.write(content)
         temp_path = temp.name
-    
     return temp_path
 
 def read_and_delete_file(temp_path):
@@ -32,7 +45,6 @@ def read_and_delete_file(temp_path):
     else:
         content = None
         logging.error(f"{temp_path} doesn't exist")
-
     return content
 
 def send_to_api(data):
@@ -69,32 +81,34 @@ class MinecraftCommand:
         self.bot_message = None
 
     async def execute(self):
-        global bot_message
+        global bot_message_id
         if self.command not in self.VALID_COMMANDS:
-            # await self.context.message.delete()
             await self.on_error(f"Invalid command: {self.command}. Please use a valid command.")
             return
         try:
-            # Check if bot_message doesn't exist or was deleted
-            if bot_message is None or not bot_message:
-                bot_message = await self.context.send(f"User {self.context.author.name} used `{self.command}` command...")
-            await self.context.message.delete()
-            await bot_message.edit(content=f"User {self.context.author.name} used `{self.command}` command...")
+            if bot_message_id is not None:
+                self.bot_message = await self.context.fetch_message(bot_message_id)
+            else:
+                self.bot_message = await self.context.send(f"User {self.context.author.name} used `{self.command}` command...")
+                bot_message_id = self.bot_message.id
+                save_bot_message_id(bot_message_id)
+
+            await self.bot_message.edit(content=f"User {self.context.author.name} used `{self.command}` command...")
             data = { "command": self.command }
             response = send_to_api(data)
-            logging.info(f"response: {response.json()}")
+            logging.info(f"response: {response}")
             BOT_REPLY = response.json().get("BOT_REPLY", f"@{self.context.author}, we're sorry but we encountered a problem while processing your request. Please try again in a moment.\nIf the problem persists, don't hesitate to reach out to @The Black Mango for assistance.")
             if response is not None:
-                await bot_message.edit(content=BOT_REPLY)
+                await self.bot_message.edit(content=BOT_REPLY)
             else:
-                await bot_message.edit(content=f"Error: Couldn't {self.command} server.")
+                await self.bot_message.edit(content=f"Error: Couldn't {self.command} server.")
         except Exception as e:
             logging.exception(str(e))
             await self.on_error(str(e))
 
     async def on_error(self, error_message):
-        if bot_message:
-            await bot_message.edit(content=f"Error: \n{error_message}")
+        if self.bot_message:
+            await self.bot_message.edit(content=f"Error: \n{error_message}")
         else:
             await self.context.send(f"Error: \n{error_message}")
 
@@ -110,18 +124,17 @@ intents = discord.Intents.default()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
-bot_message = None  # Global variable to store the bot message
 
 # Verify that the bot is connected
 @bot.event
 async def on_ready():
+    global bot_message_id
     print(f'{bot.user} has connected to Discord!')
     print("Servers:")
     for guild in bot.guilds:
         print(f"    - {guild.name}")
-
-        category_name = "BOT" # Specify the category name here:
-        category = discord.utils.get(guild.categories, name=category_name) # Get the category
+        category_name = "BOT"  # Specify the category name here:
+        category = discord.utils.get(guild.categories, name=category_name)  # Get the category
 
         # If the category doesn't exist, create it 
         if category is None:
@@ -138,6 +151,9 @@ async def on_ready():
         if channel is None:
             await category.create_text_channel(channel_name)
 
+        if bot_message_id is not None:
+            bot_message = await channel.fetch_message(bot_message_id)
+
 # On Message Event
 @bot.event
 async def on_message(message):
@@ -148,7 +164,7 @@ async def on_message(message):
     if message.channel.name == channel_name:
         if message.content.startswith("Hello"):
             await message.channel.send("Hello!")
-
+        await message.delete()  # delete the user's message
         await bot.process_commands(message)
 
 # Start minecraft server
@@ -166,6 +182,12 @@ async def get_server_status(context):
 # Stop minecraft server
 @bot.command()
 async def stop(context):
+    command = MinecraftCommand(context, "stop")
+    await command.execute()
+
+# Stop minecraft server
+@bot.command()
+async def help(context):
     command = MinecraftCommand(context, "stop")
     await command.execute()
     
