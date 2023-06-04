@@ -10,8 +10,6 @@ import requests
 import json
 import tempfile
 
-channel_name = "mango-minecraft"
-
 ######################################################################
 #                    Helper Functions                                #
 ######################################################################
@@ -60,6 +58,8 @@ def send_to_api(data):
 
 # Helper function to handle common logic in bot commands
 class MinecraftCommand:
+    VALID_COMMANDS = ["start", "stop", "status"]
+
     def __init__(self, context, command):
         self.context = context
         self.command = command
@@ -67,11 +67,16 @@ class MinecraftCommand:
 
     async def execute(self):
         global bot_message
+        if self.command not in self.VALID_COMMANDS:
+            # await self.context.message.delete()
+            await self.on_error(f"Invalid command: {self.command}. Please use a valid command.")
+            return
         try:
             # Check if bot_message doesn't exist or was deleted
             if bot_message is None or not bot_message:
-                bot_message = await self.context.send(f"Processing `{self.command}` command...")
+                bot_message = await self.context.send(f"User {self.context.author.name} used `{self.command}` command...")
             await self.context.message.delete()
+            await bot_message.edit(content=f"User {self.context.author.name} used `{self.command}` command...")
             data = { "command": self.command }
             response = send_to_api(data)
             if response is not None:
@@ -80,10 +85,13 @@ class MinecraftCommand:
                 await bot_message.edit(content=f"Error: Couldn't {self.command} server.")
         except Exception as e:
             print(str(e))
-            if bot_message:
-                await bot_message.edit(content=f"Error: \n{e}")
-            else:
-                await self.context.send(f"Error: \n{e}")
+            await self.on_error(str(e))
+
+    async def on_error(self, error_message):
+        if bot_message:
+            await bot_message.edit(content=f"Error: \n{error_message}")
+        else:
+            await self.context.send(f"Error: \n{error_message}")
 
 ######################################################################
 #                       Discord Bot                                  #
@@ -91,10 +99,13 @@ class MinecraftCommand:
 # Discord bot Token
 TOKEN = os.environ["DISCORD_TOKEN"]
 
+channel_name = "mango-minecraft"
+
 intents = discord.Intents.default()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
+bot_message = None  # Global variable to store the bot message
 
 # Verify that the bot is connected
 @bot.event
