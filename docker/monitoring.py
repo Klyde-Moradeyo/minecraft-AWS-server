@@ -11,20 +11,34 @@ RCON_IP = 'mc-server'
 RCON_PORT = os.environ["RCON_PORT"]
 RCON_PASS = None # os.environ["RCON_PASS"]
 API_GATEWAY_URL = os.environ["API_URL"]
-INACTIVE_TIME = 180  # 3600  # Time in seconds for inactive players check
-CHECK_INTERVAL = 5  # Time in seconds for the check interval
+INACTIVE_TIME =  1800  # 30 minutes |  Time in seconds for inactive players check
+CHECK_INTERVAL = 60  # Time in seconds for the check interval
 LOG_FILE = 'server_monitoring.log'  # Log file name
 
 minecraft_server = JavaServer.lookup(f"{RCON_IP}:{RCON_PORT}")
 
 def send_to_api(data):
     # API Gateway URL
-    url = f"{os.environ['API_URL']}/minecraft-prod/command"
-    print(url)
+    url = os.getenv('API_URL')
+    if url is None:
+        log_to_console_and_file("API_URL is not set in the environment variables")
+        return None
+
+    url += "/minecraft-prod/command"
+    
     headers = {'Content-Type': 'application/json'}
-    print(f"Sending Data to API: {data}")
-    response = requests.post(url, headers=headers, data=json.dumps(data))
-    print(f"Data: {data} \nResponse: \n{response.json()}")  # To print the response from server
+    
+    log_to_console_and_file(f"Sending Data to API: {data}")
+    
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()  # Raises a HTTPError if the response status is 4xx, 5xx
+    except requests.exceptions.RequestException as err:
+        log_to_console_and_file(f"Error occurred: {err}")
+        raise
+
+    log_to_console_and_file(f"Data: {data} \nResponse: \n{response.json()}")  # To print the response from server
+    
     return response
 
 def get_timestamp():
@@ -92,7 +106,6 @@ if __name__ == "__main__":
                 inactive_players_timer_start = None
 
         except Exception as e:
-            print(f"Error: {e}")
             log_to_console_and_file({'Error': e})
 
         # Wait for the check interval before checking again
