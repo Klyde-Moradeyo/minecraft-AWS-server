@@ -58,6 +58,33 @@ def send_to_api(data):
     
     return response
 
+# Helper function to handle common logic in bot commands
+class MinecraftCommand:
+    def __init__(self, context, command):
+        self.context = context
+        self.command = command
+        self.bot_message = None
+
+    async def execute(self):
+        global bot_message
+        try:
+            # Check if bot_message doesn't exist or was deleted
+            if bot_message is None or not bot_message:
+                bot_message = await self.context.send(f"Processing `{self.command}` command...")
+            await self.context.message.delete()
+            data = { "command": self.command }
+            response = send_to_api(data)
+            if response is not None:
+                await bot_message.edit(content=f"{self.command.capitalize()}ed Minecraft server: {response.json()}")
+            else:
+                await bot_message.edit(content=f"Error: Couldn't {self.command} server.")
+        except Exception as e:
+            print(str(e))
+            if bot_message:
+                await bot_message.edit(content=f"Error: \n{e}")
+            else:
+                await self.context.send(f"Error: \n{e}")
+
 ######################################################################
 #                       Discord Bot                                  #
 ######################################################################
@@ -111,46 +138,20 @@ async def on_message(message):
 # Start minecraft server
 @bot.command()
 async def start(context):
-    global file_path
-    try:
-        bot_message = await context.send("Processing `start` command...")
-        await context.message.delete()
-        data = { "command": "start" }
-        response = send_to_api(data)
-        await bot_message.edit(content=f"Started Minecraft server: {response.json()}")
-    except Exception as e:
-        print(str(e))
-        await bot_message.edit(content=f"Error: \n{e}")
+    command = MinecraftCommand(context, "start")
+    await command.execute()
 
 # Check Server Status
 @bot.command(name='status')
 async def get_server_status(context):
-    try:
-        bot_message = await context.send("Processing `status` command...")
-        await context.message.delete()
-        data = { "command": "status"}
-        status = send_to_api(data)
-        if status is not None:
-            await bot_message.edit(content=f"Server status: {status.json()}")
-        else:
-            await bot_message.edit(content="Error: Couldn't retrieve server status.")
-    except Exception as e:
-        print(str(e))
-        await bot_message.edit(content=f"Error: \n{e}")
+    command = MinecraftCommand(context, "status")
+    await command.execute()
 
 # Stop minecraft server
 @bot.command()
 async def stop(context):
-    global file_path
-    try:
-        bot_message = await context.send("Processing `stop` command...")
-        await context.message.delete()
-        data = { "command": "stop" }
-        response = send_to_api(data)
-        await bot_message.edit(content=f"Stopped Minecraft server: {response.json()}")
-    except Exception as e:
-        print(str(e))
-        await bot_message.edit(content=f"Error: \n{e}")
+    command = MinecraftCommand(context, "stop")
+    await command.execute()
     
 
 # Start the discord bot
