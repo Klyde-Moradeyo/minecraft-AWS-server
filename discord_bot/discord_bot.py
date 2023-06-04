@@ -127,9 +127,9 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 HELP_MESSAGES = {
-    "start": "🚀 Use this command to start the Minecraft server! Just type `!start` and watch the magic happen. ",
-    "status": "🔍 Type `!status` and I'll get the latest updates for you.",
-    "stop": "🛑 Want to pause your Minecraft journey for now? Type !stop and the server will safely stop, allowing you to resume later.",
+    "start": " 🚀 Use this command to start the Minecraft server! Just type `!start` and watch the magic happen. ",
+    "status": " 🔍 Type `!status` and I'll get the latest updates for you.",
+    "stop": " 🛑 Want to pause your Minecraft journey for now? Type `!stop` and the server will safely stop, allowing you to resume later.",
 }
 
 # Verify that the bot is connected
@@ -161,7 +161,7 @@ async def on_ready():
         await channel.purge(limit=None)
 
         # Create initial help message
-        help_message_content = "Commands:\n"
+        help_message_content = ""
         for command, help_message in HELP_MESSAGES.items():
             help_message_content += f"`{command}`: {help_message}\n"
         bot_message = await channel.send(help_message_content)
