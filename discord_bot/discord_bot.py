@@ -126,6 +126,12 @@ intents.message_content = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
+HELP_MESSAGES = {
+    "start": "🚀 Use this command to start the Minecraft server! Just type `!start` and watch the magic happen. ",
+    "status": "🔍 Type `!status` and I'll get the latest updates for you.",
+    "stop": "🛑 Want to pause your Minecraft journey for now? Type !stop and the server will safely stop, allowing you to resume later.",
+}
+
 # Verify that the bot is connected
 @bot.event
 async def on_ready():
