@@ -94,7 +94,7 @@ def log_to_console_and_file(data):
     if isinstance(data, dict):
         timestamped_data = {**data, 'timestamp': timestamp}
         print(timestamped_data)
-        log_to_file('SERVER_INFO: ' + ', '.join([f"{k}: {v}" for k, v in timestamped_data.items()]))
+        log_to_file(', '.join([f"{k}: {v}" for k, v in timestamped_data.items()]))
     else:
         print(f"{timestamp}: {data}")
         log_to_file(f"{timestamp}: {data}")
@@ -119,16 +119,16 @@ if __name__ == "__main__":
             if server_info.get('players_online', 0) == 0:
                 if inactive_players_timer_start is None:
                     inactive_players_timer_start = time.time()
-                    log_to_console_and_file({"status": "No players online, starting timer."})
+                    log_to_console_and_file({"status": "No players online, starting timer"})
                 elif time.time() - inactive_players_timer_start >= INACTIVE_TIME:
                     # Send to API Gateway if no players for INACTIVE_TIME
-                    log_to_console_and_file({"status": f"No players online for {get_inactive_time_string()}, sending API request."})
+                    log_to_console_and_file({"status": f"No players online for {get_inactive_time_string()}, sending API request"})
                     data = { "command": "stop" }
                     send_to_api(data)
                     inactive_players_timer_start = None
                 else:
-                    elapsed_time = time.time() - inactive_players_timer_start
-                    log_to_console_and_file({"status": f"No players online, elapsed time: {elapsed_time} seconds."})
+                    elapsed_time = int(time.time() - inactive_players_timer_start)
+                    log_to_console_and_file({"status": f"No players online, elapsed time: {elapsed_time} seconds"})
             else:
                 inactive_players_timer_start = None
                 log_to_console_and_file({"status": "Players online, timer reset."})
