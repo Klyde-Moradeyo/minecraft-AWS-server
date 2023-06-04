@@ -185,11 +185,10 @@ async def stop(context):
     command = MinecraftCommand(context, "stop")
     await command.execute()
 
-# Stop minecraft server
-@bot.command()
-async def help(context):
-    command = MinecraftCommand(context, "stop")
-    await command.execute()
+# @bot.command()
+# async def help(context):
+#     command = MinecraftCommand(context, "stop")
+#     await command.execute()
     
 
 # Start the discord bot
