@@ -264,12 +264,10 @@ def lambda_handler(event, context):
             
             if status is None:
                 print("No task with the specified tags was found")
-                response = { "STATUS": status, "BOT_REPLY": "NOT RUNNING"}
-                return
-            
-            bot_reply = state_bot_reply(previous_command, status)
-
-            response = { "STATUS": status, "BOT_REPLY": bot_reply }
+                response = {"STATUS": status, "BOT_REPLY": "NOT RUNNING"}
+            else:
+                bot_reply = state_bot_reply(previous_command, status)
+                response = {"STATUS": status, "BOT_REPLY": bot_reply}
         else:
             raise ValueError("Invalid command: " + command)
 
