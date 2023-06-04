@@ -11,7 +11,7 @@ RCON_IP = 'mc-server'
 RCON_PORT = os.environ["RCON_PORT"]
 RCON_PASS = None # os.environ["RCON_PASS"]
 API_GATEWAY_URL = os.environ["API_URL"]
-INACTIVE_TIME =  600 # 1800  # 30 minutes |  Time in seconds for inactive players check
+INACTIVE_TIME =  1800  # 30 minutes |  Time in seconds for inactive players check
 CHECK_INTERVAL = 60  # Time in seconds for the check interval
 LOG_FILE = 'server_monitoring.log'  # Log file name
 
