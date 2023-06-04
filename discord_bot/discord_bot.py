@@ -79,8 +79,10 @@ class MinecraftCommand:
             await bot_message.edit(content=f"User {self.context.author.name} used `{self.command}` command...")
             data = { "command": self.command }
             response = send_to_api(data)
+            print(f"response: {response}")
+            BOT_REPLY = response.json().get("BOT_REPLY", f"@{self.context.author}, we're sorry but we encountered a problem while processing your request. Please try again in a moment.\nIf the problem persists, don't hesitate to reach out to @The Black Mango for assistance.")
             if response is not None:
-                await bot_message.edit(content=f"{self.command.capitalize()}ed Minecraft server: {response.json()}")
+                await bot_message.edit(content=BOT_REPLY)
             else:
                 await bot_message.edit(content=f"Error: Couldn't {self.command} server.")
         except Exception as e:
