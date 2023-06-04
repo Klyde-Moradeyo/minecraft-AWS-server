@@ -9,7 +9,7 @@ import os
 import requests
 import json
 import tempfile
-import embeds
+# import embeds
 
 channel_name = "mango-minecraft"
 
