@@ -151,6 +151,9 @@ async def on_ready():
         if channel is None:
             await category.create_text_channel(channel_name)
 
+        # Clear all messages in the designated channel
+        await channel.purge(limit=None)
+
         if bot_message_id is not None:
             bot_message = await channel.fetch_message(bot_message_id)
 
