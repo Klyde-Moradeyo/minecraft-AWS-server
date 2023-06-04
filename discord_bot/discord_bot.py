@@ -113,35 +113,41 @@ async def on_message(message):
 async def start(context):
     global file_path
     try:
+        bot_message = await context.send("Processing `start` command...")
+        await context.message.delete()
         data = { "command": "start" }
         response = send_to_api(data)
-        await context.send(f"starting minecraft server: {response.json()}")
+        await bot_message.edit(content=f"Started Minecraft server: {response.json()}")
     except Exception as e:
         print(str(e))
-        await context.send(f"Error: \n{e}")
+        await bot_message.edit(content=f"Error: \n{e}")
 
 # Check Server Status
 @bot.command(name='status')
 async def get_server_status(context):
     try:
+        bot_message = await context.send("Processing `status` command...")
+        await context.message.delete()
         data = { "command": "status"}
         status = send_to_api(data)
-        await context.send(f"server status: {status.json()}")
+        await bot_message.edit(content=f"Server status: {status.json()}")
     except Exception as e:
         print(str(e))
-        await context.send(f"Error: \n{e}")
+        await bot_message.edit(content=f"Error: \n{e}")
 
-# stop minecraft server
+# Stop minecraft server
 @bot.command()
 async def stop(context):
     global file_path
     try:
+        bot_message = await context.send("Processing `stop` command...")
+        await context.message.delete()
         data = { "command": "stop" }
         response = send_to_api(data)
-        await context.send(f"Stopping Minecraft server: {response.json()}")
+        await bot_message.edit(content=f"Stopped Minecraft server: {response.json()}")
     except Exception as e:
         print(str(e))
-        await context.send(f"Error: \n{e}")
+        await bot_message.edit(content=f"Error: \n{e}")
     
 
 # Start the discord bot
