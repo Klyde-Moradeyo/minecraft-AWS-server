@@ -84,8 +84,14 @@ async def on_ready():
         if category is None:
             category = await guild.create_category(category_name)
 
+        # Fetch all channels from the guild
+        all_channels = await guild.fetch_channels()
+
+        # Filter for the category
+        category_channels = [channel for channel in all_channels if channel.category == category]
+
         # Check if the channel already exists before creating it
-        channel = discord.utils.get(category.text_channels, name=channel_name)
+        channel = discord.utils.get(category_channels, name=channel_name)
         if channel is None:
             await category.create_text_channel(channel_name)
 
