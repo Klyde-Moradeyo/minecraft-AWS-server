@@ -2,7 +2,7 @@ FROM python:3.10-slim
 
 WORKDIR /app
 
-COPY discord_bot.py requirements.txt /app/
+COPY discord_bot.py requirements.txt embeds.py /app/
 
 RUN pip install -r requirements.txt
 
