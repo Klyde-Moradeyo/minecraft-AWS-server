@@ -97,12 +97,15 @@ if __name__ == "__main__":
             # Log the server info
             log_to_console_and_file(server_info)
 
-            if server_info.get('players_online', 0) > 0:
-                inactive_players_timer_start = time.time()
-            elif inactive_players_timer_start and time.time() - inactive_players_timer_start >= INACTIVE_TIME:
-                # Send to API Gateway if no players for INACTIVE_TIME
-                data = { "command": "stop" }
-                send_to_api(data)
+            if server_info.get('players_online', 0) == 0:
+                if inactive_players_timer_start is None:
+                    inactive_players_timer_start = time.time()
+                elif time.time() - inactive_players_timer_start >= INACTIVE_TIME:
+                    # Send to API Gateway if no players for INACTIVE_TIME
+                    data = { "command": "stop" }
+                    send_to_api(data)
+                    inactive_players_timer_start = None
+            else:
                 inactive_players_timer_start = None
 
         except Exception as e:
