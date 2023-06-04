@@ -124,7 +124,7 @@ class CustomHelpCommand(commands.MinimalHelpCommand):
 
     async def send_bot_help(self, mapping):
         destination = self.get_destination()
-        help_content = 'Commands:\n'
+        help_content = 'Command:\n'
         for cog, commands in mapping.items():
             if commands:
                 filtered = await self.filter_commands(commands, sort=True)
@@ -140,10 +140,12 @@ class CustomHelpCommand(commands.MinimalHelpCommand):
     def get_destination(self):
         """Gets a `discord.abc.Messageable` to send the help pages to."""
         for guild in self.context.bot.guilds:
-            for channel in guild.channels:
-                if channel.name == "mango-minecraft":
-                    return channel
-        return self.context.channel  # fallback to the channel the command was invoked fro
+            for category in guild.categories:
+                if category.name == "BOT":
+                    for channel in category.channels:
+                        if channel.name == channel_name:
+                            return channel
+        return self.context.channel  # fallback to the channel the command was invoked from
 
 ######################################################################
 #                       Discord Bot                                  #
@@ -185,12 +187,22 @@ async def on_ready():
 
         await channel.purge(limit=None)  # Clear all messages in the designated channel
 
+        help_channel = discord.utils.get(category_channels, name=help_channel_name)  # Create help channel
+        if help_channel is None:
+            overwrites = {
+                guild.default_role: discord.PermissionOverwrite(send_messages=False),
+                bot.user: discord.PermissionOverwrite(send_messages=True)
+            }
+            help_channel = await category.create_text_channel(help_channel_name, overwrites=overwrites)
+
+        await help_channel.purge(limit=None)  # Clear all messages in the help channel
+
         # Get help command context
-        help_context = commands.Context(bot=bot, prefix='!', guild=guild, channel=channel)
+        help_context = commands.Context(bot=bot, prefix='!', guild=guild, channel=help_channel)
         help_context.command = bot.help_command
         bot.help_command.context = help_context  # Set the context for the help command
 
-        # Send help command to the mango-minecraft channel
+        # Send help command to the help channel
         await bot.help_command.send_bot_help(mapping=bot.help_command.get_bot_mapping())
 
         if bot_message_id is not None:
