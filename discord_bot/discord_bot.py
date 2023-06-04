@@ -4,13 +4,12 @@
 #   - API_URL
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 import os
 import requests
 import json
 import tempfile
 import logging
-from datetime import datetime
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -18,7 +17,6 @@ logging.basicConfig(level=logging.DEBUG)
 #                    Helper Functions                                #
 ######################################################################
 file_path = None
-last_command_time = datetime.now()
 
 def load_bot_message_id():
     try:
@@ -84,8 +82,6 @@ class MinecraftCommand:
 
     async def execute(self):
         global bot_message_id
-        global last_command_time
-        last_command_time = datetime.now()
         if self.command not in self.VALID_COMMANDS:
             await self.on_error(f"Invalid command: {self.command}. Please use a valid command.")
             return
@@ -136,31 +132,12 @@ HELP_MESSAGES = {
     "stop": " 🛑 Want to pause your Minecraft journey for now? Type `!stop` and the server will safely stop, allowing you to resume later.",
 }
 
-@tasks.loop(minutes=1)  # check every minute; 
-async def check_inactivity():
-    global last_command_time
-    inactivity_threshold = 2  # in minutes; adjust to your liking
-
-    if (datetime.now() - last_command_time).total_seconds() // 60 > inactivity_threshold:
-        if bot_message_id is not None:
-            channel = bot.get_channel(id)  # replace "id" with the ID of your channel
-            bot_message = await channel.fetch_message(bot_message_id)
-            # Reset to initial help message
-            help_message_content = ""
-            for command, help_message in HELP_MESSAGES.items():
-                help_message_content += f"`{command}`: {help_message}\n"
-            await bot_message.edit(content=help_message_content)
-
 # Verify that the bot is connected
 @bot.event
 async def on_ready():
     global bot_message_id
     print(f'{bot.user} has connected to Discord!')
     print("Servers:")
-
-    # start the inactivity check task
-    check_inactivity.start()  
-
     for guild in bot.guilds:
         print(f"    - {guild.name}")
         category = discord.utils.get(guild.categories, name=category_name)  # Get the category
