@@ -71,9 +71,6 @@ def send_to_api(data):
     
     return response
 
-######################################################################
-#                  MinecraftCommand Class                            #
-######################################################################
 # Helper function to handle common logic in bot commands
 class MinecraftCommand:
     VALID_COMMANDS = ["start", "stop", "status"]
@@ -116,28 +113,6 @@ class MinecraftCommand:
             await self.context.send(f"Error: \n{error_message}")
 
 ######################################################################
-#                 CustomHelpCommand Class                            #
-######################################################################
-class CustomHelpCommand(commands.MinimalHelpCommand):
-    def get_command_signature(self, command):
-        return f'!{command.name}'
-
-    async def send_pages(self):
-        destination = self.get_destination()
-        for page in self.paginator.pages:
-            await destination.send(page)
-
-    def get_destination(self):
-        """Gets a `discord.abc.Messageable` to send the help pages to."""
-        for guild in self.context.bot.guilds:
-            for category in guild.categories:
-                if category.name == "BOT":
-                    for channel in category.channels:
-                        if channel.name == channel_name:
-                            return channel
-        return self.context.channel  # fallback to the channel the command was invoked from
-
-######################################################################
 #                       Discord Bot                                  #
 ######################################################################
 # Discord bot Token
@@ -149,8 +124,6 @@ intents = discord.Intents.default()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
-
-bot.help_command = CustomHelpCommand()
 
 # Verify that the bot is connected
 @bot.event
