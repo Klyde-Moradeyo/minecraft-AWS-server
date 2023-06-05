@@ -51,6 +51,39 @@ create_env_file() {
     echo ".env file created at $env_file_path"
 }
 
+function mc_server_icon() {
+  local docker_compose_file_path="$1"
+
+  # Check if docker_compose_file_path is not empty
+  if [[ -z "${docker_compose_file_path}" ]]; then
+    echo "Error: No Docker Compose file path provided"
+    return 1
+  fi
+
+  # Check if the Docker Compose file exists
+  if [[ ! -f "${docker_compose_file_path}" ]]; then
+    echo "Error: File ${docker_compose_file_path} does not exist"
+    return 1
+  fi
+
+  # List of URLs
+  local urls=(
+    'https://drive.google.com/uc?id=1cKMBJ9YR3nco-eAd2H-N1Rrg3UkAdMRx'
+    'https://drive.google.com/uc?id=1M-U5Id6gjk3IUcvJv9kXRvWA7x9PTBpE'
+    'https://drive.google.com/uc?id=18zAABmF2vimdQ_275c4llR9GTKdLNX7D'
+    'https://drive.google.com/uc?id=1whYab8byQ3pW5aVW70iCu-EBi6p_VdVn'
+    'https://drive.google.com/uc?id=1rMjv3bdBIQVmbjUnWcfKkiBd8jPbp9UX'
+    'https://drive.google.com/uc?id=1VvTbz130Q2vmu7CSFP-ztoij04ZKkt4O'
+    'https://drive.google.com/uc?id=1LkfW4ERVI-Y2r74KoyA-gGLYM-k2fnsz'
+  )
+
+  # Select a random URL from the list
+  local icon_url="${urls[RANDOM % ${#urls[@]}]}"
+
+  # Replace "xxICONxx" with the selected URL in the Docker Compose file
+  sed -i.bak "s|xxICONxx|$icon_url|g" "${docker_compose_file_path}"
+}
+
 function run {
   # Set up git creds
   aws ssm get-parameter --name "$git_private_key_name" --with-decryption --region "$aws_region" --query "Parameter.Value" --output text > ~/.ssh/id_rsa
@@ -84,6 +117,9 @@ function run {
 
   # Create .env file for server monitoring
   create_env_file "$docker_folder" "$api_url" "$rcon_port"
+
+  # Choose a random server image
+  mc_server_icon "$docker_folder/docker-compose.yml"
 
   # Run Docker Compose
   docker_compose_file="$repo_folder/docker"

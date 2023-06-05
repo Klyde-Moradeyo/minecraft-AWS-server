@@ -27,7 +27,7 @@ services:
       ENABLE_COMMAND_BLOCK: "false"
       TZ: "Europe/London" # Time zone
       LOG_TIMESTAMP: "true"
-      ICON: "https://static.wikia.nocookie.net/hunterxhunter/images/8/88/Isaac_Netero_HE_Portrait.png" # Server Icon
+      ICON: "xxICONxx" # Server Icon
     tty: true
     stdin_open: true
     restart: unless-stopped
