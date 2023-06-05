@@ -30,19 +30,19 @@ class BotConfig:
                    "🏡 IP: `52.56.39.89:25565`\n" +
                    "⚙️ Version: `1.19.2`\n\n" +
                    "✨ **Features:**\n" +
-                   "**Multiplayer Sleep:** 💤 A single player can sleep and skip the night for everyone.\n" +
-                   "**Coordinates HUD:** 📍 Coordinates and 24-hour clock display above the hotbar using `/trigger ch_toggle`\n" +
-                   "**Armour Status:** 🛡️ Modify and pose armor stands using a special book.\n" +
-                   "**Custom Nether Portal:** 🔥 Create Nether portals of any shape or size, even with crying obsidian.\n" +
-                   "**Item Averages:** 💡 Count items passing through a given spot.\n" +
-                   " **Larger Phantoms:** 🦇 Creates larger phantoms based on how long since you last slept.\n" +
-                   "**Real-Time Clock:** ⏰ Trigger to let you see how long a Minecraft world has been running.\n" +
-                   "**Village Death Message:** 💔 Villager death messages.\n" +
-                   "**XP Management:** 💼 Right-Click an enchantment table with an empty bottle to fill it with some of your XP.\n\n" +
+                   "- **Multiplayer Sleep:** 💤 A single player can sleep and skip the night for everyone.\n" +
+                   "- **Coordinates HUD:** 📍 Coordinates and 24-hour clock display above the hotbar using `/trigger ch_toggle`\n" +
+                   "- **Armour Status:** 🛡️ Modify and pose armor stands using a special book.\n" +
+                   "- **Custom Nether Portal:** 🔥 Create Nether portals of any shape or size, even with crying obsidian.\n" +
+                   "- **Item Averages:** 💡 Count items passing through a given spot.\n" +
+                   "- **Larger Phantoms:** 🦇 Creates larger phantoms based on how long since you last slept.\n" +
+                   "- **Real-Time Clock:** ⏰ Trigger to let you see how long a Minecraft world has been running.\n" +
+                   "- **Village Death Message:** 💔 Villager death messages.\n" +
+                   "- **XP Management:** 💼 Right-Click an enchantment table with an empty bottle to fill it with some of your XP.\n\n" +
                    "🛠️ **Commands:**",
-        "start": "**!start**: 🚀 Start the Minecraft server. Command: `!start`",
-        "status": "**!status**: 🔍 Get the latest updates. Command: `!status`",
-        "stop": "**!stop**: 🛑 Stop the Minecraft server. Command: `!stop`",
+        "start": "- **start**: 🚀 Use this command to start the Minecraft server! Just type `!start` and watch the magic happen.",
+        "status": "- **status**: 🔍 Type `!status` and I'll get the latest updates for you.",
+        "stop": "- **stop**: 🛑 Want to pause your Minecraft journey for now? Type `!stop` and the server will safely stop, allowing you to resume later",
         "footer": "------------------------------------------------------------------------------------------------------------"
     }
 
@@ -171,7 +171,7 @@ async def on_ready():
         await channel.send(help_message_content)
 
         # Create a second message (message 2) that will be updated later
-        bot_message = await channel.send("📜🔮 The command scroll is at your service")
+        bot_message = await channel.send("📜 The command scroll is at your service 🔮")
         logging.info(f"bot_message: {bot_message} | {bot_message.id}")
 
         # Store the bot message ID for this guild
