@@ -14,22 +14,42 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 ######################################################################
+#                       Configuration                                #
+######################################################################
+class BotConfig:
+    TOKEN = os.environ["DISCORD_TOKEN"]
+    API_URL = os.getenv('API_URL')
+    CHANNEL_ID = {}  # Initialize as a dictionary
+    CHANNEL_NAME = "mango-minecraft"
+    CATEGORY_NAME = "BOT"  # Specify the category name here
+    FILE_PATH = None
+    BOT_MESSAGE_ID = {}  # Initialize as a dictionary
+
+    HELP_MESSAGES = {
+        "header": "🥭 **Mango Minecraft Guidebook** 🗺️\n\n" +
+                   "🏡 IP: `52.56.39.89:25565`\n" +
+                   "⚙️ Version: `1.19.2`\n\n" +
+                   "✨ **Features:**\n" +
+                   "**Multiplayer Sleep:** 💤 A single player can sleep and skip the night for everyone.\n" +
+                   "**Coordinates HUD:** 📍 Coordinates and 24-hour clock display above the hotbar using `/trigger ch_toggle`\n" +
+                   "**Armour Status:** 🛡️ Modify and pose armor stands using a special book.\n" +
+                   "**Custom Nether Portal:** 🔥 Create Nether portals of any shape or size, even with crying obsidian.\n" +
+                   "**Item Averages:** 💡 Count items passing through a given spot.\n" +
+                   " **Larger Phantoms:** 🦇 Creates larger phantoms based on how long since you last slept.\n" +
+                   "**Real-Time Clock:** ⏰ Trigger to let you see how long a Minecraft world has been running.\n" +
+                   "**Village Death Message:** 💔 Villager death messages.\n" +
+                   "**XP Management:** 💼 Right-Click an enchantment table with an empty bottle to fill it with some of your XP.\n\n" +
+                   "🛠️ **Commands:**",
+        "start": "**!start**: 🚀 Start the Minecraft server. Command: `!start`",
+        "status": "**!status**: 🔍 Get the latest updates. Command: `!status`",
+        "stop": "**!stop**: 🛑 Stop the Minecraft server. Command: `!stop`",
+        "footer": "------------------------------------------------------------------------------------------------------------"
+    }
+
+######################################################################
 #                    Helper Functions                                #
 ######################################################################
 file_path = None
-
-def load_bot_message_id():
-    try:
-        with open("bot_message_id.txt", "r") as f:
-            return int(f.read())
-    except FileNotFoundError:
-        return None
-
-def save_bot_message_id(message_id):
-    with open("bot_message_id.txt", "w") as f:
-        f.write(str(message_id))
-
-bot_message_id = load_bot_message_id()
 
 # helper function
 def write_to_file(content):
@@ -81,17 +101,16 @@ class MinecraftCommand:
         self.bot_message = None
 
     async def execute(self):
-        global bot_message_id
         if self.command not in self.VALID_COMMANDS:
             await self.on_error(f"Invalid command: {self.command}. Please use a valid command.")
             return
         try:
-            if bot_message_id is not None:
-                self.bot_message = await self.context.fetch_message(bot_message_id)
-            else:
-                self.bot_message = await self.context.send(f"User {self.context.author.name} used `{self.command}` command...")
-                bot_message_id = self.bot_message.id
-                save_bot_message_id(bot_message_id)
+            # Fetch the channel and bot message ID specific to the guild
+            channel_id = BotConfig.CHANNEL_ID[self.context.guild.id]
+            bot_message_id = BotConfig.BOT_MESSAGE_ID[self.context.guild.id]
+
+            channel = await bot.fetch_channel(channel_id)
+            self.bot_message = await channel.fetch_message(bot_message_id)
 
             await self.bot_message.edit(content=f"User {self.context.author.name} used `{self.command}` command...")
             data = { "command": self.command }
@@ -115,62 +134,49 @@ class MinecraftCommand:
 ######################################################################
 #                       Discord Bot                                  #
 ######################################################################
-# Discord bot Token
-TOKEN = os.environ["DISCORD_TOKEN"]
-
-channel_name = "mango-minecraft"
-category_name = "BOT"  # Specify the category name here:
-
 intents = discord.Intents.default()
 intents.message_content = True
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 
-HELP_MESSAGES = {
-    "start": " 🚀 Use this command to start the Minecraft server! Just type `!start` and watch the magic happen. ",
-    "status": " 🔍 Type `!status` and I'll get the latest updates for you.",
-    "stop": " 🛑 Want to pause your Minecraft journey for now? Type `!stop` and the server will safely stop, allowing you to resume later.",
-}
-
 # Verify that the bot is connected
 @bot.event
 async def on_ready():
-    global bot_message_id
     print(f'{bot.user} has connected to Discord!')
     print("Servers:")
     for guild in bot.guilds:
         print(f"    - {guild.name}")
-        category = discord.utils.get(guild.categories, name=category_name)  # Get the category
 
-        # If the category doesn't exist, create it 
+        # Fetch the category, create it if it doesn't exist
+        category = discord.utils.get(guild.categories, name=BotConfig.CATEGORY_NAME)
         if category is None:
-            category = await guild.create_category(category_name)
+            category = await guild.create_category(BotConfig.CATEGORY_NAME)
 
-        # Fetch all channels from the guild
-        all_channels = await guild.fetch_channels()
-
-        # Filter for the category
-        category_channels = [channel for channel in all_channels if channel.category == category]
-
-        # Check if the channel already exists before creating it
-        channel = discord.utils.get(category_channels, name=channel_name)
+        # Fetch the channel, create it if it doesn't exist
+        channel = discord.utils.get(category.text_channels, name=BotConfig.CHANNEL_NAME)
         if channel is None:
-            channel = await category.create_text_channel(channel_name)
+            channel = await category.create_text_channel(BotConfig.CHANNEL_NAME)
 
-        # Clear all messages in the designated channel
+        # Store the channel ID
+        BotConfig.CHANNEL_ID[guild.id] = channel.id
+
         await channel.purge(limit=None)
 
-        # Create initial help message
-        help_message_content = ""
-        for command, help_message in HELP_MESSAGES.items():
-            help_message_content += f"`{command}`: {help_message}\n"
-        bot_message = await channel.send(help_message_content)
+        # Create initial help message (message 1)
+        help_message_content = BotConfig.HELP_MESSAGES["header"] + "\n"
+        for command, help_message in BotConfig.HELP_MESSAGES.items():
+            if command != "header" and command != "footer":
+                help_message_content += f"{help_message}\n"
+        help_message_content += BotConfig.HELP_MESSAGES["footer"]
+        await channel.send(help_message_content)
 
-        bot_message_id = bot_message.id
-        save_bot_message_id(bot_message_id)
-        
-        if bot_message_id is not None:
-            bot_message = await channel.fetch_message(bot_message_id)
+        # Create a second message (message 2) that will be updated later
+        bot_message = await channel.send("📜🔮 The command scroll is at your service")
+        logging.info(f"bot_message: {bot_message} | {bot_message.id}")
+
+        # Store the bot message ID for this guild
+        BotConfig.BOT_MESSAGE_ID[guild.id] = bot_message.id
+        logging.info(f"MESSAGE_ID: {BotConfig.BOT_MESSAGE_ID}")
 
 # On Message Event
 @bot.event
@@ -179,7 +185,7 @@ async def on_message(message):
         return
 
     # Only process commands in the Mango-Minecraft channel
-    if message.channel.name == channel_name:
+    if message.channel.name == BotConfig.CHANNEL_NAME:
         if message.content.startswith("Hello"):
             await message.channel.send("Hello!")
         await message.delete()  # delete the user's message
@@ -212,14 +218,8 @@ async def stop(context):
     command = MinecraftCommand(context, "stop")
     await command.execute()
 
-# @bot.command()
-# async def help(context):
-#     command = MinecraftCommand(context, "stop")
-#     await command.execute()
-    
-
 # Start the discord bot
-bot.run(TOKEN)
+bot.run(BotConfig.TOKEN)
 
 # Useful Commands
 # List players
@@ -230,4 +230,3 @@ bot.run(TOKEN)
 # send message to all players
 # get server discord usage
 # display serve rlogs
-
