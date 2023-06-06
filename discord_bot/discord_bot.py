@@ -24,10 +24,11 @@ class BotConfig:
     CATEGORY_NAME = "BOT"  # Specify the category name here
     FILE_PATH = None
     BOT_MESSAGE_ID = {}  # Initialize as a dictionary
+    SERVER_IP = os.environ["SERVER_IP"]
 
     HELP_MESSAGES = {
         "header": "🥭 **Mango Minecraft Guidebook** 🗺️\n\n" +
-                   "🏡 IP: `52.56.39.89:25565`\n" +
+                   f"🏡 IP: `{SERVER_IP}:25565`\n" +
                    "⚙️ Version: `1.19.2`\n\n" +
                    "✨ **Features:**\n" +
                    "- **Multiplayer Sleep:** 💤 A single player can sleep and skip the night for everyone.\n" +
@@ -91,6 +92,9 @@ def send_to_api(data):
     
     return response
 
+######################################################################
+#                       MinecraftCommand                             #
+######################################################################
 # Helper function to handle common logic in bot commands
 class MinecraftCommand:
     VALID_COMMANDS = ["start", "stop", "status"]
