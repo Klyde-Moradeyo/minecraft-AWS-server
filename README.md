@@ -151,5 +151,3 @@ This project is licensed under the terms of the MIT license. See the [LICENSE](L
 ## Where to find me
 
 For any queries, you can message me on LinkedIn at [Klyde Moradeyo](https://www.linkedin.com/in/klyde-moradeyo-349847197/).
-
-Please fix any spelling mistakes in the above README.md for my Minecraft AWS Server Git repository. Give your fix in a code block.
