@@ -7,18 +7,18 @@ This repository contains the necessary scripts and configurations to set up a Mi
 ## Table of Contents
 
 - [Minecraft AWS Server](#minecraft-aws-server)
-  - [Table of Contents](#table-of-contents)
-  - [Technologies](#technologies)
+- [Table of Contents](#table-of-contents)
+- [Technologies](#technologies)
 - [File Structure](#file-structure)
-  - [Dependencies](#dependencies)
-  - [Getting Started](#getting-started)
-  - [Usage](#usage)
-  - [CI/CD](#cicd)
-  - [Future Improvements](#future-improvements)
-  - [Troubleshooting](#troubleshooting)
-  - [Contributing](#contributing)
-  - [License](#license)
-  - [Where to find me](#where-to-find-me)
+- [Dependencies](#dependencies)
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [CI/CD](#cicd)
+- [Future Improvements](#future-improvements)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
+- [Where to find me](#where-to-find-me)
 
 
 ## Technologies
@@ -128,6 +128,7 @@ Here are some areas for potential future development:
 - **Vanilla Tweaks YAML:** Save S3 storage and pull the latest vanilla tweaks package using `itzg/minecraft` Docker image.
 - **Save EC2 Instance Space:** Git is being used to version the Minecraft server. This is inefficient as the binaries could be quite large. An automatic archive is needed once the repo reaches a certain size limit. The archive should go to my OneDrive.
 - **Git Bundle:** Speed up git bundle?
+- **Grafana/Prometheus server monitoring:** Upon Server restarts enable a prometheus and grafana stack to enable users to ec2 machine resource usage
 
 ## Troubleshooting
 
