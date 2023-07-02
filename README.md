@@ -1,6 +1,6 @@
 # Minecraft AWS Server
 
-![Architecture]((./doc/mc-aws-server-architecture.drawio.svg))
+![Architecture](./doc/mc-aws-server-architecture.drawio.svg)
 
 This repository contains the necessary scripts and configurations to set up a Minecraft server on AWS using AWS Fargate for serverless compute. The server integrates with a Discord bot to manage server requests. The purpose of this project is to minimize Minecraft server costs by provisioning infrastructure only when needed. The Discord bot, hosted on Fly.io, allows users to start up and shut down their Minecraft server. After a certain period of inactivity, the Minecraft server automatically shuts down.
 
