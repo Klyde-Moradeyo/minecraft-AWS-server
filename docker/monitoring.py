@@ -6,7 +6,6 @@ from mcrcon import MCRcon
 from mcstatus import JavaServer
 import requests
 
-# These are placeholders, replace with your actual details
 RCON_IP = 'mc-server'
 RCON_PORT = os.environ["RCON_PORT"]
 RCON_PASS = None # os.environ["RCON_PASS"]
