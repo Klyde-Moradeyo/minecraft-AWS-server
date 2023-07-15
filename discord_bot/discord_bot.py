@@ -29,7 +29,7 @@ class BotConfig:
     HELP_MESSAGES = {
         "header": "🥭 **Mango Minecraft Guidebook** 🗺️\n\n" +
                    f"🏡 IP: `{SERVER_IP}:25565`\n" +
-                   "⚙️ Version: `1.19.2`\n\n" +
+                   "⚙️ Version: `1.20.1`\n\n" +
                    "✨ **Features:**\n" +
                    "- **Multiplayer Sleep:** 💤 A single player can sleep and skip the night for everyone.\n" +
                    "- **Coordinates HUD:** 📍 Coordinates and 24-hour clock display above the hotbar using `/trigger ch_toggle`\n" +
