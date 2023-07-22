@@ -87,6 +87,7 @@ def send_to_api(data):
     
     try:
         response = requests.post(url, headers=headers, json=data)
+        logging.info(f"Data from API: {response}")
         response.raise_for_status()  # Raises a HTTPError if the response status is 4xx, 5xx
     except requests.exceptions.RequestException as err:
         logging.error(f"Error occurred: {err}")
@@ -124,21 +125,23 @@ class MinecraftCommand:
             data = { "command": self.command }
             response = send_to_api(data)
             logging.info(f"response: {response}")
-            MC_SERVER_STATUS = response.json().get("STATUS", f"@{self.context.author}, we're sorry but we encountered a problem while processing your request. Please try again in a moment.\nIf the problem persists, don't hesitate to reach out to @The Black Mango for assistance.")
-            PREVIOUS_COMMAND = response.json().get("PREVIOUS_COMMAND", None)
             
-            # If !Status else if start or stop
-            if PREVIOUS_COMMAND is not None:
-                BOT_REPLY = bot_response.msg(PREVIOUS_COMMAND, MC_SERVER_STATUS)
+            # Response will be none if it was unsuccessful
+            if response is None:
+                BOT_REPLY = bot_response.api_err_msg()
             else:
-                BOT_REPLY = bot_response.msg(self.command, MC_SERVER_STATUS)
-            logging.info(f"BOT_REPLY: {BOT_REPLY}")
+                MC_SERVER_STATUS = response.json().get("STATUS", bot_response.api_err_msg())
+                PREVIOUS_COMMAND = response.json().get("PREVIOUS_COMMAND", None)
+
+                # If !Status else if start or stop
+                if PREVIOUS_COMMAND is not None:
+                    BOT_REPLY = bot_response.msg(PREVIOUS_COMMAND, MC_SERVER_STATUS)
+                else:
+                    BOT_REPLY = bot_response.msg(self.command, MC_SERVER_STATUS)
 
             # Edit Discord Message
-            if response is not None:
-                await self.bot_message.edit(content=BOT_REPLY)
-            else:
-                await self.bot_message.edit(content=f"Error: Couldn't {self.command} server.")
+            logging.info(f"BOT_REPLY: {BOT_REPLY}")
+            await self.bot_message.edit(content=BOT_REPLY)
         except Exception as e:
             logging.exception(str(e))
             await self.on_error(str(e))
@@ -160,11 +163,11 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 # Verify that the bot is connected
 @bot.event
 async def on_ready():
-    print(f'{bot.user} has connected to Discord!')
-    print("Servers:")
+    logging.info(f'{bot.user} has connected to Discord!')
+    logging.info("Servers:")
 
     for guild in bot.guilds:
-        print(f"    - {guild.name}")
+        logging.info(f"    - {guild.name}")
 
         # Fetch the category, create it if it doesn't exist
         category = discord.utils.get(guild.categories, name=BotConfig.CATEGORY_NAME)

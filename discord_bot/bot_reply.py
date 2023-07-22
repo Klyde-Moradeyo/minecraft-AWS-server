@@ -1,8 +1,9 @@
 import random
 
 class Bot_Response:
-
     def __init__(self):
+        help_desk_users = "`@The Black Mango`"
+
         self.STARTING_REPLIES = [
             "Your Minecraft server is under construction! Please hang in there, it should be ready in about 6-7 minutes.",
             "We're hard at work setting up your Minecraft server. Expect to be playing in just 6-7 minutes!",
@@ -51,6 +52,12 @@ class Bot_Response:
             "Your Minecraft server is on its way offline. We're making sure everything is saved for next time."
         ]
 
+        self.API_ERROR_MSGS = [
+            f"oh no! There seems to be a creeper in the system. Please try again and if the problem persists, get in touch with {help_desk_users}.",
+            f"we hit some bedrock! Your request couldn't be completed right now. If you continue to have issues, let {help_desk_users} know.",
+            f"it seems our redstone circuitry is acting up. Please try again and let {help_desk_users} know if you're still facing issues.",
+        ]
+
     def msg(self, command, state):
         if command == "start":
             if state in ["PROVISIONING", "PENDING"]:
@@ -76,3 +83,7 @@ class Bot_Response:
                 bot_reply = "Hmm, we're not sure what's happening. Please check back soon."
 
         return bot_reply
+
+    def api_err_msg(self):   
+        return random.choice(self.API_ERROR_MSGS)
+
