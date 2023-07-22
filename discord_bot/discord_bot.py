@@ -29,27 +29,43 @@ class BotConfig:
     FILE_PATH = None
     BOT_MESSAGE_ID = {}  # Initialize as a dictionary
     SERVER_IP = os.environ["SERVER_IP"]
+    SERVER_PORT = "25565"
+    SERVER_VERSION = "1.20.1"
 
-    HELP_MESSAGES = {
+    HELP_MESSAGES = { 
         "header": "🥭 **Mango Minecraft Guidebook** 🗺️\n\n" +
-                   f"🏡 IP: `{SERVER_IP}:25565`\n" +
-                   "⚙️ Version: `1.20.1`\n\n" +
-                   "✨ **Features:**\n" +
-                   "- **Multiplayer Sleep:** 💤 A single player can sleep and skip the night for everyone.\n" +
-                   "- **Coordinates HUD:** 📍 Coordinates and 24-hour clock display above the hotbar using `/trigger ch_toggle`\n" +
-                   "- **Armour Status:** 🛡️ Modify and pose armor stands using a special book.\n" +
-                   "- **Custom Nether Portal:** 🔥 Create Nether portals of any shape or size, even with crying obsidian.\n" +
-                   "- **Item Averages:** 💡 Count items passing through a given spot.\n" +
-                   "- **Larger Phantoms:** 🦇 Creates larger phantoms based on how long since you last slept.\n" +
-                   "- **Real-Time Clock:** ⏰ Trigger to let you see how long a Minecraft world has been running.\n" +
-                   "- **Village Death Message:** 💔 Villager death messages.\n" +
-                   "- **XP Management:** 💼 Right-Click an enchantment table with an empty bottle to fill it with some of your XP.\n\n" +
-                   "🛠️ **Commands:**",
-        "start": "- **start**: 🚀 Use this command to start the Minecraft server! Just type `!start` and watch the magic happen.",
-        "status": "- **status**: 🔍 Type `!status` and I'll get the latest updates for you.",
-        "stop": "- **stop**: 🛑 Want to pause your Minecraft journey for now? Type `!stop` and the server will safely stop, allowing you to resume later",
+                   f"🏡 IP: `{SERVER_IP}:{SERVER_PORT}`\n" +
+                   F"⚙️ Version: `{SERVER_VERSION}`\n",
+
+        "features": "✨ **Features:**\n" +
+                    "- **Multiplayer Sleep:** 💤 A single player can sleep and skip the night for everyone.\n" +
+                    "- **Coordinates HUD:** 📍 Coordinates and 24-hour clock display above the hotbar using `/trigger ch_toggle`\n" +
+                    "- **Armour Status:** 🛡️ Modify and pose armor stands using a special book.\n" +
+                    "- **Custom Nether Portal:** 🔥 Create Nether portals of any shape or size, even with crying obsidian.\n" +
+                    "- **Item Averages:** 💡 Count items passing through a given spot.\n" +
+                    "- **Larger Phantoms:** 🦇 Creates larger phantoms based on how long since you last slept.\n" +
+                    "- **Real-Time Clock:** ⏰ Trigger to let you see how long a Minecraft world has been running.\n" +
+                    "- **Village Death Message:** 💔 Villager death messages.\n" +
+                    "- **XP Management:** 💼 Right-Click an enchantment table with an empty bottle to fill it with some of your XP.",
+                    
+        "commands": "🛠️ **Commands:**",
+        "start_cmd": "- **start**: 🚀 Use this command to start the Minecraft server! Just type `!start` and watch the magic happen.",
+        "status_cmd": "- **status**: 🔍 Type `!status` and I'll get the latest updates for you.",
+        "stop_cmd": "- **stop**: 🛑 Want to pause your Minecraft journey for now? Type `!stop` and the server will safely stop, allowing you to resume later",
+        "feat_cmd": "- **features**: ✨ Type `!features` to learn about the unique capabilities and tools of the Minecraft server.",
+
         "footer": "------------------------------------------------------------------------------------------------------------"
     }
+
+    async def get_command_scroll_channel(guild_id):
+        channel_id = BotConfig.CHANNEL_ID[guild_id]
+        channel = await bot.fetch_channel(channel_id)
+        return channel
+
+    async def get_command_scroll_msg(guild_id, channel):
+        bot_message_id = BotConfig.BOT_MESSAGE_ID[guild_id]
+        bot_message = await channel.fetch_message(bot_message_id)
+        return bot_message
 
 ######################################################################
 #                    Helper Functions                                #
@@ -98,11 +114,11 @@ def send_to_api(data):
     return response
 
 ######################################################################
-#                       MinecraftCommand                             #
+#                       Command                             #
 ######################################################################
 # Helper function to handle common logic in bot commands
-class MinecraftCommand:
-    VALID_COMMANDS = ["start", "stop", "status"]
+class Command:
+    VALID_COMMANDS = ["start", "stop", "status", "features"]
 
     def __init__(self, context, command):
         self.context = context
@@ -115,32 +131,37 @@ class MinecraftCommand:
             return
         try:
             # Fetch the channel and bot message ID specific to the guild
-            channel_id = BotConfig.CHANNEL_ID[self.context.guild.id]
-            bot_message_id = BotConfig.BOT_MESSAGE_ID[self.context.guild.id]
+            channel = await BotConfig.get_command_scroll_channel(self.context.guild.id)
+            self.bot_message = await BotConfig.get_command_scroll_msg(self.context.guild.id, channel)
 
-            channel = await bot.fetch_channel(channel_id)
-            self.bot_message = await channel.fetch_message(bot_message_id)
+            # Inform User their Command is being processed
+            BOT_REPLY = f"User {self.context.author.name} used `{self.command}` command..."
+            await self.bot_message.edit(content=BOT_REPLY)
 
-            await self.bot_message.edit(content=f"User {self.context.author.name} used `{self.command}` command...")
-            data = { "command": self.command }
-            response = send_to_api(data)
-            logging.info(f"response: {response}")
-            
-            # Response will be none if it was unsuccessful
-            if response is None:
-                BOT_REPLY = bot_response.api_err_msg()
-            else:
-                MC_SERVER_STATUS = response.json().get("STATUS", bot_response.api_err_msg())
-                PREVIOUS_COMMAND = response.json().get("PREVIOUS_COMMAND", None)
-
-                # If !Status else if start or stop
-                if PREVIOUS_COMMAND is not None:
-                    BOT_REPLY = bot_response.msg(PREVIOUS_COMMAND, MC_SERVER_STATUS)
+            if self.command != "features":
+                # Send Command to API
+                data = { "command": self.command }
+                response = send_to_api(data)
+    
+                # Response will be none if it was unsuccessful
+                if response is None:
+                    BOT_REPLY = bot_response.api_err_msg()
                 else:
-                    BOT_REPLY = bot_response.msg(self.command, MC_SERVER_STATUS)
+                    MC_SERVER_STATUS = response.json().get("STATUS", bot_response.api_err_msg())
+                    PREVIOUS_COMMAND = response.json().get("PREVIOUS_COMMAND", None)
 
-            # Edit Discord Message
+                    # If !Status else if start or stop
+                    if PREVIOUS_COMMAND is not None:
+                        BOT_REPLY = bot_response.msg(PREVIOUS_COMMAND, MC_SERVER_STATUS)
+                    else:
+                        BOT_REPLY = bot_response.msg(self.command, MC_SERVER_STATUS)
+            else:
+                BOT_REPLY = BotConfig.HELP_MESSAGES["features"]
+
+            # Log Bot Reply
             logging.info(f"BOT_REPLY: {BOT_REPLY}")
+
+            # Inform User of their commands status
             await self.bot_message.edit(content=BOT_REPLY)
         except Exception as e:
             logging.exception(str(e))
@@ -186,8 +207,8 @@ async def on_ready():
 
         # Create initial help message (message 1)
         help_message_content = BotConfig.HELP_MESSAGES["header"] + "\n"
-        for command, help_message in BotConfig.HELP_MESSAGES.items():
-            if command != "header" and command != "footer":
+        for section, help_message in BotConfig.HELP_MESSAGES.items():
+            if section != "header" and section != "footer" and section != "features":
                 help_message_content += f"{help_message}\n"
         help_message_content += BotConfig.HELP_MESSAGES["footer"]
         await channel.send(help_message_content)
@@ -219,7 +240,7 @@ async def start(context):
     """
     Starts the Minecraft server.
     """
-    command = MinecraftCommand(context, "start")
+    command = Command(context, "start")
     await command.execute()
 
 # Check Server Status
@@ -228,7 +249,7 @@ async def get_server_status(context):
     """
     Checks the status of the Minecraft server.
     """
-    command = MinecraftCommand(context, "status")
+    command = Command(context, "status")
     await command.execute()
 
 # Stop minecraft server
@@ -237,7 +258,16 @@ async def stop(context):
     """
     Stops the Minecraft server.
     """
-    command = MinecraftCommand(context, "stop")
+    command = Command(context, "stop")
+    await command.execute()
+
+# Show Minecraft server Features
+@bot.command()
+async def features(context):
+    """
+    Show Minecraft server Features
+    """
+    command = Command(context, "features")
     await command.execute()
 
 # Start the discord bot

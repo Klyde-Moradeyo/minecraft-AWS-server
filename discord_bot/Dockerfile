@@ -1,9 +1,11 @@
-FROM python:3.10-slim
+FROM python:3.10-slim-buster
 
 WORKDIR /app
 
-COPY discord_bot.py requirements.txt bot_reply.py /app/
+COPY ./requirements.txt /app/requirements.txt
 
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . /app
 
 CMD ["python", "discord_bot.py"]
