@@ -74,6 +74,13 @@ class Bot_Response:
             "🚫 The Minecraft server is currently in rest mode. A perfect opportunity to gather your thoughts for your next big project!"
         ]
 
+        self.COMMAND_SCROLL = [
+            "📜 The command scroll is at your service 🔮",
+            "📜 Scroll open, awaiting command 🌟",
+            "📜 Input command to start the magic 🔮",
+            "🔮 Ready and waiting for your command 📜",
+        ]
+
     def msg(self, command, state):
         if state == "MC_SERVER_UP":
             bot_reply = random.choice(self.MC_SERVER_UP)
@@ -106,4 +113,7 @@ class Bot_Response:
 
     def api_err_msg(self):   
         return random.choice(self.API_ERROR_MSGS)
+    
+    def get_cmd_scroll_msg(self):
+        return random.choice(self.COMMAND_SCROLL)
 

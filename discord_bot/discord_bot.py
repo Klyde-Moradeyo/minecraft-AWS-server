@@ -4,18 +4,22 @@
 #   - API_URL
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import os
 import requests
 import json
 import tempfile
 import logging
 from bot_reply import Bot_Response
+from datetime import datetime, timedelta
 
 logging.basicConfig(level=logging.DEBUG)
 
 # Initilize bot reply
 bot_response = Bot_Response()
+
+# Store the latest command issued in each guild
+latest_guild_commands = {}
 
 ######################################################################
 #                       Configuration                                #
@@ -113,6 +117,22 @@ def send_to_api(data):
     
     return response
 
+@tasks.loop(seconds=60)  # Check every 60 seconds
+async def reset_command_scroll():
+    for guild_id, command in latest_guild_commands.items():
+        if datetime.now() - command.datetime > timedelta(minutes=2):  # Reset after 2 minutes
+            # Fetch the channel and bot message specific to the guild
+            channel = await BotConfig.get_command_scroll_channel(guild_id)
+            bot_message = await BotConfig.get_command_scroll_msg(guild_id, channel)
+
+            # Check the current content of bot_message
+            if bot_message.content in bot_response.COMMAND_SCROLL:
+                continue
+
+            # Reset the bot message
+            await bot_message.edit(content=bot_response.get_cmd_scroll_msg())
+            logging.info(f"Resetting command for Guild: {guild_id}, Latest Command: {command.command} | {command.datetime}")
+
 ######################################################################
 #                       Command                             #
 ######################################################################
@@ -124,6 +144,7 @@ class Command:
         self.context = context
         self.command = command
         self.bot_message = None
+        self.datetime = datetime.now()
 
     async def execute(self):
         if self.command not in self.VALID_COMMANDS:
@@ -163,6 +184,11 @@ class Command:
 
             # Inform User of their commands status
             await self.bot_message.edit(content=BOT_REPLY)
+
+            # Update the datetime after executing the command
+            self.datetime = datetime.now() 
+
+            latest_guild_commands[self.context.guild.id] = self
         except Exception as e:
             logging.exception(str(e))
             await self.on_error(str(e))
@@ -214,7 +240,8 @@ async def on_ready():
         await channel.send(help_message_content)
 
         # Create a second message (message 2) that will be updated later
-        bot_message = await channel.send("📜 The command scroll is at your service 🔮")
+        reset_command_scroll.start()
+        bot_message = await channel.send(bot_response.get_cmd_scroll_msg())
         logging.info(f"bot_message: {bot_message} | {bot_message.id}")
 
         # Store the bot message ID for this guild
