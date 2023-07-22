@@ -210,8 +210,6 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 # Verify that the bot is connected
 @bot.event
 async def on_ready():
-    reset_command_scroll.start()
-    
     logging.info(f'{bot.user} has connected to Discord!')
     logging.info("Servers:")
 
@@ -240,6 +238,9 @@ async def on_ready():
                 help_message_content += f"{help_message}\n"
         help_message_content += BotConfig.HELP_MESSAGES["footer"]
         await channel.send(help_message_content)
+
+        if not reset_command_scroll.is_running():
+            reset_command_scroll.start()
 
         # Create a second message (message 2) that will be updated later
         bot_message = await channel.send(bot_response.get_cmd_scroll_msg())
