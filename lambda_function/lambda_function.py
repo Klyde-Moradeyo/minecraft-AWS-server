@@ -4,7 +4,9 @@ from botocore.exceptions import BotoCoreError, ClientError
 import os
 import tempfile
 import datetime
-import random
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 # Helper Funfctions
 class DateTimeEncoder(json.JSONEncoder):
@@ -30,82 +32,6 @@ def get_ssm_command():
     contents = param["Parameter"]["Value"]
         
     return contents
-
-def state_bot_reply(command, state):
-    bot_reply = ""
-
-    STARTING_REPLIES = [
-        "Your Minecraft server is under construction! Please hang in there, it should be ready in about 6-7 minutes.",
-        "We're hard at work setting up your Minecraft server. Expect to be playing in just 6-7 minutes!",
-        "Minecraft server coming up! Sit tight, we'll have it ready for you in roughly 6-7 minutes."
-    ]
-
-    ACTIVATING_REPLIES = [
-        "Initiating server setup. Your Minecraft world is being created!",
-        "Hang tight! We're in the process of creating your Minecraft world.",
-        "Just a moment more. We're bringing your Minecraft server to life!"
-    ]
-
-    RUNNING_REPLIES = [
-        "Your Minecraft server is being prepared. Please wait while we set up the infrastructure for your adventure!",
-        "Great news! We're currently setting up your Minecraft server. Get ready to embark on your journey soon!",
-        "Your Minecraft server is currently being provisioned. It won't be long before you can start your exciting adventure!"
-    ]
-
-    STOPPING_REPLIES = [
-        "We're wrapping up server setup. Your Minecraft world is almost ready!",
-        "Just a few final touches and your Minecraft world will be ready.",
-        "Almost there! Your Minecraft world is nearly ready for you."
-    ]
-
-    STOPPED_REPLIES = [
-        "Minecraft server setup complete. Welcome to your new world!",
-        "Server setup is done! Your Minecraft world awaits.",
-        "All done! Your Minecraft server is ready for exploration."
-    ]
-
-    STOP_PROVISIONING_REPLIES = [
-        "We're preparing to take your Minecraft server offline, please wait.",
-        "Starting the shutdown process for your Minecraft server, please hold on.",
-        "We're beginning the process to bring your Minecraft server offline."
-    ]
-
-    STOP_ACTIVATING_REPLIES = [
-        "Initiating server shutdown. Your Minecraft world is being saved.",
-        "Starting the process to safely shut down your Minecraft world.",
-        "Your Minecraft server is preparing to go offline. We're saving your world data."
-    ]
-
-    STOP_RUNNING_REPLIES = [
-        "Your Minecraft server is currently shutting down.",
-        "Server shutdown in progress. Your Minecraft world will be ready for you when you return.",
-        "Your Minecraft server is on its way offline. We're making sure everything is saved for next time."
-    ]
-
-    if command == "start":
-        if state in ["PROVISIONING", "PENDING"]:
-            bot_reply = random.choice(STARTING_REPLIES)
-        elif state == "ACTIVATING":
-            bot_reply = random.choice(ACTIVATING_REPLIES)
-        elif state == "RUNNING":
-            bot_reply = random.choice(RUNNING_REPLIES)
-        elif state in ["DEACTIVATING", "STOPPING"]:
-            bot_reply = random.choice(STOPPING_REPLIES)
-        elif state == "STOPPED":
-            bot_reply = random.choice(STOPPED_REPLIES)
-        else:
-            bot_reply = "Hmm, we're not sure what's happening. Please check back soon."
-    elif command == "stop":
-        if state in ["PROVISIONING", "PENDING"]:
-            bot_reply = random.choice(STOP_PROVISIONING_REPLIES)
-        elif state == "ACTIVATING":
-            bot_reply = random.choice(STOP_ACTIVATING_REPLIES)
-        elif state == "RUNNING":
-            bot_reply = random.choice(STOP_RUNNING_REPLIES)
-        else:
-            bot_reply = "Hmm, we're not sure what's happening. Please check back soon."
-
-    return bot_reply
 
 ######################################################################
 #                           Fargate                                  #
@@ -198,6 +124,9 @@ def lambda_handler(event, context):
         command = json.loads(event["body"]).get("command")
         if not isinstance(command, str):
             raise ValueError('Command must be a string')
+        
+        # Initilize bot response
+        service_status = None
 
         # ECS Fargate Config
         ecs_client = boto3.client("ecs")
@@ -240,34 +169,36 @@ def lambda_handler(event, context):
         if (command == "start" or command == "stop"):
             # Check if task is running
             if task_running:
-                print("Task is already running")
-                response = { "BOT_REPLY": "TASK IS ALREADY RUNNING"}
+                task_status = check_task_status(ecs_client, cluster, task_tags)
+                response = { "STATUS": task_status}
                 return
             
-            send_command(command) # sends command to SSM param store
+            # Sends command to SSM param store
+            send_command(command) 
+
+            # Start Fargate Container
             task_arn = create_fargate_container(ecs_client, task_definition, cluster, container_name, network_configuration, environment_variables, task_tags)
 
-            if command == "start":
-                bot_reply = "Your Minecraft server is under construction! Please hang in there, it should be ready in about 6-7 minutes."
-            if command == "stop":
-                bot_reply = "We're preparing to take your Minecraft server offline, please wait."
-
-            response = { "TASK_ARN": task_arn, "BOT_REPLY": bot_reply }
+            task_status = check_task_status(ecs_client, cluster, task_tags)
+            if task_status is not None:
+                response = { "STATUS": task_status }
+            else:
+                err_msg = f"Error running Starting Task: {task_arn}"
+                logging.info(err_msg)
+                raise Exception(err_msg)
         elif (command == "status"):
-            previous_command = get_ssm_command()
-            print(f"previous_command {previous_command}")
             status = None
+            previous_command = get_ssm_command()
+
+            logging.info(f"previous_command: {previous_command}")
 
             if task_running:
-                status = check_task_status(ecs_client, cluster, task_tags)
-                print(f"check_task_status: {status}")
-            
-            if status is None:
-                print("No task with the specified tags was found")
-                response = {"STATUS": status, "BOT_REPLY": "NOT RUNNING"}
+                task_status = check_task_status(ecs_client, cluster, task_tags)
+                logging.info(f"check_task_status: {task_status}")
             else:
-                bot_reply = state_bot_reply(previous_command, status)
-                response = {"STATUS": status, "BOT_REPLY": bot_reply}
+                task_status = "NOT RUNNING"
+            
+            response = { "STATUS": task_status, "PREVIOUS_COMMAND": previous_command}
         else:
             raise ValueError("Invalid command: " + command)
 

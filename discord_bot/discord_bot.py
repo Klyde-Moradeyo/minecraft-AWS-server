@@ -10,8 +10,12 @@ import requests
 import json
 import tempfile
 import logging
+from bot_reply import Bot_Response
 
 logging.basicConfig(level=logging.DEBUG)
+
+# Initilize bot reply
+bot_response = Bot_Response()
 
 ######################################################################
 #                       Configuration                                #
@@ -120,7 +124,17 @@ class MinecraftCommand:
             data = { "command": self.command }
             response = send_to_api(data)
             logging.info(f"response: {response}")
-            BOT_REPLY = response.json().get("BOT_REPLY", f"@{self.context.author}, we're sorry but we encountered a problem while processing your request. Please try again in a moment.\nIf the problem persists, don't hesitate to reach out to @The Black Mango for assistance.")
+            MC_SERVER_STATUS = response.json().get("STATUS", f"@{self.context.author}, we're sorry but we encountered a problem while processing your request. Please try again in a moment.\nIf the problem persists, don't hesitate to reach out to @The Black Mango for assistance.")
+            PREVIOUS_COMMAND = response.json().get("PREVIOUS_COMMAND", None)
+            
+            # If !Status else if start or stop
+            if PREVIOUS_COMMAND is not None:
+                BOT_REPLY = bot_response.msg(PREVIOUS_COMMAND, MC_SERVER_STATUS)
+            else:
+                BOT_REPLY = bot_response.msg(self.command, MC_SERVER_STATUS)
+            logging.info(f"BOT_REPLY: {BOT_REPLY}")
+
+            # Edit Discord Message
             if response is not None:
                 await self.bot_message.edit(content=BOT_REPLY)
             else:
@@ -148,6 +162,7 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 async def on_ready():
     print(f'{bot.user} has connected to Discord!')
     print("Servers:")
+
     for guild in bot.guilds:
         print(f"    - {guild.name}")
 

@@ -1,0 +1,78 @@
+import random
+
+class Bot_Response:
+
+    def __init__(self):
+        self.STARTING_REPLIES = [
+            "Your Minecraft server is under construction! Please hang in there, it should be ready in about 6-7 minutes.",
+            "We're hard at work setting up your Minecraft server. Expect to be playing in just 6-7 minutes!",
+            "Minecraft server coming up! Sit tight, we'll have it ready for you in roughly 6-7 minutes."
+        ]
+
+        self.ACTIVATING_REPLIES = [
+            "Initiating server setup. Your Minecraft world is being created!",
+            "Hang tight! We're in the process of creating your Minecraft world.",
+            "Just a moment more. We're bringing your Minecraft server to life!"
+        ]
+
+        self.RUNNING_REPLIES = [
+            "Your Minecraft server is being prepared. Please wait while we set up the infrastructure for your adventure!",
+            "Great news! We're currently setting up your Minecraft server. Get ready to embark on your journey soon!",
+            "Your Minecraft server is currently being provisioned. It won't be long before you can start your exciting adventure!"
+        ]
+
+        self.STOPPING_REPLIES = [
+            "We're wrapping up server setup. Your Minecraft world is almost ready!",
+            "Just a few final touches and your Minecraft world will be ready.",
+            "Almost there! Your Minecraft world is nearly ready for you."
+        ]
+
+        self.STOPPED_REPLIES = [
+            "Minecraft server setup complete. Welcome to your new world!",
+            "Server setup is done! Your Minecraft world awaits.",
+            "All done! Your Minecraft server is ready for exploration."
+        ]
+
+        self.STOP_PROVISIONING_REPLIES = [
+            "We're preparing to take your Minecraft server offline, please wait.",
+            "Starting the shutdown process for your Minecraft server, please hold on.",
+            "We're beginning the process to bring your Minecraft server offline."
+        ]
+
+        self.STOP_ACTIVATING_REPLIES = [
+            "Initiating server shutdown. Your Minecraft world is being saved.",
+            "Starting the process to safely shut down your Minecraft world.",
+            "Your Minecraft server is preparing to go offline. We're saving your world data."
+        ]
+
+        self.STOP_RUNNING_REPLIES = [
+            "Your Minecraft server is currently shutting down.",
+            "Server shutdown in progress. Your Minecraft world will be ready for you when you return.",
+            "Your Minecraft server is on its way offline. We're making sure everything is saved for next time."
+        ]
+
+    def msg(self, command, state):
+        if command == "start":
+            if state in ["PROVISIONING", "PENDING"]:
+                bot_reply = random.choice(self.STARTING_REPLIES)
+            elif state == "ACTIVATING":
+                bot_reply = random.choice(self.ACTIVATING_REPLIES)
+            elif state == "RUNNING":
+                bot_reply = random.choice(self.RUNNING_REPLIES)
+            elif state in ["DEACTIVATING", "STOPPING"]:
+                bot_reply = random.choice(self.STOPPING_REPLIES)
+            elif state == "STOPPED":
+                bot_reply = random.choice(self.STOPPED_REPLIES)
+            else:
+                bot_reply = "Hmm, we're not sure what's happening. Please check back soon."
+        elif command == "stop":
+            if state in ["PROVISIONING", "PENDING"]:
+                bot_reply = random.choice(self.STOP_PROVISIONING_REPLIES)
+            elif state == "ACTIVATING":
+                bot_reply = random.choice(self.STOP_ACTIVATING_REPLIES)
+            elif state == "RUNNING":
+                bot_reply = random.choice(self.STOP_RUNNING_REPLIES)
+            else:
+                bot_reply = "Hmm, we're not sure what's happening. Please check back soon."
+
+        return bot_reply
