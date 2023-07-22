@@ -147,6 +147,8 @@ resource "aws_lambda_function" "lambda_function" {
 
   environment {
     variables = {
+      MC_SERVER_IP = aws_eip.mc_server_eip.public_ip
+      MC_PORT = "25565"
       DISCORD_TOKEN = var.discord_token_name
       DEFAULT_SUBNET_ID = local.subnet_id
       DEFAULT_SECURITY_GROUP_ID = local.security_group_id

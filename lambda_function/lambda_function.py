@@ -5,10 +5,13 @@ import os
 import tempfile
 import datetime
 import logging
+from mcstatus import JavaServer
 
 logging.basicConfig(level=logging.DEBUG)
 
-# Helper Funfctions
+######################################################################
+#                         Helper Functions                           #
+######################################################################
 class DateTimeEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, datetime.datetime):
@@ -32,6 +35,22 @@ def get_ssm_command():
     contents = param["Parameter"]["Value"]
         
     return contents
+
+def check_mc_server(ip, port):
+    minecraft_server = JavaServer.lookup(f"{ip}:{port}")
+    try:
+        status = minecraft_server.status()
+        return {
+            'online': minecraft_server.ping() is not None,
+            'players_online': status.players.online,
+            'version': status.version.name
+        }
+    except Exception:
+        return {
+            'online': False,
+            'players_online': 0,
+            'version': 'unknown'
+        }
 
 ######################################################################
 #                           Fargate                                  #
@@ -128,6 +147,9 @@ def lambda_handler(event, context):
         # Initilize bot response
         service_status = None
 
+        MC_PORT = os.environ["MC_PORT"]
+        MC_SERVER_IP = os.environ["MC_SERVER_IP"]
+
         # ECS Fargate Config
         ecs_client = boto3.client("ecs")
         task_definition = "minecraft_task_definition"
@@ -196,9 +218,15 @@ def lambda_handler(event, context):
                 task_status = check_task_status(ecs_client, cluster, task_tags)
                 logging.info(f"check_task_status: {task_status}")
             else:
-                task_status = "NOT RUNNING"
+                # If there is no task_running, we check if the mc server is running
+                mc_server_status = check_mc_server(MC_SERVER_IP, MC_PORT)
+
+                if mc_server_status["online"]:
+                    task_status = "MC_SERVER_UP"
+                else:
+                    task_status = "MC_SERVER_DOWN"
             
-            response = { "STATUS": task_status, "PREVIOUS_COMMAND": previous_command}
+            response = { "STATUS": task_status, "PREVIOUS_COMMAND": previous_command }
         else:
             raise ValueError("Invalid command: " + command)
 

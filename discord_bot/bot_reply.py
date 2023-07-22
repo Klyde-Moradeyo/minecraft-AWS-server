@@ -53,13 +53,33 @@ class Bot_Response:
         ]
 
         self.API_ERROR_MSGS = [
-            f"oh no! There seems to be a creeper in the system. Please try again and if the problem persists, get in touch with {help_desk_users}.",
-            f"we hit some bedrock! Your request couldn't be completed right now. If you continue to have issues, let {help_desk_users} know.",
-            f"it seems our redstone circuitry is acting up. Please try again and let {help_desk_users} know if you're still facing issues.",
+            f"Oh no! There seems to be a creeper in the system. Please try again and if the problem persists, get in touch with {help_desk_users}.",
+            f"We hit some bedrock! Your request couldn't be completed right now. If you continue to have issues, let {help_desk_users} know.",
+            f"It seems our redstone circuitry is acting up. Please try again and let {help_desk_users} know if you're still facing issues.",
+        ]
+
+        self.MC_SERVER_UP = [
+            "✅ Great news! Our Minecraft server has returned from its break and is ready for crafting and building. Time to dive back in!",
+            "✅ Get your pickaxes ready! The server is online and eager for more Minecraft adventures.",
+            "✅ All systems are go! Our server has returned from the Nether and is now online. It's crafting time once again.",
+            "✅ Attention all builders! The Minecraft server is now online and ready for your epic adventure.",
+            "✅ We're back! The Minecraft server has returned from its ocean monument adventure. Dive back into your world!"
+        ]
+
+        self.MC_SERVER_DOWN = [
+            "🚫 Minecraft server is currently taking a well-earned break. Type `!start` to launch the server!",
+            "🚫 The Minecraft server is currently offline. Now's a great time to plan your next big build.",
+            "🚫 Our server is currently catching some Z's. Type `!start` to nudge it awake for more crafting.",
+            "🚫 The Minecraft server is off on a short adventure. Type `!start` for its return, and be ready for more epic gameplay!",
+            "🚫 The Minecraft server is currently in rest mode. A perfect opportunity to gather your thoughts for your next big project!"
         ]
 
     def msg(self, command, state):
-        if command == "start":
+        if state == "MC_SERVER_UP":
+            bot_reply = random.choice(self.MC_SERVER_UP)
+        elif state == "MC_SERVER_DOWN":
+            bot_reply = random.choice(self.MC_SERVER_DOWN)
+        elif command == "start":
             if state in ["PROVISIONING", "PENDING"]:
                 bot_reply = random.choice(self.STARTING_REPLIES)
             elif state == "ACTIVATING":
