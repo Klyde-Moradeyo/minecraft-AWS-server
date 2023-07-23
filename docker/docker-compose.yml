@@ -2,6 +2,7 @@ version: "3.9"
 
 services:
   mc-server:
+    container_name: mc-server
     image: itzg/minecraft-server:java17
     volumes:
       # attach a directory relative to the directory containing this compose file
@@ -32,6 +33,7 @@ services:
     restart: unless-stopped
 
   mc-monitoring:
+    container_name: mc-monitoring
     image: python:3.10-slim
     volumes:
       - .:/app
@@ -40,7 +42,7 @@ services:
     env_file:
       - .env
     restart: unless-stopped
-    mem_limit: 128M
+    mem_limit: 256M
     cpus: 0.25
 
 volumes:
