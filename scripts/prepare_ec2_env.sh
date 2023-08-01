@@ -35,12 +35,14 @@ create_env_file() {
     local directory=$1
     local api_url=$2
     local rcon_port=$3
+    local promtheus_port="9200" # To be replaced by a parameter from terraform files
     local env_file_path="$directory/.env"
 
     # Define the environment variables
     declare -A env_variables
     env_variables["API_URL"]="$api_url"
     env_variables["RCON_PORT"]="$rcon_port"
+    env_variables["PROMETHEUS_PORT"]="$promtheus_port"
 
     # Create the .env file
     echo "# Generated .env file" > "$env_file_path"
