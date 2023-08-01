@@ -193,8 +193,8 @@ if __name__ == "__main__":
     RCON_PORT = envs["RCON_PORT"]
     RCON_PASS = envs["RCON_PASS"]
     API_GATEWAY_URL = envs["API_URL"] + "/minecraft-prod/command"
-    INACTIVE_TIME =  180 # 1800  # 30 minutes
-    CHECK_INTERVAL = 5 # 60  # Time in seconds for the check interval
+    INACTIVE_TIME =  1800  # 30 minutes
+    CHECK_INTERVAL = 60  # Time in seconds for the check interval
     LOG_FILE = 'server_monitoring.log'  # Log file name
 
     minecraft_server = JavaServer.lookup(f"{RCON_IP}:{RCON_PORT}")
