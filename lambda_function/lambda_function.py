@@ -133,22 +133,22 @@ def lambda_handler(event, context):
             raise ValueError('Command must be a string')
 
         envs = get_env_variables()
-        ecs_client = "ecs" # boto3.client("ecs")
+        ecs_client = boto3.client("ecs")
         environment_variables = [ {'name': 'TF_TOKEN_app_terraform_io', 'value': envs['TF_USER_TOKEN'] }]
         task_tags = [ {'key': key, 'value': value} for key, value in envs.items() if key.startswith('TAG_') ]
 
-        task_running = False # is_task_with_tags_exists(ecs_client, envs['CLUSTER'], task_tags)
+        task_running = is_task_with_tags_exists(ecs_client, envs['CLUSTER'], task_tags)
 
         if command in ('start', 'stop'):
             if task_running:
-                task_status = "PROVISIONING" # check_task_status(ecs_client, envs['CLUSTER'], task_tags)
+                task_status = check_task_status(ecs_client, envs['CLUSTER'], task_tags)
                 return {
                     'statusCode': 200,
                     'body': json.dumps({'STATUS': task_status}, cls=DateTimeEncoder)
                 }
             
             # Sends command to SSM param store
-            # send_command(command)
+            send_command(command)
 
             fargate_network_configuration = {
                 "awsvpcConfiguration": {
@@ -157,17 +157,17 @@ def lambda_handler(event, context):
                     "assignPublicIp": "ENABLED"
                 }   
             }
-            task_arn = "task_arn_placeholder" # create_fargate_container(ecs_client, "minecraft_task_definition", envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
-                                              #   environment_variables, task_tags)
+            task_arn = create_fargate_container(ecs_client, "minecraft_task_definition", envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
+                                                environment_variables, task_tags)
 
-            task_status = "PROVISIONING" # check_task_status(ecs_client, envs['CLUSTER'], task_tags)
+            task_status = check_task_status(ecs_client, envs['CLUSTER'], task_tags)
             if task_status is None:
                 raise Exception(f"Error running Starting Task: {task_arn}")
 
             response = {'STATUS': task_status}
         elif command == 'status':
             if task_running:
-                task_status = "PROVISIONING" # check_task_status(ecs_client, cluster, task_tags)
+                task_status = check_task_status(ecs_client, cluster, task_tags)
             else: # If there is no task_running, we check if the mc server is running
                 mc_server_status = check_mc_server(envs["MC_SERVER_IP"], envs["MC_PORT"])
 
@@ -176,7 +176,7 @@ def lambda_handler(event, context):
                 else:
                     task_status = "MC_SERVER_DOWN"
 
-            response = {'STATUS': task_status, 'PREVIOUS_COMMAND': "get_ssm_command()"}
+            response = {'STATUS': task_status, 'PREVIOUS_COMMAND': get_ssm_command()}
         else:
             raise ValueError(f"Invalid command: {command}")
 
