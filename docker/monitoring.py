@@ -2,9 +2,11 @@ import time
 import json
 import os
 from datetime import datetime
+import requests
+from typing import List, Dict, Any
 from mcrcon import MCRcon
 from mcstatus import JavaServer
-import requests
+from prometheus_client import start_http_server, Gauge
 
 RCON_IP = 'mc-server'
 RCON_PORT = os.environ["RCON_PORT"]
@@ -14,126 +16,188 @@ INACTIVE_TIME =  1800  # 30 minutes |  Time in seconds for inactive players chec
 CHECK_INTERVAL = 60  # Time in seconds for the check interval
 LOG_FILE = 'server_monitoring.log'  # Log file name
 
-minecraft_server = JavaServer.lookup(f"{RCON_IP}:{RCON_PORT}")
 
-def send_to_api(data):
-    MAX_RETRIES = 3
-    TIMEOUT = 5  # seconds
+######################################################################
+#                         Helper Functions                           #
+######################################################################
+def get_env_variables() -> Dict[str, str]:
+    env_vars = ["RCON_PORT", "API_URL", "RCON_PASS" , "PROMETHEUS_PORT"]
+    return {var: os.getenv(var) for var in env_vars}
 
-    url = os.getenv('API_URL')
-    if url is None:
-        log_to_console_and_file("API_URL is not set in the environment variables")
+######################################################################
+#                               LOG                                  #
+######################################################################
+class LOG:
+    def __init__(self, log_file):
+        self.log_file = log_file
+
+    def format_data(self, online, players_online, version, time_without_players, timer_status):  
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        return {
+            "timestamp": timestamp,
+            "server_online": online,
+            "players_online": players_online,
+            "server_version": version,
+            "time_without_players": time_without_players,
+            "timer_status": timer_status
+            }
+
+    def log(self, data):
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        if isinstance(data, dict):
+            timestamped_data = {'timestamp': timestamp, **data}
+            print(timestamped_data)
+            self.log_to_file(', '.join([f"{k}: {v}" for k, v in timestamped_data.items()]))
+        else:
+            print(f"{timestamp}: {data}")
+            self.log_to_file(f"{timestamp}: {data}")
+
+    def log_to_file(self, data):
+        with open(self.log_file, 'a') as f:
+            if isinstance(data, dict):
+                f.write(json.dumps(data, indent=4))
+            else:
+                f.write(data)
+            f.write('\n')
+
+######################################################################
+#                           Monitor Class                            #
+######################################################################
+class MonitorError(Exception):
+    pass
+
+class MONITOR:
+    def __init__(self, server, log, inactive_time, check_interval, api_url, rcon_pass, envs):
+        self.server = server
+        self.log = log
+        self.inactive_time = inactive_time
+        self.check_interval = check_interval
+        self.api_url = api_url
+        self.rcon_pass = rcon_pass
+        self.inactive_players_timer_start = None
+
+        # Promtheus Metrics
+        self.online_players_gauge = Gauge('minecraft_online_players', 'Number of online players')
+        self.server_up_gauge = Gauge('minecraft_server_up', 'Whether the server is up')
+
+        # Start up the server to expose the metrics
+        start_http_server(int(envs['PROMETHEUS_PORT']))
+
+    def get_basic_server_info(self):
+        try:
+            status = self.server.status()
+            online = self.server.ping() is not None
+            players_online = status.players.online
+            version = status.version.name
+        except Exception as e:
+            online = False
+            players_online = 0
+            version = None
+
+        return {
+            'online': online,
+            'players_online': players_online,
+            'version': version
+        }
+    
+    def send_to_api(self, command):
+        MAX_RETRIES = 3
+        TIMEOUT = 5  # seconds
+
+        headers = {'Content-Type': 'application/json'}
+        data =  { "command": command }
+
+        log_data = {
+            "api_command": command,
+            "status": "sending",
+            "retries": 0,
+            "response_code": None,
+            "http_error": None,
+            "timeout_error": False,
+            "request_error": None,
+            "max_retries_exceeded": False
+        }
+    
+        for i in range(MAX_RETRIES):
+            try:
+                response = requests.post(self.api_url, headers=headers, json=data, timeout=TIMEOUT)
+                response.raise_for_status()
+                log_data["status"] = "success"
+                log_data["response_code"] = response.status_code
+                log_data["retries"] = i + 1
+                self.log.log(log_data)
+                return response
+            except requests.exceptions.HTTPError as http_err:
+                log_data["status"] = "failure"
+                log_data["http_error"] = str(http_err)
+            except requests.exceptions.Timeout:
+                log_data["status"] = "failure"
+                log_data["timeout_error"] = True
+            except requests.exceptions.RequestException as req_err:
+                log_data["status"] = "failure"
+                log_data["request_error"] = str(req_err)
+
+            if i == MAX_RETRIES - 1:
+                log_data["max_ret ries_exceeded"] = True
+                log_data["retries"] = i + 1
+                self.log.log(log_data)
+
+            wait_time = (2 ** i)  # exponential backoff
+            time.sleep(wait_time)
+
         return None
 
-    url += "/minecraft-prod/command"
-    headers = {'Content-Type': 'application/json'}
-    log_to_console_and_file(f"Sending Data to API: {data}")
-    
-    for i in range(MAX_RETRIES):
-        try:
-            response = requests.post(url, headers=headers, json=data, timeout=TIMEOUT)
-            response.raise_for_status()
-            log_to_console_and_file(f"Data: {data} \nResponse: \n{response.json()}")
-            return response
-        except requests.exceptions.HTTPError as http_err:
-            log_to_console_and_file(f"HTTP error occurred: {http_err}")
-        except requests.exceptions.Timeout:
-            log_to_console_and_file("Request timed out")
-        except requests.exceptions.RequestException as req_err:
-            log_to_console_and_file(f"Error occurred: {req_err}")
+    def get_inactive_time_string(self):
+        minutes, seconds = divmod(self.inactive_time, 60)
+        return f"{minutes} minutes {seconds} seconds"
 
-        wait_time = (2 ** i)  # exponential backoff
-        time.sleep(wait_time)
-    
-    log_to_console_and_file("Max retries exceeded with no successful response from API")
-    return None
+    def run(self):
+        while True:
+            try:
+                basic_info = self.get_basic_server_info()
 
-def get_timestamp():
-    return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                server_info = { **basic_info }
 
-def get_basic_server_info():
-    try:
-        status = minecraft_server.status()
-        return {
-            'online': minecraft_server.ping() is not None,
-            'players_online': status.players.online,
-            'version': status.version.name
-        }
-    except Exception:
-        return {
-            'online': False,
-            'players_online': 0,
-            'version': 'unknown'
-        }
+                # Update the metrics
+                self.online_players_gauge.set(server_info['players_online'])
+                self.server_up_gauge.set(server_info['online'])
 
-def get_detailed_server_info():
-    with MCRcon(RCON_IP, RCON_PASS, port=RCON_PORT) as mcr:
-        tps = mcr.command("/tps")
-        uptime = mcr.command("/uptime")  # You might need a plugin or mod for this
-        debug = mcr.command("/debug")
-        latency = mcr.command("/ping")  # You might need a plugin or mod for this
+                if server_info.get('players_online', 0) == 0:
+                    if self.inactive_players_timer_start is None:
+                        self.inactive_players_timer_start = time.time()
+                        data = self.log.format_data(server_info['online'], server_info['players_online'], server_info['version'], 0, "STARTING")
+                        self.log.log(data)
+                    elif time.time() - self.inactive_players_timer_start >= self.inactive_time: # Send to API Gateway if no players for inactive_time
+                        data = self.log.format_data(server_info['online'], server_info['players_online'], server_info['version'], self.get_inactive_time_string(), "EXPIRED - SIGNALING MC SERVER STOP")
+                        self.log.log(data)
+                        self.send_to_api("stop")
+                        self.inactive_players_timer_start = None
+                    else:
+                        elapsed_time = int(time.time() - self.inactive_players_timer_start)
+                        data = self.log.format_data(server_info['online'], server_info['players_online'], server_info['version'], elapsed_time, "RUNNING")
+                        self.log.log(data)
+                else:
+                    self.inactive_players_timer_start = None
+                    data = self.log.format_data(server_info['online'], server_info['players_online'], server_info['version'], self.get_inactive_time_string(), "RESET")
+                    self.log.log(data)
 
-    return {
-        'tps': tps,
-        'uptime': uptime,
-        'debug': debug,
-        'latency': latency
-    }
+            except MonitorError:
+                self.log.log("Monitoring error occurred")
 
-def log_to_file(data):
-    with open(LOG_FILE, 'a') as f:
-        if isinstance(data, dict):
-            f.write(json.dumps(data, indent=4))
-        else:
-            f.write(data)
-        f.write('\n')
-
-def log_to_console_and_file(data):
-    timestamp = get_timestamp()
-    if isinstance(data, dict):
-        timestamped_data = {**data, 'timestamp': timestamp}
-        print(timestamped_data)
-        log_to_file(', '.join([f"{k}: {v}" for k, v in timestamped_data.items()]))
-    else:
-        print(f"{timestamp}: {data}")
-        log_to_file(f"{timestamp}: {data}")
-
-def get_inactive_time_string():
-    minutes, seconds = divmod(INACTIVE_TIME, 60)
-    return f"{minutes} minutes {seconds} seconds" 
+            # Wait for the check interval before checking again
+            time.sleep(self.check_interval)
 
 if __name__ == "__main__":
-    inactive_players_timer_start = None
+    envs = get_env_variables()
+    RCON_IP = 'mc-server'
+    RCON_PORT = envs["RCON_PORT"]
+    RCON_PASS = envs["RCON_PASS"]
+    API_GATEWAY_URL = envs["API_URL"] + "/minecraft-prod/command"
+    INACTIVE_TIME =  180 # 1800  # 30 minutes
+    CHECK_INTERVAL = 5 # 60  # Time in seconds for the check interval
+    LOG_FILE = 'server_monitoring.log'  # Log file name
 
-    while True:
-        try:
-            basic_info = get_basic_server_info()
-            # detailed_info = get_detailed_server_info() if basic_info['online'] else {}
-
-            server_info = {**basic_info}
-
-            # Log the server info
-            log_to_console_and_file(server_info)
-
-            if server_info.get('players_online', 0) == 0:
-                if inactive_players_timer_start is None:
-                    inactive_players_timer_start = time.time()
-                    log_to_console_and_file({"status": "No players online, starting timer"})
-                elif time.time() - inactive_players_timer_start >= INACTIVE_TIME:
-                    # Send to API Gateway if no players for INACTIVE_TIME
-                    log_to_console_and_file({"status": f"No players online for {get_inactive_time_string()}, sending API request"})
-                    data = { "command": "stop" }
-                    send_to_api(data)
-                    inactive_players_timer_start = None
-                else:
-                    elapsed_time = int(time.time() - inactive_players_timer_start)
-                    log_to_console_and_file({"status": f"No players online, elapsed time: {elapsed_time} seconds"})
-            else:
-                inactive_players_timer_start = None
-                log_to_console_and_file({"status": "Players online, timer reset."})
-
-        except Exception as e:
-            log_to_console_and_file({'Error': str(e)})
-
-        # Wait for the check interval before checking again
-        time.sleep(CHECK_INTERVAL)
+    minecraft_server = JavaServer.lookup(f"{RCON_IP}:{RCON_PORT}")
+    log = LOG(LOG_FILE)
+    monitor = MONITOR(minecraft_server, log, INACTIVE_TIME, CHECK_INTERVAL, API_GATEWAY_URL, RCON_PASS, envs)
+    monitor.run()
