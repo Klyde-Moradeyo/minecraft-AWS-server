@@ -161,7 +161,7 @@ class Command:
             await self.bot_message.edit(content=BOT_REPLY)
 
             if BotConfig.ENABLE_MAINTENANCE:
-                BOT_REPLY = "🛠️ Minecraft's crafting table is closed for maintenance - Back soon 🛠️"
+                BOT_REPLY = bot_response.get_maintenance_msg()
                 await self.bot_message.edit(content=BOT_REPLY)
                 return
 

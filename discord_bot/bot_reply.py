@@ -81,6 +81,19 @@ class Bot_Response:
             "🔮 Ready and waiting for your command 📜",
         ]
 
+        self.MAINTENANCE_MESSAGES = [
+            "⚙️ Minecraft server maintenance underway. Back shortly!",
+            "⚙️ We're tinkering behind the scenes. Be right back!",
+            "⚙️ Crafting break! Maintenance in progress.",
+            "⚙️ Temporarily offline for upgrades.",
+            "⚙️ Server enhancements in motion. See you soon!",
+            "⚙️ Leveling up! Momentary downtime.",
+            "⚙️ Brb - Server maintenance ongoing.",
+            "⚙️ Minecraft world undergoing care. Back shortly!",
+            "⚙️ Redstone check-in progress. Be back soon!",
+            "⚙️ Hold tight! Maintenance mode activated."
+        ]
+
     def msg(self, command, state):
         if state == "MC_SERVER_UP":
             bot_reply = random.choice(self.MC_SERVER_UP)
@@ -116,4 +129,6 @@ class Bot_Response:
     
     def get_cmd_scroll_msg(self):
         return random.choice(self.COMMAND_SCROLL)
-
+    
+    def get_maintenance_msg(self):
+        return random.choice(self.MAINTENANCE_MESSAGES)
