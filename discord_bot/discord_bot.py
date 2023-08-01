@@ -35,6 +35,7 @@ class BotConfig:
     SERVER_IP = os.environ["SERVER_IP"]
     SERVER_PORT = "25565"
     SERVER_VERSION = "1.20.1"
+    ENABLE_MAINTENANCE = True
 
     HELP_MESSAGES = { 
         "header": "🥭 **Mango Minecraft Guidebook** 🗺️\n\n" +
@@ -158,6 +159,11 @@ class Command:
             # Inform User their Command is being processed
             BOT_REPLY = f"User {self.context.author.name} used `{self.command}` command..."
             await self.bot_message.edit(content=BOT_REPLY)
+
+            if BotConfig.ENABLE_MAINTENANCE:
+                BOT_REPLY = "🛠️ Minecraft's crafting table is closed for maintenance - Back soon 🛠️"
+                await self.bot_message.edit(content=BOT_REPLY)
+                return
 
             if self.command != "features":
                 # Send Command to API
