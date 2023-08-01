@@ -167,7 +167,7 @@ def lambda_handler(event, context):
             response = {'STATUS': task_status}
         elif command == 'status':
             if task_running:
-                task_status = check_task_status(ecs_client, cluster, task_tags)
+                task_status = check_task_status(ecs_client, envs['CLUSTER'], task_tags)
             else: # If there is no task_running, we check if the mc server is running
                 mc_server_status = check_mc_server(envs["MC_SERVER_IP"], envs["MC_PORT"])
 
