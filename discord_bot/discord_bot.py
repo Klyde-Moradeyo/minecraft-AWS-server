@@ -163,6 +163,8 @@ class Command:
             if BotConfig.ENABLE_MAINTENANCE:
                 BOT_REPLY = bot_response.get_maintenance_msg()
                 await self.bot_message.edit(content=BOT_REPLY)
+                self.datetime = datetime.now() 
+                latest_guild_commands[self.context.guild.id] = self
                 return
 
             if self.command != "features":

@@ -83,14 +83,12 @@ class Bot_Response:
 
         self.MAINTENANCE_MESSAGES = [
             "⚙️ Minecraft server maintenance underway. Back shortly!",
-            "⚙️ We're tinkering behind the scenes. Be right back!",
             "⚙️ Crafting break! Maintenance in progress.",
             "⚙️ Temporarily offline for upgrades.",
-            "⚙️ Server enhancements in motion. See you soon!",
-            "⚙️ Leveling up! Momentary downtime.",
+            "⚙️ Server maintenance in motion. See you soon!",
+            "⚙️ Leveling up! Momentary server maintenance.",
             "⚙️ Brb - Server maintenance ongoing.",
-            "⚙️ Minecraft world undergoing care. Back shortly!",
-            "⚙️ Redstone check-in progress. Be back soon!",
+            "⚙️ Minecraft world undergoing maintenance. Back shortly!",
             "⚙️ Hold tight! Maintenance mode activated."
         ]
 
