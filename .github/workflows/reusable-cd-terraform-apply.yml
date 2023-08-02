@@ -24,8 +24,6 @@ on:
         required: true
       tf_api_token:
         required: true
-  
-  
 
 env:
     GIT_TAG_PREFIX: "SIOS" # Serverless Infrastructure Orchestration System
