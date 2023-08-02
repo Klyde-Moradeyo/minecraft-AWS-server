@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Title: Prepare Enviornment
-# Use: Sets up workspace
-
 set -e
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source $script_dir/helper_functions.sh
+source "${script_dir}/helper_functions.sh" || error_handler "Failed to source helper functions"
+
+# Trap the ERR signal
+trap 'error_handler' ERR
 
 s3_bucket_path="$1"
 git_private_key_name="$2"
@@ -13,14 +13,16 @@ aws_region="$3"
 api_url="$4"
 rcon_port="$5"
 
+if [[ $# -ne 5 ]]; then
+  echo "Usage: $0 <s3_bucket_path> <git_private_key_name> <aws_region> <api_url> <rcon_port>"
+  exit 1
+fi
+
 echo $s3_bucket_path
 echo $git_private_key_name
 echo $aws_region
 echo $api_url
 echo $rcon_port
-
-# Trap the ERR signal
-trap 'error_handler' ERR
 
 function check_install {
   for cmd in aws tar git docker; do
@@ -86,56 +88,87 @@ function mc_server_icon() {
   sed -i.bak "s|xxICONxx|$icon_url|g" "${docker_compose_file_path}"
 }
 
-function run {
-  # Set up git creds
-  aws ssm get-parameter --name "$git_private_key_name" --with-decryption --region "$aws_region" --query "Parameter.Value" --output text > ~/.ssh/id_rsa
-  chmod 600 ~/.ssh/id_rsa
-  ssh-keyscan github.com >> ~/.ssh/known_hosts
+function setup_git_creds {
+  ssh_key_file=$(mktemp)
+  aws ssm get-parameter --name "$git_private_key_name" --with-decryption --region "$aws_region" --query "Parameter.Value" --output text > "$ssh_key_file" || error_handler "Failed to fetch SSH key"
+  chmod 600 "$ssh_key_file"
+  ssh-keyscan github.com >> $ssh_key_file
+  echo "$ssh_key_file"
+}
 
-  # Variables
-  home_dir="/home/ubuntu"
-  git_private_key_path="$home_dir/.ssh/id_rsa"
+function clone_and_clean_repo {
+  local git_private_key_path="$1"
 
-  repo="git@github.com:Klyde-Moradeyo/minecraft-AWS-server.git"
-  repo_branch="main"
-  repo_folder="$home_dir/minecraft-AWS-server"
-
-  # disable strict host key checking and then git clone relevant repos
   GIT_SSH_COMMAND="ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git clone -v -b $repo_branch $repo $repo_folder
 
   # clean up unused files - We only need the docker folder
   mkdir /tmp/empty-dir
   rsync -a --delete --exclude=docker /tmp/empty-dir/ $repo_folder/ # Use rsync to delete everything in $repo_folder except for $repo_folder/docker
+}
 
-  docker_folder="$repo_folder/docker"
-  mc_map_repo_folder="$docker_folder/minecraft-data"
-  repo_world_folder="$docker_folder/minecraft-data/minecraft-world/world"
-
+function copy_minecraft_world {
   # Copy minecraft world from S3
   aws s3 cp "$s3_bucket_path/minecraft-world.bundle" "$home_dir/minecraft-world.bundle" || { echo "Failed to download Minecraft world from S3"; exit 1; }
   mkdir -p "$mc_map_repo_folder"
   git clone "$home_dir/minecraft-world.bundle" "$mc_map_repo_folder"
   rm -rf "$home_dir/minecraft-world.bundle" # Clean up after ourselves
+}
+
+function setup_docker_environment {
+  local docker_folder="$1"
 
   # Create .env file for server monitoring
   create_env_file "$docker_folder" "$api_url" "$rcon_port"
 
   # Choose a random server image
   mc_server_icon "$docker_folder/docker-compose.yml"
+}
+
+function run_docker_compose {
+  local docker_compose_file="$1"
 
   # Run Docker Compose
-  docker_compose_file="$repo_folder/docker"
   docker compose -f "$docker_compose_file/docker-compose.yml" --project-directory "$docker_compose_file" up -d
+}
 
-  # clean packages
+function clean_packages {
   apt-get clean
   apt autoremove
   rm -rf /var/lib/apt/lists/*
 }
 
+function run {
+  # Variables
+  home_dir="/home/ubuntu"
+  git_private_key_path=$(setup_git_creds)
+  repo="git@github.com:Klyde-Moradeyo/minecraft-AWS-server.git"
+  repo_branch="main"
+  repo_folder="$home_dir/minecraft-AWS-server"
+  docker_folder="$repo_folder/docker"
+  docker_compose_file="$repo_folder/docker"
+  mc_map_repo_folder="$docker_folder/minecraft-data"
+
+  # Clone and clean repository
+  clone_and_clean_repo "$git_private_key_path"
+
+  # Copy Minecraft world
+  copy_minecraft_world
+
+  # Setup Docker environment
+  setup_docker_environment "$docker_folder"
+
+  # Run Docker Compose
+  run_docker_compose "$docker_compose_file"
+
+  # Clean packages
+  clean_packages
+
+  # Cleanup
+  rm -f "$git_private_key_path"
+}
+
 # Call the run function
 start=$(date +%s.%N)
-check_install
 run
 finish=$(date +%s.%N)
 
