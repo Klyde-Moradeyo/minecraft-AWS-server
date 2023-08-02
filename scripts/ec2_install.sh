@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Title: EC2 Install
-# Use: Installs Docker, Docker Compose and AWS CLI
+# Use: Installs Docker, Docker Compose, AWS CLI, and Git
 # Ref:
 #   https://docs.docker.com/engine/install/ubuntu/
 #   https://docs.docker.com/compose/install/linux/#install-the-plugin-manually
@@ -14,90 +14,122 @@ source $script_dir/helper_functions.sh
 # Trap the ERR signal
 trap 'error_handler' ERR
 
-function run {
-    # Update the package list and install packages to allow apt to use a repository over HTTPS
-    apt-get update && apt-get install -y sudo apt-utils
+# Run the apt-get command 
+# DPkg::Lock checks if apt lock is in use - Timeout set to -1 for unlimited. 60 for 60 sec
+apt_get() {
+  sudo apt-get -o DPkg::Lock::Timeout=-1 "$@"
+}
 
-    ########################
-    #    Docker Install    #
-    ########################
-    sudo apt-get install -y \
-        apt-transport-https \
-        ca-certificates \
-        curl \
-        gnupg \
-        lsb-release
+########################
+# Dependencies Install #
+########################
+function install_dependencies {
+  apt-get update
+  apt-get install -y sudo apt-utils
+  apt_get install -y \
+    lsof \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release \
+    unzip \
+    zip \
+    bc \
+    rsync
+}
 
-    # Add Docker’s official GPG
-    sudo install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --yes --dearmor -o /etc/apt/keyrings/docker.gpg
-    sudo chmod a+r /etc/apt/keyrings/docker.gpg
+########################
+#    Docker Install    #
+########################
+function install_docker {
+  install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --yes --dearmor -o /etc/apt/keyrings/docker.gpg
+  chmod a+r /etc/apt/keyrings/docker.gpg
 
-    # Add Docker package repository to the list of software sources in the Ubuntu
-    echo \
-    "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-    "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
-    sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-    # Update the package list
-    sudo apt-get update
-
-    # Install Docker
-    sudo apt-get install -y \
+  # Add Docker package repository
+  echo "deb [arch=\"$(dpkg --print-architecture)\" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo \"$VERSION_CODENAME\") stable" | \
+  tee /etc/apt/sources.list.d/docker.list > /dev/null
+  
+  apt_get update
+  apt_get install -y \
         docker-ce \
         docker-ce-cli \
         containerd.io
 
-    # Download and install the Compose CLI plugin
-    DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-    mkdir -p "$DOCKER_CONFIG/cli-plugins"
-    curl -SL https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-linux-x86_64 -o "$DOCKER_CONFIG/cli-plugins/docker-compose"
+  install_docker_compose
+}
 
-    # Apply executable permissions 
-    chmod +x "$DOCKER_CONFIG/cli-plugins/docker-compose"
+# Docker Compose installation
+function install_docker_compose {
+  DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+  mkdir -p "$DOCKER_CONFIG/cli-plugins"
+  curl -SL https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-linux-x86_64 -o "$DOCKER_CONFIG/cli-plugins/docker-compose"
+  chmod +x "$DOCKER_CONFIG/cli-plugins/docker-compose"
+}
 
-    # Check Docker Docker Compose installation
-    # docker --version
-    # docker compose version
+########################
+#    AWS CLI Install   #
+########################
+function install_aws_cli {
+  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  unzip -o awscliv2.zip
+  ./aws/install
+}
 
-    ########################
-    #    AWS CLI Install   #
-    ########################
-    sudo apt-get install -y \
-        unzip \
-        zip
+########################
+#     Install Git      #
+########################
+function install_git {
+  apt_get install git -y
+}
 
-    # Download the latest version of the AWS CLI
-    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-    unzip -o awscliv2.zip
-
-    # Install the AWS CLI
-    sudo ./aws/install
-
-    # Verify the installation
-    # aws --version
-
-    ########################
-    #     Install Git      #
-    ########################
-    sudo apt-get install git -y
-    # git --version
-
-    ########################
-    #     Post Install     #
-    ########################
+########################
+#     Post Install     #
+########################
+function post_install {
+    # Remove AWS zip
     rm -rfv aws awscliv2.zip
 
-    # Print Everything that was installed in this script at the end
     echo "-------------------------------------"
     echo "              Installed              "
     echo "-------------------------------------"
-    echo "Docker:
-                  $(docker --version)
-                  $(docker compose version)"
-    echo "AWS CLI: $(aws --version)"
-    echo "GIT: $(git --version)"
+
+    if command -v docker > /dev/null 2>&1; then
+        echo "Docker:
+              $(docker --version)
+              $(docker compose version)"
+    else
+        echo "Docker: Not Installed"
+    fi
+
+    if command -v aws > /dev/null 2>&1; then
+        echo "AWS CLI: $(aws --version)"
+    else
+        echo "AWS CLI: Not Installed"
+    fi
+
+    if command -v git > /dev/null 2>&1; then
+        echo "GIT: $(git --version)"
+    else
+        echo "GIT: Not Installed"
+    fi
     echo "-------------------------------------"
+}
+
+function run {
+  install_dependencies
+
+  # Run installations in parallel
+  install_docker &
+  install_aws_cli &
+  install_git & 
+
+  # Wait for all installations to complete
+  wait
+
+  post_install
 }
 
 # Call the run function
@@ -107,4 +139,3 @@ finish=$(date +%s.%N)
 
 get_current_date
 calculate_runtime $start $finish
-
