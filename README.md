@@ -129,6 +129,7 @@ Here are some areas for potential future development:
 - **Save EC2 Instance Space:** Git is being used to version the Minecraft server. This is inefficient as the binaries could be quite large. An automatic archive is needed once the repo reaches a certain size limit. The archive should go to my OneDrive.
 - **Git Bundle:** Speed up git bundle?
 - **Grafana/Prometheus server monitoring:** Upon Server restarts enable a prometheus and grafana stack to enable users to ec2 machine resource usage
+- **Custom AMI for the ec2 instance:** This should in theory reduce setup time by 1m 30 sec. And it should cost around 8 GB * $0.023 = $0.184 per month.
 
 ## Troubleshooting
 
