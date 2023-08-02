@@ -34,3 +34,9 @@ function error_handler {
     # Print an error message
     echo "An error occurred while executing the script." >&2
 }
+
+function check_pid {
+    local pid=$1
+    local error_message=$2
+    wait $pid || { echo "$error_message"; exit 1; }
+}

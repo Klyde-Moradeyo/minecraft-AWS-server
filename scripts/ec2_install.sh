@@ -123,11 +123,17 @@ function run {
 
   # Run installations in parallel
   install_docker &
-  install_aws_cli &
-  install_git & 
+  install_docker_pid=$!
 
-  # Wait for all installations to complete
-  wait
+  install_aws_cli &
+  install_aws_cli_pid=$!
+
+  install_git & 
+  install_git_pid=$!
+
+  check_pid $install_docker_pid "Failed in docker install"
+  check_pid $install_aws_cli_pid "Failed in AWS CLI install"
+  check_pid $install_git_pid "Failed in Git install"
 
   post_install
 }
