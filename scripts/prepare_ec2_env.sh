@@ -96,19 +96,17 @@ function setup_git_creds {
   echo "$ssh_key_file"
 }
 
-function clone_and_clean_repo {
-  local git_private_key_path="$1"
-
-  GIT_SSH_COMMAND="ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git clone -v -b $repo_branch $repo $repo_folder
-
+function clean_repo {
   # clean up unused files - We only need the docker folder
   mkdir /tmp/empty-dir
   rsync -a --delete --exclude=docker /tmp/empty-dir/ $repo_folder/ # Use rsync to delete everything in $repo_folder except for $repo_folder/docker
 }
 
-function copy_minecraft_world {
-  # Copy minecraft world from S3
-  aws s3 cp "$s3_bucket_path/minecraft-world.bundle" "$home_dir/minecraft-world.bundle" || { echo "Failed to download Minecraft world from S3"; exit 1; }
+function setup_minecraft_world {
+  local s3_bucket_path="$1"
+  local home_dir="$2"
+  local mc_map_repo_folder="$3"
+
   mkdir -p "$mc_map_repo_folder"
   git clone "$home_dir/minecraft-world.bundle" "$mc_map_repo_folder"
   rm -rf "$home_dir/minecraft-world.bundle" # Clean up after ourselves
@@ -116,6 +114,8 @@ function copy_minecraft_world {
 
 function setup_docker_environment {
   local docker_folder="$1"
+  local api_url="$2"
+  local rcon_port="$3"
 
   # Create .env file for server monitoring
   create_env_file "$docker_folder" "$api_url" "$rcon_port"
@@ -132,9 +132,34 @@ function run_docker_compose {
 }
 
 function clean_packages {
+  local git_private_key_path="$1"
+
   apt-get clean
   apt autoremove
   rm -rf /var/lib/apt/lists/*
+  rm -f "$git_private_key_path"
+}
+
+function parallel_download_and_clone {
+  local git_private_key_path="$1"
+  local s3_bucket_path="$2"
+  local home_dir="$3"
+  local repo_folder="$4"
+
+  repo="git@github.com:Klyde-Moradeyo/minecraft-AWS-server.git"
+  repo_branch="main"
+
+  # Start git cloning in the background
+  GIT_SSH_COMMAND="ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git clone -v -b $repo_branch $repo $repo_folder &
+  git_clone_pid=$!
+
+  # Start downloading Minecraft world in the background
+  aws s3 cp "$s3_bucket_path/minecraft-world.bundle" "$home_dir/minecraft-world.bundle" &
+  mc_world_download_pid=$!
+
+  # Wait for both background processes to complete
+  check_pid $mc_world_download_pid "Failed to download Minecraft world from S3"
+  check_pid $git_clone_pid "Failed to clone the git repository"
 }
 
 function run {
@@ -148,23 +173,23 @@ function run {
   docker_compose_file="$repo_folder/docker"
   mc_map_repo_folder="$docker_folder/minecraft-data"
 
-  # Clone and clean repository
-  clone_and_clean_repo "$git_private_key_path"
+  # Download minecraft world and Clone git Repo in parallel
+  parallel_download_and_clone "$git_private_key_path" "$s3_bucket_path" "$home_dir" "$repo_folder"
 
-  # Copy Minecraft world
-  copy_minecraft_world
+  # clean repository
+  clean_repo
+
+  # Setup Minecraft world
+  setup_minecraft_world "$s3_bucket_path" "$home_dir" "$mc_map_repo_folder"
 
   # Setup Docker environment
-  setup_docker_environment "$docker_folder"
+  setup_docker_environment "$docker_folder" "$api_url" "$rcon_port"
 
   # Run Docker Compose
   run_docker_compose "$docker_compose_file"
 
   # Clean packages
-  clean_packages
-
-  # Cleanup
-  rm -f "$git_private_key_path"
+  clean_packages "$git_private_key_path"
 }
 
 # Call the run function
