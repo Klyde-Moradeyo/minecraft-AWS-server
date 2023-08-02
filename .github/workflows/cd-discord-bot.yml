@@ -34,8 +34,18 @@ jobs:
           TF_TOKEN_app_terraform_io: ${{ secrets.TF_API_TOKEN }}
         run: |
           terraform init
-          echo "API_URL=$(terraform output -raw api_gateway_url)" >> $GITHUB_ENV
-          echo "SERVER_IP=$(terraform output -raw eip)" >> $GITHUB_ENV
+
+          # Get Terraform outputs
+          API_URL=$(terraform output -raw api_gateway_url)
+          SERVER_IP=$(terraform output -raw eip)
+
+          # Create Env Vars
+          echo "API_URL=$API_URL" >> $GITHUB_ENV
+          echo "SERVER_IP=$SERVER_IP" >> $GITHUB_ENV
+
+          # Hide the Environment Variables
+          echo "::add-mask::$API_URL"
+          echo "::add-mask::$SERVER_IP"
       
       - name: Set up FLY CTL
         uses: superfly/flyctl-actions/setup-flyctl@master

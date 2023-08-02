@@ -58,8 +58,16 @@ jobs:
             TF_TOKEN_app_terraform_io: ${{ secrets.tf_api_token }}
           run: |
             terraform init
-            echo "ECR_REPO_NAME=$(terraform output -raw ecr_repository_name)" >> $GITHUB_ENV
-          
+
+            # Get Terraform outputs
+            ECR_REPO_NAME=$(terraform output -raw ecr_repository_name)
+
+            # Create Env Vars
+            echo "ECR_REPO_NAME=$ECR_REPO_NAME" >> $GITHUB_ENV
+
+            # Hide the Environment Variables
+            echo "::add-mask::$ECR_REPO_NAME"
+
         - name: Build Fargate Image
           working-directory: ./fargate_task
           env:
