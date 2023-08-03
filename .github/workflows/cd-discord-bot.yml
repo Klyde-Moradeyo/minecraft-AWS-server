@@ -57,6 +57,7 @@ jobs:
         run: |
           flyctl secrets set API_URL=${{ env.API_URL }}
           flyctl secrets set SERVER_IP=${{ env.SERVER_IP }}
+          flyctl secrets set DEV_DISCORD_ACCOUNT_ID=${{ secrets.DEV_DISCORD_ACCOUNT_ID }}
           flyctl deploy --remote-only
 
       - name: Tag Git

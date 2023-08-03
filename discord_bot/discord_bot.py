@@ -35,7 +35,10 @@ class BotConfig:
     SERVER_IP = os.environ["SERVER_IP"]
     SERVER_PORT = "25565"
     SERVER_VERSION = "1.20.1"
+
+    # maintenance config
     ENABLE_MAINTENANCE = True
+    MAINTENANCE_BYPASS_USERS = [ os.environ["DEV_DISCORD_ACCOUNT_ID"] ]
 
     HELP_MESSAGES = { 
         "header": "🥭 **Mango Minecraft Guidebook** 🗺️\n\n" +
@@ -160,7 +163,7 @@ class Command:
             BOT_REPLY = f"User {self.context.author.name} used `{self.command}` command..."
             await self.bot_message.edit(content=BOT_REPLY)
 
-            if BotConfig.ENABLE_MAINTENANCE:
+            if BotConfig.ENABLE_MAINTENANCE and str(self.context.author.id) not in BotConfig.MAINTENANCE_BYPASS_USERS:
                 BOT_REPLY = bot_response.get_maintenance_msg()
                 await self.bot_message.edit(content=BOT_REPLY)
                 self.datetime = datetime.now() 
