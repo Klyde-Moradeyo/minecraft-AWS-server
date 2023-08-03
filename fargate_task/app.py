@@ -214,8 +214,8 @@ def ssh_and_run_script(ip, username, key_file, script_path, log_file_path, *args
         # logging.error(stderr.read().decode())
         
         if exit_status != 0:
-            logging.error(f"Script exited with status code {exit_status}.")
-            print_and_log_ssh_script_output(ip, username, key_file, log_file_path)
+            script_logs = print_and_log_ssh_script_output(ip, username, key_file, log_file_path)
+            logging.error(f"${script_logs} \nScript exited with status code {exit_status}.")
             raise Exception(f"Script exited with status code {exit_status}.")
     except Exception as e:
         logging.error(f"Failed to execute script on {ip}: {str(e)}.")
@@ -283,7 +283,7 @@ def print_and_log_ssh_script_output(ip, username, key_file, log_file_path):
         sftp = ssh.open_sftp()
         with sftp.file(log_file_path, 'r') as remote_file:
             log_content = remote_file.read().decode()
-            logging.info(log_content)  # Log the content as well
+            return log_content
     except Exception as e:
         logging.error(f"Failed to read log file from {ip}: {str(e)}.")
         sys.exit(1)
