@@ -35,7 +35,7 @@ class BotConfig:
     SERVER_IP = os.environ["SERVER_IP"]
     SERVER_PORT = "25565"
     SERVER_VERSION = "1.20.1"
-    ENABLE_MAINTENANCE = True
+    ENABLE_MAINTENANCE = False
 
     HELP_MESSAGES = { 
         "header": "🥭 **Mango Minecraft Guidebook** 🗺️\n\n" +
