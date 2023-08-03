@@ -130,6 +130,7 @@ Here are some areas for potential future development:
 - **Git Bundle:** Speed up git bundle?
 - **Grafana/Prometheus server monitoring:** Upon Server restarts enable a prometheus and grafana stack to enable users to ec2 machine resource usage
 - **Custom AMI for the ec2 instance:** This should in theory reduce setup time by 1m 30 sec. And it should cost around 8 GB * $0.023 = $0.184 per month.
+- **Fargate Container hangs in stop command**: The fargate container hangs while running the `stop` command in cases where it has been called and the minecraft infrastrucutre is not present. I've updated lambda function to stop this case from happening but investigation needs to occur as to why it is hanging and not exiting in the first place
 
 ## Troubleshooting
 

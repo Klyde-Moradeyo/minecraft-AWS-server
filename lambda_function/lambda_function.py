@@ -139,7 +139,16 @@ def lambda_handler(event, context):
 
         task_running = is_task_with_tags_exists(ecs_client, envs['CLUSTER'], task_tags)
 
+        mc_server_status = check_mc_server(envs["MC_SERVER_IP"], envs["MC_PORT"])
+
         if command in ('start', 'stop'):
+            if command == "stop" and not mc_server_status["online"]:
+                task_status = "MC_SERVER_DOWN"
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps({'STATUS': task_status}, cls=DateTimeEncoder)
+                }
+            
             if task_running:
                 task_status = check_task_status(ecs_client, envs['CLUSTER'], task_tags)
                 return {
@@ -169,8 +178,6 @@ def lambda_handler(event, context):
             if task_running:
                 task_status = check_task_status(ecs_client, envs['CLUSTER'], task_tags)
             else: # If there is no task_running, we check if the mc server is running
-                mc_server_status = check_mc_server(envs["MC_SERVER_IP"], envs["MC_PORT"])
-
                 if mc_server_status["online"]:
                     task_status = "MC_SERVER_UP"
                 else:
