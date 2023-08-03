@@ -180,6 +180,10 @@ def scp_to_ec2(ip, username, key_file, local_path, remote_path):
         stdin, stdout, stderr = ssh.exec_command(f'mkdir -p {remote_dir}')
         stdout.channel.recv_exit_status()  # Wait for the command to finish
 
+        # Log the output of the script
+        logging.info(stdout.read().decode())
+        logging.error(stderr.read().decode())
+
         # SCPClient takes a paramiko transport as its argument
         with SCPClient(ssh.get_transport()) as scp:
             scp.put(local_path, remote_path)  # Copy from local to remote
@@ -204,14 +208,14 @@ def ssh_and_run_script(ip, username, key_file, script_path, log_file_path, *args
         
         # Wait for the command to finish
         exit_status = stdout.channel.recv_exit_status()
+
+        # Log the output of the script
+        logging.info(stdout.read().decode())
+        logging.error(stderr.read().decode())
         
         if exit_status != 0:
             logging.error(f"Script exited with status code {exit_status}.")
             raise Exception(f"Script exited with status code {exit_status}.")
-        
-        # Log the output of the script
-        logging.info(stdout.read().decode())
-        logging.error(stderr.read().decode())
     except Exception as e:
         logging.error(f"Failed to execute script on {ip}: {str(e)}.")
         sys.exit(1)
@@ -233,14 +237,15 @@ def ssh_and_run_command(ip, username, key_file, command, *args):
         
         # Wait for the command to finish
         exit_status = stdout.channel.recv_exit_status()
+
+        # Log the output of the script
+        logging.info(stdout.read().decode())
+        logging.error(stderr.read().decode())
         
         if exit_status != 0:
             logging.error(f"Command exited with status code {exit_status}.")
             raise Exception(f"Command exited with status code {exit_status}.")
 
-        # Log the output of the script
-        logging.info(stdout.read().decode())
-        logging.error(stderr.read().decode())
     except Exception as e:
         logging.error(f"Failed to execute command on {ip}: {str(e)}.")
         sys.exit(1)
