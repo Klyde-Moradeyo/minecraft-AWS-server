@@ -209,12 +209,13 @@ def ssh_and_run_script(ip, username, key_file, script_path, log_file_path, *args
         # Wait for the command to finish
         exit_status = stdout.channel.recv_exit_status()
 
-        # Log the output of the script
-        logging.info(stdout.read().decode())
-        logging.error(stderr.read().decode())
+        # Log the output of the script - Doesn't work as we redirect output to a script.
+        # logging.info(stdout.read().decode())
+        # logging.error(stderr.read().decode())
         
         if exit_status != 0:
             logging.error(f"Script exited with status code {exit_status}.")
+            print_and_log_ssh_script_output(ip, username, key_file, log_file_path)
             raise Exception(f"Script exited with status code {exit_status}.")
     except Exception as e:
         logging.error(f"Failed to execute script on {ip}: {str(e)}.")
@@ -270,6 +271,24 @@ def establish_ssh_connection(machine_ip, username, key_file, max_retries=10, ret
                 ssh.close()  # Close the connection before raising the exception
                 logging.debug("Exceeded maximum number of retries. Exiting.")
                 raise Exception("Exceeded maximum number of retries. Failed to establish SSH connection.")
+            
+def print_and_log_ssh_script_output(ip, username, key_file, log_file_path):
+    ssh = create_ssh_client(ip, username, key_file)
+    if ssh is None:
+        logging.error(f"SSH connection could not be established to {ip}.")
+        raise Exception(f"SSH connection could not be established to {ip}.")
+
+    try:
+        # Retrieve the log file
+        sftp = ssh.open_sftp()
+        with sftp.file(log_file_path, 'r') as remote_file:
+            log_content = remote_file.read().decode()
+            logging.info(log_content)  # Log the content as well
+    except Exception as e:
+        logging.error(f"Failed to read log file from {ip}: {str(e)}.")
+        sys.exit(1)
+    finally:
+        ssh.close()
 
 ################################
 #         Git Functions        #
