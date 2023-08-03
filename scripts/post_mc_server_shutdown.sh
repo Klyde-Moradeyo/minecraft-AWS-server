@@ -1,64 +1,85 @@
 #!/bin/bash
 
-# Post Minecraft Server Container Close
-# Use: Post "terraform destroy" script to be performed on ec2 instance
-
 set -e
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source $script_dir/helper_functions.sh
+source "$script_dir/helper_functions.sh"
+
+# Trap the ERR signa
+trap 'if [[ $? -ne 0 ]]; then error_handler; fi' EXIT
 
 s3_bucket_path="$1"
-echo $s3_bucket_path
 
-# Trap the ERR signal
-trap 'error_handler' ERR
+echo "=== Configuration Parameters ==="
+echo "S3 Bucket Path: $s3_bucket_path"
+echo "==============================="
 
-function run {
-  home_dir="/home/ubuntu"
-  docker_dir="$home_dir/minecraft-AWS-server/docker"
-  git_private_key_path="$home_dir/.ssh/id_rsa"
-  mc_map_repo_folder="$docker_dir/minecraft-data"
-  container_world_folder="$docker_dir/minecraft-data/world"
+if [[ $# -ne 1 ]]; then
+  echo "Usage: $0 <s3_bucket_path>"
+  exit 1
+fi
 
-  # Stop the docker container
-  $(cd $docker_dir && docker compose down)
+stop_docker() {
+  local docker_dir="$1"
+  (cd "$docker_dir" && docker compose down)
+}
 
-  # Get Monitoring log to scripts folder
+move_monitoring_log() {
+  local docker_dir="$1"
+  local home_dir="$2"
   mv "$docker_dir/server_monitoring.log" "$home_dir/setup/logs"
+}
 
-  # Use rsync to delete everything in docker directory except for the minecraft world
-  rsync -a --delete --exclude="minecraft-data/world" --exclude=".git" /tmp/empty-dir/ $docker_dir/ 
+delete_docker_dir_except_world() {
+  local docker_dir="$1"
+  rsync -a --delete --exclude="minecraft-data/world" --exclude=".git" /tmp/empty-dir/ "$docker_dir/"
+}
 
-  ########################
-  # Save MC world in Git #
-  ########################
-  # Configure Git user
-  git config --global user.email "darkmango444@gmail.com"
-  git config --global user.name "dark-mango-bot"
+configure_git() {
+  local mc_map_repo_folder="$1"
+  local git_email="mango-bot@mango.com"
+  local username="dark-mango-bot"
 
-  cd $mc_map_repo_folder
+  git -C "$mc_map_repo_folder" config user.email "$git_email"
+  git -C "$mc_map_repo_folder" config user.name "$username"
+}
 
-  # Add and commit changes
-  git add .
-  git commit -m "Auto-commit: Update minecraft data"
-  git tag "minecraft-data-update-$(date +"%Y-%m-%d")-time-$(date +"%H-%M-%S")"
+commit_and_push_world() {
+  local mc_map_repo_folder="$1"
+  local s3_bucket_path="$2"
+  git -C "$mc_map_repo_folder" add .
+  # Allow the commit command to fail without stopping the script
+  if git -C "$mc_map_repo_folder" commit -m "Auto-commit: Update minecraft data"; then
+    git -C "$mc_map_repo_folder" tag "minecraft-data-update-$(date +"%Y-%m-%d")-time-$(date +"%H-%M-%S")"
+    git -C "$mc_map_repo_folder" bundle create minecraft-world.bundle --all
+    aws s3 cp minecraft-world.bundle "$s3_bucket_path"
+  else
+    echo "No changes to commit"
+  fi
+}
 
-  # Push changes to the S3 Bucket
-  git bundle create minecraft-world.bundle --all
-  aws s3 cp minecraft-world.bundle "$s3_bucket_path"
-
-  # Zip logs and push to S3 bucket
-  zip -r setup_logs.zip "$home_dir/setup/logs"
+zip_and_push_logs() {
+  local home_dir="$1"
+  local s3_bucket_path="$2"
+  zip -jr setup_logs.zip "$home_dir/setup/logs"
   aws s3 cp setup_logs.zip "$s3_bucket_path"
 }
 
-# Call the run function
+run() {
+  local home_dir="/home/ubuntu"
+  local docker_dir="$home_dir/minecraft-AWS-server/docker"
+  local mc_map_repo_folder="$docker_dir/minecraft-data"
+
+  stop_docker "$docker_dir"
+  move_monitoring_log "$docker_dir" "$home_dir"
+  delete_docker_dir_except_world "$docker_dir"
+  configure_git "$mc_map_repo_folder"
+  commit_and_push_world "$mc_map_repo_folder" "$s3_bucket_path"
+  zip_and_push_logs "$home_dir" "$s3_bucket_path"
+}
+
 start=$(date +%s.%N)
 run
 finish=$(date +%s.%N)
 
 get_current_date
 calculate_runtime $start $finish
-exit 0
-
-
