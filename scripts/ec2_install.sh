@@ -12,7 +12,7 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source $script_dir/helper_functions.sh
 
 # Trap the ERR signal
-trap 'error_handler' ERR
+trap 'if [[ $? -ne 0 ]]; then error_handler; fi' EXIT
 
 # Run the apt-get command 
 # DPkg::Lock checks if apt lock is in use - Timeout set to -1 for unlimited. 60 for 60 sec

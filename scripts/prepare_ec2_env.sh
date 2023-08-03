@@ -5,7 +5,7 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${script_dir}/helper_functions.sh" || error_handler "Failed to source helper functions"
 
 # Trap the ERR signal
-trap 'error_handler' ERR
+trap 'if [[ $? -ne 0 ]]; then error_handler; fi' EXIT
 
 s3_bucket_path="$1"
 git_private_key_name="$2"
