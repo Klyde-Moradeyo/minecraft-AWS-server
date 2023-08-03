@@ -13,16 +13,18 @@ aws_region="$3"
 api_url="$4"
 rcon_port="$5"
 
+echo "=== Configuration Parameters ==="
+echo "S3 Bucket Path: $s3_bucket_path"
+echo "Git Private Key Name: $git_private_key_name"
+echo "AWS Region: $aws_region"
+echo "API URL: $api_url"
+echo "RCON Port: $rcon_port"
+echo "==============================="
+
 if [[ $# -ne 5 ]]; then
   echo "Usage: $0 <s3_bucket_path> <git_private_key_name> <aws_region> <api_url> <rcon_port>"
   exit 1
 fi
-
-echo $s3_bucket_path
-echo $git_private_key_name
-echo $aws_region
-echo $api_url
-echo $rcon_port
 
 function check_install {
   for cmd in aws tar git docker; do
