@@ -44,4 +44,7 @@ lambda_function/lambda_function_payload.zip
 terraform/infrastructure_handler/lambda_function_payload.zip
 
 # test folder
-test/docker_env/minecraft-data
+test/sandbox/minecraft-world*
+
+# log files
+*.log
