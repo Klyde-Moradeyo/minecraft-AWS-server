@@ -24,7 +24,7 @@ apt_get() {
 # Dependencies Install #
 ########################
 function install_dependencies {
-  add-apt-repository universe # Ensure the universe repository is enabled for access to additional packages
+  add-apt-repository -y universe # Ensure the universe repository is enabled for access to additional packages
   apt-get update
   apt-get install -y sudo apt-utils
   apt_get install -y \
