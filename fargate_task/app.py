@@ -19,7 +19,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.backends import default_backend
 
 # Enable detailed boto3 logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 ######################################################################
 #                   General Functions                                #
@@ -106,38 +106,6 @@ def get_command():
     )
     return response['Parameter']['Value']
 
-def run_bash_script(script_path, log_file_path, *script_args):
-    try:
-        # Ensure the bash script file has execute permissions
-        st = os.stat(script_path)  # Get the current permissions of the file
-        os.chmod(script_path, st.st_mode | stat.S_IEXEC)  # Add execute permission for the owner
-
-        # Note: It's generally safer to pass the arguments in as a list,
-        # especially if they might be user-provided, to avoid shell injection attacks.
-        process = subprocess.Popen(
-            [script_path] + list(script_args), 
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.PIPE
-        )
-
-        stdout, stderr = process.communicate()
-
-        # Open the log file
-        with open(log_file_path, 'w') as log_file:
-            if stdout:
-                log_file.write(stdout.decode())
-            if stderr:
-                log_file.write(stderr.decode())
-
-        if process.returncode != 0:
-            stderr = stderr.decode()
-            logging.error(f"Script {script_path} failed with error: {stderr}")
-            sys.exit(1)
-        
-    except Exception as e:
-        logging.error(f"Failed to execute script {script_path}: {str(e)}")
-        sys.exit(1)
-
 def read_from_tf_vars(var, file_path):
     try:
         with open(file_path, 'r') as f:
@@ -151,6 +119,91 @@ def read_from_tf_vars(var, file_path):
         raise ValueError(f"Cannot find {var} in {file_path}")
 
     return obj['variable'][var]["default"]
+
+def run_bash_script(script_path: str, *script_args: str) -> None:
+    try:
+        # Ensure the bash script file has execute permissions
+        st = os.stat(script_path)  # Get the current permissions of the file
+        os.chmod(script_path, st.st_mode | stat.S_IEXEC)  # Add execute permission for the owner
+
+        # Use subprocess.Popen for real-time output
+        process = subprocess.Popen(
+            [script_path] + list(script_args),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+
+        # Read from stdout and stderr in real-time
+        for line in process.stdout:
+            logging.info(line.strip())
+
+        for line in process.stderr:
+            logging.error(line.strip())
+
+        # Wait for the process to complete and get the return code
+        return_code = process.wait()
+
+        if return_code != 0:
+            logging.error(f"Script {script_path} failed with return code: {return_code}")
+            sys.exit(1)
+
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Script {script_path} failed with error: {e.stderr}")
+        sys.exit(1)
+    except Exception as e:
+        logging.error(f"Failed to execute script {script_path}: {str(e)}")
+        sys.exit(1)
+
+def convert_bytes(byte_value):
+    # Conversion factors
+    KB = 1024
+    MB = KB ** 2
+    GB = KB ** 3
+    
+    # Calculate sizes
+    size_kb = byte_value / KB
+    size_mb = byte_value / MB
+    size_gb = byte_value / GB
+    
+    return {
+        "size_bytes": byte_value,
+        "size_kb": size_kb,
+        "size_mb": size_mb,
+        "size_gb": size_gb
+    }
+
+def send_to_api(data, url):
+    if url is None:
+        print("API_URL is not set in the environment variables")
+        return None
+
+    url += "/minecraft-prod/command"
+    
+    headers = {'Content-Type': 'application/json'}
+    
+    logging.info(f"Sending Data to API: {data}")
+    
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        logging.info(f"Response from API: {response}")
+        response.raise_for_status()  # Raises a HTTPError if the response status is 4xx, 5xx
+    except requests.exceptions.RequestException as err:
+        logging.error(f"Error occurred: {err}")
+        return None
+
+    return response
+
+def check_mc_bundle_size(file_size, api_url):
+    MAX_BUNDLE_SIZE_MB= 1950
+    BUFFER=0.15 
+    BUNDLE_SIZE_LIMIT= MAX_BUNDLE_SIZE_MB - (MAX_BUNDLE_SIZE_MB * BUFFER) # Safe Guard of 15% of the size limit
+
+    logging.info(f"Minecraft Bundle size: {convert_bytes(file_size)['size_gb']} GB")
+    if convert_bytes(file_size)["size_mb"] > BUNDLE_SIZE_LIMIT:
+        data = { "command": "archive_world" }
+        response = send_to_api(data, api_url)
+        return response
 
 ################################
 #            SSH               #
@@ -202,7 +255,7 @@ def ssh_and_run_script(ip, username, key_file, script_path, log_file_path, *args
     # Convert args to a string
     args_str = ' '.join(args)
 
-    try:
+    try: 
         # Run the bash script and redirect its output to a log file
         stdin, stdout, stderr = ssh.exec_command(f"sudo bash {script_path} {args_str} > {log_file_path} 2>&1")
         
@@ -214,7 +267,7 @@ def ssh_and_run_script(ip, username, key_file, script_path, log_file_path, *args
         # logging.error(stderr.read().decode())
         
         if exit_status != 0:
-            script_logs = print_and_log_ssh_script_output(ip, username, key_file, log_file_path)
+            script_logs = shh_and_read_file_output(ip, username, key_file, log_file_path)
             logging.error(f"${script_logs} \nScript exited with status code {exit_status}.")
             raise Exception(f"Script exited with status code {exit_status}.")
     except Exception as e:
@@ -223,7 +276,7 @@ def ssh_and_run_script(ip, username, key_file, script_path, log_file_path, *args
     finally:
         ssh.close()
 
-def ssh_and_run_command(ip, username, key_file, command, *args):
+def ssh_and_run_command(ip, username, key_file, command, return_output=False, *args):
     ssh = create_ssh_client(ip, username, key_file)
     if ssh is None:
         logging.error(f"SSH connection could not be established to {ip}.")
@@ -232,12 +285,17 @@ def ssh_and_run_command(ip, username, key_file, command, *args):
     # Convert args to a string
     args_str = ' '.join(args)
 
+    output = ''
     try:
         # Run the command and redirect its output to a log file
         stdin, stdout, stderr = ssh.exec_command(f"{command} {args_str}")
-        
+
         # Wait for the command to finish
         exit_status = stdout.channel.recv_exit_status()
+
+        # Read and decode output
+        output = stdout.read().decode()
+        error_output = stderr.read().decode()
 
         # Log the output of the script
         logging.info(stdout.read().decode())
@@ -252,6 +310,10 @@ def ssh_and_run_command(ip, username, key_file, command, *args):
         sys.exit(1)
     finally:
         ssh.close()
+        
+    # Return output if requested
+    if return_output:
+        return output
 
 def establish_ssh_connection(machine_ip, username, key_file, max_retries=10, retry_delay=5):
     ssh = paramiko.SSHClient()
@@ -272,7 +334,7 @@ def establish_ssh_connection(machine_ip, username, key_file, max_retries=10, ret
                 logging.debug("Exceeded maximum number of retries. Exiting.")
                 raise Exception("Exceeded maximum number of retries. Failed to establish SSH connection.")
             
-def print_and_log_ssh_script_output(ip, username, key_file, log_file_path):
+def shh_and_read_file_output(ip, username, key_file, log_file_path):
     ssh = create_ssh_client(ip, username, key_file)
     if ssh is None:
         logging.error(f"SSH connection could not be established to {ip}.")
@@ -375,6 +437,7 @@ def server_handler(command):
     os.environ['TF_TOKEN_app_terraform_io'] = tf_api_key
 
     run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_handler"], "init")
+    api_url = run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_handler"], "output", "api_gateway_url")
     machine_ip = run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_handler"], "output", "eip")
     s3_uri = run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_handler"], "output", "mc_s3_bucket_uri")
     username = "ubuntu"
@@ -416,7 +479,7 @@ def server_handler(command):
         print(key_file)
         establish_ssh_connection(machine_ip, username, key_file)
 
-        ssh_and_run_command(machine_ip, username, key_file, "mkdir -p", "setup/logs", "setup/scripts")
+        ssh_and_run_command(machine_ip, username, key_file, False, "mkdir -p", "setup/logs", "setup/scripts")
 
         # Copy Scripts to EC2 Instance
         scp_to_ec2(machine_ip, username, key_file, local_helper_script_path, remote_helper_script_path)
@@ -450,9 +513,20 @@ def server_handler(command):
         # Run Scripts in EC2 Instance
         ssh_and_run_script(machine_ip, username, key_file, remote_shutdown_script_path, remote_shutdown_logs_path, s3_uri)
 
+        # Check minecraft-world.bundle size - need to add an option for output in ssh_andrun_command.
+        mincraft_bundle_path = os.path.join(repo_name, "docker", "minecraft-data", "minecraft-world.bundle"),
+        mc_world_size = ssh_and_run_command(machine_ip, username, key_file, True, "stat -c%s", mincraft_bundle_path)
+
         # Terraform commands
         run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "init")
         run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "destroy")
+
+        # If the minecraft bundle is over a certain size -> start new job to compress it
+        check_mc_bundle_size(mc_world_size, api_url)
+    elif command == "archive_world":
+        # Archive Minecraft World Data Script
+        local_archive_mc_script_path = os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], "mc_world_archiver.sh")
+        run_bash_script(local_archive_mc_script_path, s3_uri)
     else:
         print("error command not found")
     
