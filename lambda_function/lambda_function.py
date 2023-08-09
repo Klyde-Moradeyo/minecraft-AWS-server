@@ -40,8 +40,9 @@ def get_ssm_command() -> str:
     return command
 
 def check_mc_server(ip: str, port: str) -> Dict[str, Any]:
-    minecraft_server = JavaServer.lookup(f"{ip}:{port}")
     try:
+        minecraft_server = JavaServer.lookup(f"{ip}:{port}")
+
         status = minecraft_server.status()
         return {
             'online': minecraft_server.ping() is not None,
@@ -49,7 +50,7 @@ def check_mc_server(ip: str, port: str) -> Dict[str, Any]:
             'version': status.version.name
         }
     except Exception:
-        logger.exception("Error while checking Minecraft server")
+        logger.warning("Warning: Could not check the Minecraft server. Maybe its offline?")
         return {
             'online': False,
             'players_online': 0,
