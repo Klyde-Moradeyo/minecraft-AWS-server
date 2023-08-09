@@ -201,7 +201,7 @@ def check_mc_bundle_size(file_size, api_url):
 
     logging.info(f"Minecraft Bundle size: {convert_bytes(file_size)['size_gb']} GB")
     if convert_bytes(file_size)["size_mb"] > BUNDLE_SIZE_LIMIT:
-        data = { "command": "archive_world" }
+        data = { "command": "mc_world_archive" }
         response = send_to_api(data, api_url)
         return response
 
@@ -523,7 +523,7 @@ def server_handler(command):
 
         # If the minecraft bundle is over a certain size -> start new job to compress it
         check_mc_bundle_size(mc_world_size, api_url)
-    elif command == "archive_world":
+    elif command == "mc_world_archive":
         # Archive Minecraft World Data Script
         local_archive_mc_script_path = os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], "mc_world_archiver.sh")
         run_bash_script(local_archive_mc_script_path, s3_uri)
