@@ -222,7 +222,8 @@ def lambda_handler(event, context):
                 
                 logging.info(f"waiting for {seconds_to_minutes(time_limit)} minutes")
                 while time_elapsed < time_limit:  
-                    if not task_running: # Launch new Fargate task and exit
+                    task_running = is_task_with_tags_exists(ecs_client, envs['CLUSTER'], task_tags)
+                    if not task_running: # Launch new Fargate task and exit if there is no task running
                         send_command(command)
                         task_arn = create_fargate_container(ecs_client, "minecraft_task_definition", envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
                                                             environment_variables, task_tags)
