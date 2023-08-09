@@ -2,7 +2,6 @@ import json
 import os
 import time
 import datetime
-import requests
 import logging
 from typing import List, Dict, Any
 import boto3
