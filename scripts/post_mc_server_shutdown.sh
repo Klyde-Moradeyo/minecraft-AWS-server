@@ -34,22 +34,13 @@ delete_docker_dir_except_world() {
   rsync -a --delete --exclude="minecraft-data/world" --exclude=".git" /tmp/empty-dir/ "$docker_dir/"
 }
 
-configure_git() {
-  local mc_map_repo_folder="$1"
-  local git_email="mango-bot@mango.com"
-  local username="dark-mango-bot"
-
-  git -C "$mc_map_repo_folder" config user.email "$git_email"
-  git -C "$mc_map_repo_folder" config user.name "$username"
-}
-
 commit_and_push_world() {
   local mc_map_repo_folder="$1"
   local s3_bucket_path="$2"
   git -C "$mc_map_repo_folder" add .
   # Allow the commit command to fail without stopping the script
-  if git -C "$mc_map_repo_folder" commit -m "Auto-commit: Update minecraft data"; then
-    git -C "$mc_map_repo_folder" tag "minecraft-data-update-$(date +"%Y-%m-%d")-time-$(date +"%H-%M-%S")"
+  if git -C "$mc_map_repo_folder" commit -m "$commit_msg"; then
+    # git -C "$mc_map_repo_folder" tag "minecraft-data-update-$(date +"%Y-%m-%d")-time-$(date +"%H-%M-%S")"
     git -C "$mc_map_repo_folder" bundle create minecraft-world.bundle --all
     aws s3 cp minecraft-world.bundle "$s3_bucket_path"
   else
