@@ -142,7 +142,7 @@ async def reset_command_scroll():
 ######################################################################
 # Helper function to handle common logic in bot commands
 class Command:
-    VALID_COMMANDS = ["start", "stop", "status", "features"]
+    VALID_COMMANDS = ["start", "stop", "status", "features", "mc_world_archive"]
 
     def __init__(self, context, command):
         self.context = context
@@ -163,8 +163,17 @@ class Command:
             BOT_REPLY = f"User {self.context.author.name} used `{self.command}` command..."
             await self.bot_message.edit(content=BOT_REPLY)
 
+            # Maintenance Mode - Only allow Devs to use Discord bot while maintenance mode is ON.
             if BotConfig.ENABLE_MAINTENANCE and str(self.context.author.id) not in BotConfig.MAINTENANCE_BYPASS_USERS:
                 BOT_REPLY = bot_response.get_maintenance_msg()
+                await self.bot_message.edit(content=BOT_REPLY)
+                self.datetime = datetime.now() 
+                latest_guild_commands[self.context.guild.id] = self
+                return
+            
+            # 'mc_world_archive' command is for Developers only to use
+            if self.command == "mc_world_archive" and str(self.context.author.id) not in BotConfig.MAINTENANCE_BYPASS_USERS:
+                BOT_REPLY = bot_response.get_admin_only_reply_msg()
                 await self.bot_message.edit(content=BOT_REPLY)
                 self.datetime = datetime.now() 
                 latest_guild_commands[self.context.guild.id] = self
@@ -308,6 +317,15 @@ async def features(context):
     Show Minecraft server Features
     """
     command = Command(context, "features")
+    await command.execute()
+
+# For Running tests
+@bot.command()
+async def mc_world_archive(context):
+    """
+    Compress the Minecraft World Repository - Only Developers can use this command
+    """
+    command = Command(context, "mc_world_archive")
     await command.execute()
 
 # Start the discord bot

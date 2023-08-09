@@ -3,7 +3,7 @@ import random
 class Bot_Response:
     def __init__(self):
         help_desk_users = "`@The Black Mango`"
-
+        
         self.STARTING_REPLIES = [
             "Your Minecraft server is under construction! Please hang in there, it should be ready in about 6-7 minutes.",
             "We're hard at work setting up your Minecraft server. Expect to be playing in just 6-7 minutes!",
@@ -92,6 +92,17 @@ class Bot_Response:
             "⚙️ Hold tight! Maintenance mode activated."
         ]
 
+        self.ADMIN_ONLY_REPLIES = [
+            "🖋️ Only Admins can write this book's next chapter."
+            "🚪 Behind this door are Admin mysteries. Got the key?"
+            "🌌 That's a path to the End. Only Ender Admins can tread."
+            "🗝️ Looks like a locked Nether portal. Admins may have the key.",
+            "🧪 Need the right potion (Admin access) to brew that.",
+            "📜 A sealed scroll? Only Admins can unroll it.",
+            "🔒 Enchanted lock detected. Seek an Admin for the charm.",
+            "🌠 Shooting star? Only Admins can make this wish."
+        ]
+
     def msg(self, command, state):
         if state == "MC_SERVER_UP":
             bot_reply = random.choice(self.MC_SERVER_UP)
@@ -119,6 +130,10 @@ class Bot_Response:
                 bot_reply = random.choice(self.STOP_RUNNING_REPLIES)
             else:
                 bot_reply = "Hmm, we're not sure what's happening. Please check back soon."
+        elif command == "archive_world":
+            bot_reply = "Archiving has started"
+        else:
+            bot_reply = f"Bot Reply not configured for command '{command}'"
 
         return bot_reply
 
@@ -130,3 +145,6 @@ class Bot_Response:
     
     def get_maintenance_msg(self):
         return random.choice(self.MAINTENANCE_MESSAGES)
+    
+    def get_admin_only_reply_msg(self):
+        return random.choice(self.ADMIN_ONLY_REPLIES)
