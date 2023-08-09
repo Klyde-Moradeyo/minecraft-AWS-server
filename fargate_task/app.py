@@ -276,7 +276,7 @@ def ssh_and_run_script(ip, username, key_file, script_path, log_file_path, *args
     finally:
         ssh.close()
 
-def ssh_and_run_command(ip, username, key_file, command, return_output=False, *args):
+def ssh_and_run_command(ip, username, key_file, return_output, command, *args):
     ssh = create_ssh_client(ip, username, key_file)
     if ssh is None:
         logging.error(f"SSH connection could not be established to {ip}.")
