@@ -1,6 +1,8 @@
 import json
 import os
+import time
 import datetime
+import requests
 import logging
 from typing import List, Dict, Any
 import boto3
@@ -8,7 +10,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 from mcstatus import JavaServer
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 ######################################################################
 #                         Helper Functions                           #
@@ -57,9 +59,15 @@ def check_mc_server(ip: str, port: str) -> Dict[str, Any]:
 
 def get_env_variables() -> Dict[str, str]:
     env_vars = ['MC_PORT', 'MC_SERVER_IP', 'CLUSTER', 'CONTAINER_NAME', 'DEFAULT_SUBNET_ID', 'DEFAULT_SECURITY_GROUP_ID', 
-                'TF_USER_TOKEN', 'TAG_NAME', 'TAG_NAMESPACE', 'TAG_ENVIRONMENT']
+                'TF_USER_TOKEN', 'TAG_NAME', 'TAG_NAMESPACE', 'TAG_ENVIRONMENT', 'TAG_RUNNING_COMMAND']
 
     return {var: os.getenv(var) for var in env_vars}
+
+def seconds_to_minutes(seconds: int) -> float:
+    if not isinstance(seconds, int) or seconds < 0:
+        raise ValueError("Input seconds should be a non-negative integer.")
+    
+    return seconds / 60.0
 
 ######################################################################
 #                           Fargate                                  #
@@ -84,42 +92,85 @@ def create_fargate_container(ecs_client, task_definition, cluster, container_nam
     logger.debug(f"Created Fargate container with ARN: {task_arn}")
     return response["tasks"][0]["taskArn"]
 
-def is_task_with_tags_exists(ecs_client, cluster, task_tags):
-    response = ecs_client.list_tasks(cluster=cluster)
+def is_task_with_tags_exists(ecs_client, cluster, desired_tags):
+    # Fetch tasks from the given cluster
+    try:
+        tasks_response = ecs_client.list_tasks(cluster=cluster)
+    except Exception as e:
+        logger.error(f"Error fetching tasks from cluster {cluster}: {e}")
+        return False
 
-    for task_arn in response['taskArns']:
-        task_details = ecs_client.describe_tasks(
-            cluster=cluster,
-            tasks=[task_arn],
-            include=['TAGS'],  # Include tags in the response
-        )
+    # Iterate over each task ARN retrieved
+    for task_arn in tasks_response.get('taskArns'):
+        # Try to get the details of the current task, including its tags
+        try:
+            current_task_details = ecs_client.describe_tasks(
+                cluster=cluster,
+                tasks=[task_arn],
+                include=['TAGS'],
+            )
+        except Exception as e:
+            logger.error(f"Error fetching details for task {task_arn} in cluster {cluster}: {e}")
+            return False
 
-        for task in task_details['tasks']:
-            if all(tag in task['tags'] for tag in task_tags):
+        for task_data in current_task_details.get('tasks'):
+            tag_match_count = 0 
+
+            # Compare each desired tag against the task's tags
+            for tag_to_check in desired_tags:
+                if tag_to_check['key'] == 'TAG_RUNNING_COMMAND': # For the 'TAG_RUNNING_COMMAND', only check the key's presence. We dont care about the value
+                    if any(existing_tag['key'] == tag_to_check['key'] for existing_tag in task_data.get('tags')):
+                        tag_match_count += 1
+                else: # For other tags, check both the key and value
+                    if tag_to_check in task_data.get('tags'):
+                        tag_match_count += 1
+
+            # If all desired tags are found within the task's tags, return True
+            if tag_match_count == len(desired_tags):
+                logger.info(f"Located task with ARN {task_arn} matching the specified tags.")
                 return True
 
+    # If no tasks matched the provided tags
+    logger.info(f"No tasks matching the provided tags were found in cluster {cluster}.")
     return False
 
 def check_task_status(ecs_client, cluster, tags):
-    # Convert tags to a dictionary for easier comparison
-    tags_dict = {tag['key']: tag['value'] for tag in tags}
-
     # List all tasks in the cluster
-    list_tasks_response = ecs_client.list_tasks(cluster=cluster)
-    logger.info(f"list task response: {list_tasks_response}")
+    try:
+        list_tasks_response = ecs_client.list_tasks(cluster=cluster)
+    except Exception as e:
+        logger.error(f"Error fetching tasks from cluster {cluster}: {e}")
+        return None
 
-    for task_arn in list_tasks_response["taskArns"]:
+    logger.info(f"List task response: {list_tasks_response}")
+
+    for task_arn in list_tasks_response.get("taskArns", []):
         # Describe each task to get its tags
-        describe_task_response = ecs_client.describe_tasks(cluster=cluster, tasks=[task_arn], include=['TAGS'])
+        try:
+            describe_task_response = ecs_client.describe_tasks(cluster=cluster, tasks=[task_arn], include=['TAGS'])
+        except Exception as e:
+            logger.warning(f"Error fetching details for task {task_arn} in cluster {cluster}: {e}")
+            continue
+        
         task = describe_task_response["tasks"][0]
 
-        # Check if the task has the specified tags
-        task_tags = {tag["key"]: tag["value"] for tag in task.get("tags", [])}
-        # If the task has the specified tags, return its status
-        if all(item in task_tags.items() for item in tags_dict.items()):
+        tag_match_count = 0
+        for tag_to_check in tags:
+            if tag_to_check['key'] == 'TAG_RUNNING_COMMAND': 
+                # For the 'TAG_RUNNING_COMMAND', only check the key's presence. We don't care about the value.
+                if any(existing_tag['key'] == tag_to_check['key'] for existing_tag in task.get('tags', [])):
+                    tag_match_count += 1
+            else: 
+                # For other tags, check both the key and value.
+                if tag_to_check in task.get('tags', []):
+                    tag_match_count += 1
+
+        # If all tags match, return the task's status
+        if tag_match_count == len(tags):
             logger.debug(f"Task Status: { task['lastStatus'] }")
             return task["lastStatus"]
 
+    logger.info(f"No tasks matched the provided tags: {tags}.")
     return None
 
 ######################################################################
@@ -127,21 +178,83 @@ def check_task_status(ecs_client, cluster, tags):
 ######################################################################
 def lambda_handler(event, context):
     try:
-        command = json.loads(event["body"]).get("command")
+        # Environment Vars
+        envs = get_env_variables()
+
+        # Inputs
+        parsed_body = json.loads(event["body"])
+        recursion_count = parsed_body.get("recursion_count", 0)
+        command = parsed_body.get("command")
+        envs['TAG_RUNNING_COMMAND'] = command
+
+        # Log Input
+        logger.info(f"COMMAND: {command} | Recursion Count: {recursion_count}")
+        
+        # to do: We will need a error for sent to admin when recursion reaches a certain amount e.g 5 times
+        if recursion_count == 3:
+            logging.error(f"RECURSION LIMIT HIT: {recursion_count}")
+            raise TimeoutError
 
         if not isinstance(command, str):
             raise ValueError('Command must be a string')
 
-        envs = get_env_variables()
         ecs_client = boto3.client("ecs")
         environment_variables = [ {'name': 'TF_TOKEN_app_terraform_io', 'value': envs['TF_USER_TOKEN'] }]
         task_tags = [ {'key': key, 'value': value} for key, value in envs.items() if key.startswith('TAG_') ]
+        fargate_network_configuration = {
+            "awsvpcConfiguration": {
+                "subnets": [ envs['DEFAULT_SUBNET_ID'] ], 
+                "securityGroups": [ envs['DEFAULT_SECURITY_GROUP_ID'] ],
+                "assignPublicIp": "ENABLED"
+            }   
+        }
 
         task_running = is_task_with_tags_exists(ecs_client, envs['CLUSTER'], task_tags)
-
+ 
         mc_server_status = check_mc_server(envs["MC_SERVER_IP"], envs["MC_PORT"])
 
-        if command in ('start', 'stop'):
+        if command == "mc_world_archive":
+            # Wait for task to finish running then schedule task
+            if task_running:
+                check_interval = 30
+                time_limit = 600
+                time_elapsed = 0 # counter
+                
+                logging.info(f"waiting for {seconds_to_minutes(time_limit)} minutes")
+                while time_elapsed < time_limit:  
+                    if not task_running: # Launch new Fargate task and exit
+                        send_command(command)
+                        task_arn = create_fargate_container(ecs_client, "minecraft_task_definition", envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
+                                                            environment_variables, task_tags)
+                        logger.info(f"New Fargate task launched: {task_arn}")
+
+                        task_status = check_task_status(ecs_client, envs['CLUSTER'], task_tags)
+                        if task_status is None:
+                            raise Exception(f"Error running Starting Task: {task_arn}")
+                        
+                        response = { "STATUS": f"MC_WORLD_ARCHIVE_{task_status}", "INFO": f"New Fargate task launched: {task_arn}" }
+                        break
+                    time.sleep(check_interval)  # check every 5 seconds
+                    time_elapsed += check_interval
+                    logging.info(f"time elapsed: {time_elapsed} seconds")
+
+                if time_elapsed >= time_limit:
+                    logger.warning(f"Fargate task still running after {seconds_to_minutes(time_elapsed)} minutes.")
+
+                # Improvement: Retrigger Lambda after a period of time if the fargate task hasnt been srarted after the specified time
+                response = { "STATUS": f"MC_WORLD_ARCHIVE_FAILED_START", "INFO": f"Timed out" }
+            else:
+                logger.info(f"Else statement")
+                send_command(command)
+                task_arn = create_fargate_container(ecs_client, "minecraft_task_definition", envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
+                                                    environment_variables, task_tags)
+                logger.info(f"New Fargate task launched: {task_arn}")
+                task_status = check_task_status(ecs_client, envs['CLUSTER'], task_tags)
+                if task_status is None:
+                    raise Exception(f"Error running Starting Task: {task_arn}")
+                
+                response = { "STATUS": f"MC_WORLD_ARCHIVE_{task_status}", "INFO": f"New Fargate task launched: {task_arn}" }
+        elif command in ('start', 'stop'):
             if command == "stop" and not mc_server_status["online"]:
                 task_status = "MC_SERVER_DOWN"
                 return {
@@ -159,13 +272,6 @@ def lambda_handler(event, context):
             # Sends command to SSM param store
             send_command(command)
 
-            fargate_network_configuration = {
-                "awsvpcConfiguration": {
-                    "subnets": [ envs['DEFAULT_SUBNET_ID'] ], 
-                    "securityGroups": [ envs['DEFAULT_SECURITY_GROUP_ID'] ],
-                    "assignPublicIp": "ENABLED"
-                }   
-            }
             task_arn = create_fargate_container(ecs_client, "minecraft_task_definition", envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
                                                 environment_variables, task_tags)
 
@@ -191,15 +297,39 @@ def lambda_handler(event, context):
             "statusCode": 200,
             "body": json.dumps(response, cls=DateTimeEncoder)
         }
-    except (BotoCoreError, ClientError, Exception) as error:
-        logger.exception(f"Error processing request: {str(error)}")
+    except TimeoutError as error:
+        logger.error("Timeout occurred", extra={
+            "error": str(error),
+            "recursion_count": recursion_count
+        })
         return {
-            "statusCode": 500,
-            "body": json.dumps(str(error), cls=DateTimeEncoder)
+            "statusCode": 408,
+            "body": json.dumps({"error": str(error)}, cls=DateTimeEncoder) 
         }
+
     except ValueError as error:
-        logger.error(str(error))
+        logger.error("Value error occurred", extra={
+            "error": str(error),
+        })
         return {
             "statusCode": 400,
-            "body": json.dumps(str(error), cls=DateTimeEncoder)
+            "body": json.dumps({"error": str(error)}, cls=DateTimeEncoder)
+        }
+
+    except (BotoCoreError, ClientError) as error:
+        logger.exception("Boto3 related error occurred", extra={
+            "error": str(error),
+        })
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"error": str(error)}, cls=DateTimeEncoder)
+        }
+
+    except Exception as error:
+        logger.exception("Unhandled exception occurred", extra={
+            "error": str(error),
+        })
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"error": str(error)}, cls=DateTimeEncoder)
         }
