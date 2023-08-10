@@ -80,7 +80,7 @@ variable "ecs_cpu_limit" {
 variable "ecs_memory_limit" {
   description = "Memory Resource limit for container and task level"
   type        = string
-  default     = "512"
+  default     = "1024"
 }
 
 ########################
