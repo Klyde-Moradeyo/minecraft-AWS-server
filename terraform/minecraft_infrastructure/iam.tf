@@ -55,7 +55,7 @@ resource "aws_iam_role_policy" "mc_allow_ec2_to_s3" {
       {
         Effect   = "Allow"
         Action   = ["s3:ListBucket"]
-        Resource = ["${local.mc_s3_bucket_arn}/*"]
+        Resource = ["${local.mc_s3_bucket_arn}"]
       },
       {
         Effect   = "Allow"
