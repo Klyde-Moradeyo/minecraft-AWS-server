@@ -216,7 +216,7 @@ def lambda_handler(event, context):
         if command == "mc_world_archive":
             # Wait for task to finish running then schedule task
             if task_running:
-                check_interval = 30
+                check_interval = 60
                 time_limit = 600
                 time_elapsed = 0 # counter
                 
