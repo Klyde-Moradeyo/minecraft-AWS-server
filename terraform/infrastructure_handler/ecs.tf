@@ -160,7 +160,7 @@ resource "aws_iam_policy" "mc_allow_ecs_to_s3" {
       {
         Effect   = "Allow"
         Action   = ["s3:ListBucket"]
-        Resource = ["${aws_s3_bucket.mc_s3.arn}/*"]
+        Resource = ["${aws_s3_bucket.mc_s3.arn}"]
       },
       {
         Effect   = "Allow"
