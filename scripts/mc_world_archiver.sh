@@ -115,7 +115,7 @@ function s3_push {
     local s3_bucket_path="$2"
     
     echo "Pushing '$s3_object_dir' to bucket '$s3_bucket_path'"
-    # aws s3 cp "$s3_object_dir" "$s3_bucket_path"
+    aws s3 cp "$s3_object_dir" "$s3_bucket_path"
 }
 
 function check_s3_file_exist {
