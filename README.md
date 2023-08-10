@@ -121,6 +121,8 @@ The CI doesn't actually run any tests, but it builds the necessary components fo
 
 Here are some areas for potential future development:
 
+- **Minecraft Archive Bundle in seperate s3 bucket**: I would like to keep the minecraft-dat-archive.bundle in a versioned s3 bucket incase of any failures.
+- **Fargate Python Code:** Split Fargate Python file into classes. The file is to long now. Needs to be refactored!
 - **Multi Minecraft server worlds:** Modify the Discord bot to load up multiple Minecraft worlds and even modded worlds!
 - **API Gateway authentication:** The API Gateway is unprotected. Authentication needs to be added.
 - **Public Domain for Minecraft server:** It would be more cost-effective to use an AWS public domain rather than an EIP.
@@ -131,6 +133,21 @@ Here are some areas for potential future development:
 - **Grafana/Prometheus server monitoring:** Upon Server restarts enable a prometheus and grafana stack to enable users to ec2 machine resource usage
 - **Custom AMI for the ec2 instance:** This should in theory reduce setup time by 1m 30 sec. And it should cost around 8 GB * $0.023 = $0.184 per month.
 - **Fargate Container hangs in stop command**: The fargate container hangs while running the `stop` command in cases where it has been called and the minecraft infrastrucutre is not present. I've updated lambda function to stop this case from happening but investigation needs to occur as to why it is hanging and not exiting in the first place
+- **DynamoDB for monitoring**: Alot of the infra in this project is not running 24/7. I'm thinkng dynamodb for persisting important information such as run durations.
+
+### Order of work.
+
+1. **Minecraft Archive Bundle in seperate s3 bucket**
+2. **Create Dev Environment**: Create a Dev environment in aws for testing changes
+3. **Grafana/Prometheus server monitoring:**: I want to be able to monitor changes in performance. For lets say, if i increase the fargate instances 
+4. **API Gateway authentication:** -- honestly this should be 3 but I'm excited about prometheus
+5.  **Fargate Python Code:**  
+6. **DynamoDB for monitoring**
+7. **Public Domain for Minecraft server:**
+8. **Custom AMI for the ec2 instance:**
+9. **Git Bundle:**
+10. **Fargate Container hangs in stop command**
+11. - **Multi Minecraft server worlds:** Modify the Discord bot to load up multiple Minecraft worlds and even modded worlds!
 
 ## Troubleshooting
 
