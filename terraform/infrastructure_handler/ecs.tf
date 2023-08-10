@@ -152,9 +152,8 @@ resource "aws_iam_role_policy_attachment" "ecs_ssm_access_role_policy" {
 }
 
 # S3 Access
-resource "aws_iam_role_policy" "mc_allow_ecs_to_s3" {
-  name   = "${module.label.id}-allow-ecs-to-s3"
-  role   = aws_iam_role.ecs_task_execution_role.id
+resource "aws_iam_policy" "mc_allow_ecs_to_s3" {
+  name   = "ecs-${var.name}-allow-ecs-to-s3"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -174,6 +173,11 @@ resource "aws_iam_role_policy" "mc_allow_ecs_to_s3" {
       },
     ]
   })
+}
+
+resource "aws_iam_role_policy_attachment" "mc_allow_ecs_to_s3_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = aws_iam_policy.mc_allow_ecs_to_s3.arn
 }
 
 ########################
