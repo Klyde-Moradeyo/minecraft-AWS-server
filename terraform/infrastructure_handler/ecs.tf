@@ -161,7 +161,7 @@ resource "aws_iam_role_policy" "mc_allow_ecs_to_s3" {
       {
         Effect   = "Allow"
         Action   = ["s3:ListBucket"]
-        Resource = ["${aws_s3_bucket.mc_s3.id}/*"]
+        Resource = ["${aws_s3_bucket.mc_s3.arn}/*"]
       },
       {
         Effect   = "Allow"
@@ -170,7 +170,7 @@ resource "aws_iam_role_policy" "mc_allow_ecs_to_s3" {
           "s3:GetObject",
           "s3:DeleteObject",
         ]
-        Resource = ["${aws_s3_bucket.mc_s3.id}/*"]
+        Resource = ["${aws_s3_bucket.mc_s3.arn}/*"]
       },
     ]
   })
