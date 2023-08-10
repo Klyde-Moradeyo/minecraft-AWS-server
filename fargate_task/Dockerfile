@@ -12,18 +12,20 @@ ENV AWSCLI_VERSION=2.7.31
 RUN apt-get update && apt-get install -y \
     unzip \
     curl \
-    git
+    git \
+    rsync \
+    bc
 
 # Install Terraform
 RUN curl https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -o /tmp/terraform.zip \
     && unzip /tmp/terraform.zip -d /usr/local/bin/ \
-    && rm -rfv /tmp/terraform.zip aws
+    && rm /tmp/terraform.zip
 
 # Install AWS CLI
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI_VERSION}.zip" -o "awscliv2.zip" \
     && unzip awscliv2.zip \
     && ./aws/install \
-    && rm awscliv2.zip
+    && rm -rfv awscliv2.zip aws
 
 # Verify installations
 RUN terraform -v \
