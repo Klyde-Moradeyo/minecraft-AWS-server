@@ -151,6 +151,31 @@ resource "aws_iam_role_policy_attachment" "ecs_ssm_access_role_policy" {
   policy_arn = aws_iam_policy.ecs_ssm_access.arn
 }
 
+# S3 Access
+resource "aws_iam_role_policy" "mc_allow_ecs_to_s3" {
+  name   = "${module.label.id}-allow-ecs-to-s3"
+  role   = aws_iam_role.ecs_task_execution_role.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["s3:ListBucket"]
+        Resource = ["${aws_s3_bucket.mc_s3.id}/*"]
+      },
+      {
+        Effect   = "Allow"
+        Action   = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:DeleteObject",
+        ]
+        Resource = ["${aws_s3_bucket.mc_s3.id}/*"]
+      },
+    ]
+  })
+}
+
 ########################
 #         ECS          #
 ########################
