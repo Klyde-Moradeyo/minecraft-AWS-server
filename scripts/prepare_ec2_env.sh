@@ -92,7 +92,6 @@ function mc_server_icon() {
 }
 
 function setup_git_creds {
-  echo "Setting up git credentials"
   ssh_key_file=$(mktemp)
   aws ssm get-parameter --name "$git_private_key_name" --with-decryption --region "$aws_region" --query "Parameter.Value" --output text > "$ssh_key_file" || error_handler "Failed to fetch SSH key"
   chmod 600 "$ssh_key_file"
