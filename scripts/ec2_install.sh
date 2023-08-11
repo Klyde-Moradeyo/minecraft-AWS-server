@@ -44,6 +44,7 @@ function install_dependencies {
 #    Docker Install    #
 ########################
 function install_docker {
+  echo "Starting Docker install"
   install -m 0755 -d /etc/apt/keyrings
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --yes --dearmor -o /etc/apt/keyrings/docker.gpg
   chmod a+r /etc/apt/keyrings/docker.gpg
@@ -58,32 +59,38 @@ function install_docker {
         docker-ce \
         docker-ce-cli \
         containerd.io
-
+  echo "Docker install complete"
   install_docker_compose
 }
 
 # Docker Compose installation
 function install_docker_compose {
+  echo "Starting Docker Compose install"
   DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
   mkdir -p "$DOCKER_CONFIG/cli-plugins"
   curl -SL https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-linux-x86_64 -o "$DOCKER_CONFIG/cli-plugins/docker-compose"
   chmod +x "$DOCKER_CONFIG/cli-plugins/docker-compose"
+  echo "Docker Compose install complete"
 }
 
 ########################
 #    AWS CLI Install   #
 ########################
 function install_aws_cli {
+  echo "Starting AWS CLI install"
   curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
   unzip -o awscliv2.zip
   ./aws/install
+  echo "AWS CLI install complete"
 }
 
 ########################
 #     Install Git      #
 ########################
 function install_git {
+  echo "Starting Git Install"
   apt_get install git -y
+  echo "Git install complete"
 }
 
 ########################
@@ -123,18 +130,10 @@ function run {
   install_dependencies
 
   # Run installations in parallel
-  install_docker &
-  install_docker_pid=$!
-
-  install_aws_cli &
-  install_aws_cli_pid=$!
-
-  install_git & 
-  install_git_pid=$!
-
-  check_pid $install_docker_pid "Failed in docker install"
-  check_pid $install_aws_cli_pid "Failed in AWS CLI install"
-  check_pid $install_git_pid "Failed in Git install"
+  run_parallel \
+      "install_docker" \
+      "install_aws_cli" \
+      "install_git"
 
   post_install
 }

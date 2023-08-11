@@ -86,11 +86,13 @@ function mc_server_icon() {
   # Select a random URL from the list
   local icon_url="${urls[RANDOM % ${#urls[@]}]}"
 
+  echo "Using minecraft server icon: '$icon_url'"
   # Replace "xxICONxx" with the selected URL in the Docker Compose file
   sed -i.bak "s|xxICONxx|$icon_url|g" "${docker_compose_file_path}"
 }
 
 function setup_git_creds {
+  echo "Setting up git credentials"
   ssh_key_file=$(mktemp)
   aws ssm get-parameter --name "$git_private_key_name" --with-decryption --region "$aws_region" --query "Parameter.Value" --output text > "$ssh_key_file" || error_handler "Failed to fetch SSH key"
   chmod 600 "$ssh_key_file"
@@ -100,6 +102,7 @@ function setup_git_creds {
 
 function clean_repo {
   # clean up unused files - We only need the docker folder
+  echo "Cleaning Git Repo apart from the docker folder"
   mkdir /tmp/empty-dir
   rsync -a --delete --exclude=docker /tmp/empty-dir/ $repo_folder/ # Use rsync to delete everything in $repo_folder except for $repo_folder/docker
 }
@@ -109,6 +112,7 @@ function setup_minecraft_world {
   local home_dir="$2"
   local mc_map_repo_folder="$3"
 
+  echo "Setting up minecraft world"
   mkdir -p "$mc_map_repo_folder"
   git clone "$home_dir/minecraft-world.bundle" "$mc_map_repo_folder"
   rm -rf "$home_dir/minecraft-world.bundle" # Clean up after ourselves
@@ -118,6 +122,8 @@ function setup_docker_environment {
   local docker_folder="$1"
   local api_url="$2"
   local rcon_port="$3"
+
+  echo "Setting up docker environment"
 
   # Create .env file for server monitoring
   create_env_file "$docker_folder" "$api_url" "$rcon_port"
@@ -130,12 +136,14 @@ function run_docker_compose {
   local docker_compose_file="$1"
 
   # Run Docker Compose
-  docker compose -f "$docker_compose_file/docker-compose.yml" --project-directory "$docker_compose_file" up -d
+  echo "Starting Containers: '$docker_compose_file'"
+  docker compose -f "$docker_compose_file" --project-directory "$docker_compose_file" up -d
 }
 
 function clean_packages {
   local git_private_key_path="$1"
 
+  echo "Cleaning unused packages and files"
   apt-get clean
   apt autoremove
   rm -rf /var/lib/apt/lists/*
@@ -151,17 +159,11 @@ function parallel_download_and_clone {
   repo="git@github.com:Klyde-Moradeyo/minecraft-AWS-server.git"
   repo_branch="main"
 
-  # Start git cloning in the background
-  GIT_SSH_COMMAND="ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git clone -v -b $repo_branch $repo $repo_folder &
-  git_clone_pid=$!
-
-  # Start downloading Minecraft world in the background
-  aws s3 cp "$s3_bucket_path/minecraft-world.bundle" "$home_dir/minecraft-world.bundle" &
-  mc_world_download_pid=$!
-
-  # Wait for both background processes to complete
-  check_pid $mc_world_download_pid "Failed to download Minecraft world from S3"
-  check_pid $git_clone_pid "Failed to clone the git repository"
+  # Git Clone Repo and Download minecraft world in parallel
+  echo "Cloning Git Repo and Downloading Minecraft world in parallel"
+  run_parallel \
+      "GIT_SSH_COMMAND=\"ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no\" git clone -v -b $repo_branch $repo $repo_folder" \
+      "aws s3 cp \"$s3_bucket_path/minecraft-world.bundle" "$home_dir/minecraft-world.bundle\""
 }
 
 function run {
@@ -188,7 +190,7 @@ function run {
   setup_docker_environment "$docker_folder" "$api_url" "$rcon_port"
 
   # Run Docker Compose
-  run_docker_compose "$docker_compose_file"
+  run_docker_compose "$docker_compose_file/docker-compose.yml"
 
   # Clean packages
   clean_packages "$git_private_key_path"
