@@ -159,17 +159,11 @@ function parallel_download_and_clone {
   repo="git@github.com:Klyde-Moradeyo/minecraft-AWS-server.git"
   repo_branch="main"
 
-  # Start git cloning in the background
-  GIT_SSH_COMMAND="ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git clone -v -b $repo_branch $repo $repo_folder &
-  git_clone_pid=$!
-
-  # Start downloading Minecraft world in the background
-  aws s3 cp "$s3_bucket_path/minecraft-world.bundle" "$home_dir/minecraft-world.bundle" &
-  mc_world_download_pid=$!
-
-  # Wait for both background processes to complete
-  check_pid $mc_world_download_pid "Failed to download Minecraft world from S3"
-  check_pid $git_clone_pid "Failed to clone the git repository"
+  # Git Clone Repo and Download minecraft world in parallel
+  echo "Cloning Git Repo and Downloading Minecraft world in parallel"
+  run_parallel \
+      "GIT_SSH_COMMAND=\"ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no\" git clone -v -b $repo_branch $repo $repo_folder" \
+      "aws s3 cp \"$s3_bucket_path/minecraft-world.bundle" "$home_dir/minecraft-world.bundle\""
 }
 
 function run {
