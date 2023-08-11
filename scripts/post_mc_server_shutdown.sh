@@ -45,6 +45,7 @@ commit_and_push_world() {
   git -C "$mc_map_repo_folder" add .
   # Allow the commit command to fail without stopping the script
   if git -C "$mc_map_repo_folder" commit -m "$commit_msg"; then
+    echo "Changes committed successfully"
   else
     echo "No changes to commit"
   fi
