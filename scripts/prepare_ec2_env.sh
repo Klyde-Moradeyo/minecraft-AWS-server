@@ -132,11 +132,11 @@ function setup_docker_environment {
 }
 
 function run_docker_compose {
-  local docker_compose_file="$1"
+  local docker_compose_dir="$1"
 
   # Run Docker Compose
-  echo "Starting Containers: '$docker_compose_file'"
-  docker compose -f "$docker_compose_file" --project-directory "$docker_compose_file" up -d
+  echo "Starting Docker Compose in: '$docker_compose_dir'"
+  docker compose -f "$docker_compose_dir/docker-compose.yml" --project-directory "$docker_compose_dir" up -d
 }
 
 function clean_packages {
@@ -189,7 +189,7 @@ function run {
   setup_docker_environment "$docker_folder" "$api_url" "$rcon_port"
 
   # Run Docker Compose
-  run_docker_compose "$docker_compose_file/docker-compose.yml"
+  run_docker_compose "$docker_compose_file"
 
   # Clean packages
   clean_packages "$git_private_key_path"
