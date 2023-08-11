@@ -130,7 +130,7 @@ function run {
   install_dependencies
 
   # Run installations in parallel
-  run_parallel \
+  run_parallel --sudo \
       "install_docker" \
       "install_aws_cli" \
       "install_git"
