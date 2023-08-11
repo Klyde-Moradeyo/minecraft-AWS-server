@@ -289,6 +289,7 @@ def ssh_and_run_command(ip, username, key_file, return_output, command, *args):
     output = ''
     try:
         # Run the command and redirect its output to a log file
+        print(f"ssh_and_run_command: {command} {args_str}")
         stdin, stdout, stderr = ssh.exec_command(f"{command} {args_str}")
 
         # Wait for the command to finish
@@ -515,7 +516,8 @@ def server_handler(command):
         ssh_and_run_script(machine_ip, username, key_file, remote_shutdown_script_path, remote_shutdown_logs_path, s3_uri)
 
         # Check minecraft-world.bundle size - need to add an option for output in ssh_andrun_command.
-        mincraft_bundle_path = os.path.join(repo_name, "docker", "minecraft-data", "minecraft-world.bundle"),
+        mincraft_bundle_path = os.path.join(repo_name, "docker", "minecraft-data", "minecraft-world.bundle")
+        print(f"mincraft_bundle_path: {mincraft_bundle_path}")
         mc_world_size = ssh_and_run_command(machine_ip, username, key_file, True, "stat -c%s", mincraft_bundle_path)
 
         # Terraform commands
