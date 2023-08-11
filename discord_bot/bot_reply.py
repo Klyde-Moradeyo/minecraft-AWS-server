@@ -102,6 +102,12 @@ class Bot_Response:
             "🔒 Enchanted lock detected. Seek an Admin for the charm.",
             "🌠 Shooting star? Only Admins can make this wish."
         ]
+        
+        self.WORLD_ARCHIVE_REPO_REPLIES = [
+            "📦 Packing up and compressing the realm",
+            "🏺 Sealing your world in a smaller vessel",
+            "⛏️ Archiving blocks and memories into a compact chest"
+        ]
 
     def msg(self, command, state):
         if state == "MC_SERVER_UP":
@@ -130,8 +136,8 @@ class Bot_Response:
                 bot_reply = random.choice(self.STOP_RUNNING_REPLIES)
             else:
                 bot_reply = "Hmm, we're not sure what's happening. Please check back soon."
-        elif command == "archive_world":
-            bot_reply = "Archiving has started"
+        elif command == "mc_world_archive":
+            bot_reply = random.choice(self.WORLD_ARCHIVE_REPO_REPLIES)
         else:
             bot_reply = f"Bot Reply not configured for command '{command}'"
 
