@@ -193,18 +193,32 @@ def send_to_api(data, url):
         return None
 
     return response
-
+    
 def check_mc_bundle_size(file_size, api_url):
-    # MAX_BUNDLE_SIZE_MB= 1950
-    MAX_BUNDLE_SIZE_MB= 500 ## For testing
-    BUFFER=0.15 
-    BUNDLE_SIZE_LIMIT= MAX_BUNDLE_SIZE_MB - (MAX_BUNDLE_SIZE_MB * BUFFER) # Safe Guard of 15% of the size limit
+    try:
+        # MAX_BUNDLE_SIZE_MB= 1950
+        MAX_BUNDLE_SIZE_MB= 500 ## For testing
+        BUFFER=0.15 
+        BUNDLE_SIZE_LIMIT= MAX_BUNDLE_SIZE_MB - (MAX_BUNDLE_SIZE_MB * BUFFER) # Safe Guard of 15% of the size limit
 
-    logging.info(f"Minecraft Bundle size: {convert_bytes(file_size)['size_gb']} GB")
-    if convert_bytes(file_size)["size_mb"] > BUNDLE_SIZE_LIMIT:
-        data = { "command": "mc_world_archive" }
-        response = send_to_api(data, api_url)
-        return response
+        logging.info(f"Minecraft Bundle size: {convert_bytes(file_size)['size_gb']} GB")
+
+        if convert_bytes(file_size)["size_mb"] > BUNDLE_SIZE_LIMIT:
+            data = {"command": "mc_world_archive"}
+            response = send_to_api(data, api_url)
+            
+            if response.status_code != 200:
+                logging.error(f"Error sending data to API. Status code: {response.status_code}")
+            else:
+                logging.info(f"Successfully sent command to API. Response: {response.json()}")
+            
+            return response
+        else:
+            logging.info(f"Minecraft Bundle size within permissible limit.")
+            
+    except Exception as e:
+        logging.error(f"An error occurred while checking Minecraft bundle size: {str(e)}")
+        raise
 
 ################################
 #            SSH               #
@@ -526,7 +540,7 @@ def server_handler(command):
         run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "destroy")
 
         # If the minecraft bundle is over a certain size -> start new job to compress it
-        check_mc_bundle_size(mc_world_size, api_url)
+        check_mc_bundle_size(int(mc_world_size), api_url)
     elif command == "mc_world_archive":
         # Archive Minecraft World Data Script
         local_archive_mc_script_path = os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], "mc_world_archiver.sh")
