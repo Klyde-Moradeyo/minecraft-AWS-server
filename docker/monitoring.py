@@ -178,7 +178,7 @@ class MONITOR:
                         self.log.log(data)
                 else:
                     self.inactive_players_timer_start = None
-                    data = self.log.format_data(server_info['online'], server_info['players_online'], server_info['version'], self.get_inactive_time_string(), "RESET")
+                    data = self.log.format_data(server_info['online'], server_info['players_online'], server_info['version'], 0, "RESET")
                     self.log.log(data)
 
             except MonitorError:
