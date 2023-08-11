@@ -93,7 +93,7 @@ function create_repo {
 }
 
 function configure_git_pack_settings {
-    if git config --global pack.windowMemory "100m" &&
+    if git config --global pack.windowMemory "400m" &&
        git config --global pack.packSizeLimit "100m" &&
        git config --global pack.threads "1"; then
         echo "Git pack settings successfully configured."
