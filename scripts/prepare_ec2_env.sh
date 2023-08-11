@@ -161,8 +161,8 @@ function parallel_download_and_clone {
   # Git Clone Repo and Download minecraft world in parallel
   echo "Cloning Git Repo and Downloading Minecraft world in parallel"
   run_parallel \
-      "GIT_SSH_COMMAND=\"ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no\" git clone -v -b $repo_branch $repo $repo_folder" \
-      "aws s3 cp \"$s3_bucket_path/minecraft-world.bundle" "$home_dir/minecraft-world.bundle\""
+      "GIT_SSH_COMMAND=\"ssh -i $git_private_key_path -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no\" git clone -v -b \"$repo_branch\" \"$repo\" \"$repo_folder\"" \
+      "aws s3 cp \"$s3_bucket_path/minecraft-world.bundle\" \"$home_dir/minecraft-world.bundle\""
 }
 
 function run {
