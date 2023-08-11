@@ -196,8 +196,7 @@ def send_to_api(data, url):
     
 def check_mc_bundle_size(file_size, api_url):
     try:
-        # MAX_BUNDLE_SIZE_MB= 1950
-        MAX_BUNDLE_SIZE_MB= 500 ## For testing
+        MAX_BUNDLE_SIZE_MB= 1950
         BUFFER=0.15 
         BUNDLE_SIZE_LIMIT= MAX_BUNDLE_SIZE_MB - (MAX_BUNDLE_SIZE_MB * BUFFER) # Safe Guard of 15% of the size limit
 
@@ -206,12 +205,6 @@ def check_mc_bundle_size(file_size, api_url):
         if convert_bytes(file_size)["size_mb"] > BUNDLE_SIZE_LIMIT:
             data = {"command": "mc_world_archive"}
             response = send_to_api(data, api_url)
-            
-            if response.status_code != 200:
-                logging.error(f"Error sending data to API. Status code: {response.status_code}")
-            else:
-                logging.info(f"Successfully sent command to API. Response: {response.json()}")
-            
             return response
         else:
             logging.info(f"Minecraft Bundle size within permissible limit.")
@@ -531,9 +524,7 @@ def server_handler(command):
 
         # Check minecraft-world.bundle size - need to add an option for output in ssh_andrun_command.
         mincraft_bundle_path = os.path.join("minecraft-AWS-server", "docker", "minecraft-data", "minecraft-world.bundle")
-        print(f"mincraft_bundle_path: {mincraft_bundle_path}")
         mc_world_size = ssh_and_run_command(machine_ip, username, key_file, True, "stat -c%s", mincraft_bundle_path)
-        print(f"mc_world_size {mc_world_size}")
 
         # Terraform commands
         run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "init")
