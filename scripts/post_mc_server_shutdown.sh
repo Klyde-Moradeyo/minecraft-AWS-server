@@ -40,6 +40,7 @@ delete_docker_dir_except_world() {
 commit_and_push_world() {
   local mc_map_repo_folder="$1"
   local s3_bucket_path="$2"
+  local mc_world_bundle_path="$mc_map_repo_folder/minecraft-world.bundle"
 
   echo "Git Commit'$mc_map_repo_folder'"
   git -C "$mc_map_repo_folder" add .
@@ -50,11 +51,11 @@ commit_and_push_world() {
     echo "No changes to commit"
   fi
   
-  echo "Creating Git Bundle: '$mc_map_repo_folder/minecraft-world.bundle'"
+  echo "Creating Git Bundle: '$mc_world_bundle_path'"
   git -C "$mc_map_repo_folder" bundle create minecraft-world.bundle --all
 
   echo "Pushing 'minecraft-world.bundle' to '$s3_bucket_path'"
-  aws s3 cp minecraft-world.bundle "$s3_bucket_path"
+  aws s3 cp "$mc_world_bundle_path" "$s3_bucket_path"
 }
 
 zip_and_push_logs() {
