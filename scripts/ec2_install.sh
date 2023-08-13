@@ -78,7 +78,8 @@ function install_docker_compose {
 ########################
 function install_aws_cli {
   echo "Starting AWS CLI install"
-  curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  # curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" # x86 Architecture
+  curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip" # arm64 Architecture
   unzip -o awscliv2.zip
   ./aws/install
   echo "AWS CLI install complete"
