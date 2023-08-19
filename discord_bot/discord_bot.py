@@ -141,7 +141,7 @@ async def reset_command_scroll():
         logging.error(f"Exception in reset_command_scroll: {e}")
 
 ######################################################################
-#                       Command                             #
+#                       Command                                      #
 ######################################################################
 # Helper function to handle common logic in bot commands
 class Command:
