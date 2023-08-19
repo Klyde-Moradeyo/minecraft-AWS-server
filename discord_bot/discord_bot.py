@@ -123,19 +123,22 @@ def send_to_api(data):
 
 @tasks.loop(seconds=60)  # Check every 60 seconds
 async def reset_command_scroll():
-    for guild_id, command in latest_guild_commands.items():
-        if datetime.now() - command.datetime > timedelta(minutes=2):  # Reset after 2 minutes
-            # Fetch the channel and bot message specific to the guild
-            channel = await BotConfig.get_command_scroll_channel(guild_id)
-            bot_message = await BotConfig.get_command_scroll_msg(guild_id, channel)
+    try:
+        for guild_id, command in latest_guild_commands.items():
+            if datetime.now() - command.datetime > timedelta(minutes=2):  # Reset after 2 minutes
+                # Fetch the channel and bot message specific to the guild
+                channel = await BotConfig.get_command_scroll_channel(guild_id)
+                bot_message = await BotConfig.get_command_scroll_msg(guild_id, channel)
 
-            # Check the current content of bot_message
-            if bot_message.content in bot_response.COMMAND_SCROLL:
-                continue
+                # Check the current content of bot_message
+                if bot_message.content in bot_response.COMMAND_SCROLL:
+                    continue
 
-            # Reset the bot message
-            await bot_message.edit(content=bot_response.get_cmd_scroll_msg())
-            logging.info(f"Resetting command for Guild: {guild_id}, Latest Command: {command.command} | {command.datetime}")
+                # Reset the bot message
+                await bot_message.edit(content=bot_response.get_cmd_scroll_msg())
+                logging.info(f"Resetting command for Guild: {guild_id}, Latest Command: {command.command} | {command.datetime}")
+    except Exception as e:
+        logging.error(f"Exception in reset_command_scroll: {e}")
 
 ######################################################################
 #                       Command                             #
