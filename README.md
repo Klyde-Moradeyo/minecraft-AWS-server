@@ -137,8 +137,8 @@ Here are some areas for potential future development:
 
 ### Order of work.
 
-1. **Minecraft Archive Bundle in seperate s3 bucket**
-2. **Create Dev Environment**: Create a Dev environment in aws for testing changes
+1. **Create Dev Environment**: Create a Dev environment in aws for testing changes
+2. **Minecraft Archive Bundle in seperate s3 bucket**
 3. **Grafana/Prometheus server monitoring:**: I want to be able to monitor changes in performance. For lets say, if i increase the fargate instances 
 4. **API Gateway authentication:** -- honestly this should be 3 but I'm excited about prometheus
 5.  **Fargate Python Code:**  
