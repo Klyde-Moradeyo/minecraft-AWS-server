@@ -196,7 +196,7 @@ def send_to_api(data, url):
     
 def check_mc_bundle_size(file_size, api_url):
     try:
-        MAX_BUNDLE_SIZE_MB= 1950
+        MAX_BUNDLE_SIZE_MB= 1600
         BUFFER=0.15 
         BUNDLE_SIZE_LIMIT= MAX_BUNDLE_SIZE_MB - (MAX_BUNDLE_SIZE_MB * BUFFER) # Safe Guard of 15% of the size limit
 
