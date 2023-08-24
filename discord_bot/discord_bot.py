@@ -37,7 +37,7 @@ class BotConfig:
     SERVER_VERSION = "1.20.1"
 
     # maintenance config
-    ENABLE_MAINTENANCE = False
+    ENABLE_MAINTENANCE = True
     MAINTENANCE_BYPASS_USERS = [ os.environ["DEV_DISCORD_ACCOUNT_ID"] ]
 
     HELP_MESSAGES = { 
