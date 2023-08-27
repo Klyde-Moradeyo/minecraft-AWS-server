@@ -37,13 +37,16 @@ class BotConfig:
     SERVER_VERSION = "1.20.1"
 
     # maintenance config
+    # Server status messages: - 🟢 Healthy - 🟠 Maintenance - 🔴 Issues - [REASON]
     ENABLE_MAINTENANCE = False
     MAINTENANCE_BYPASS_USERS = [ os.environ["DEV_DISCORD_ACCOUNT_ID"] ]
+    INFRASTRUCTURE_STATUS_MSG = "🟢 Healthy"
 
     HELP_MESSAGES = { 
         "header": "🥭 **Mango Minecraft Guidebook** 🗺️\n\n" +
                    f"🏡 IP: `{SERVER_IP}:{SERVER_PORT}`\n" +
-                   F"⚙️ Version: `{SERVER_VERSION}`\n",
+                   f"⚙️ Version: `{SERVER_VERSION}`\n",
+                   f"🚦 Service Health: {INFRASTRUCTURE_STATUS_MSG}\n"
 
         "features": "✨ **Features:**\n" +
                     "- **Multiplayer Sleep:** 💤 A single player can sleep and skip the night for everyone.\n" +
