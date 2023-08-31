@@ -1,0 +1,49 @@
+name: Reusable CI Lambda Function
+
+on:
+  workflow_call:
+    inputs:
+        git_tag_prefix:
+            description: 'Git Tag Prefix'
+            type: string
+            required: true
+    secrets:
+      gh_pat_token:
+        required: true
+
+jobs:
+    git-tag:
+        name: "Git Tag"
+        runs-on: ubuntu-latest
+        steps:
+        # - name: Checkout code
+        #   uses: actions/checkout@v3
+        #   with:
+        #     fetch-depth: 0
+        #     token: ${{ secrets.gh_pat_token }}
+        - name: Tag Git
+          run: |
+            latest_tag=$(git tag | grep '^${{ inputs.git_tag_prefix }}_' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)
+            if [[ -z "$latest_tag" ]]; then
+              echo "No tags found starting with ${{ inputs.git_tag_prefix }}_"
+              exit 1
+            fi
+    
+            # Remove the prefix from the tag
+            version_string=${latest_tag#${{ inputs.git_tag_prefix }}_}
+    
+            # Split the version string into an array
+            version=(${version_string//./ })
+    
+            # Increment patch version
+            version[2]=$((version[2] + 1))
+    
+            # Construct new tag
+            GIT_TAG="${{ inputs.git_tag_prefix }}_${version[0]}.${version[1]}.${version[2]}"
+    
+            echo "New tag is $GIT_TAG"
+    
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git tag "$GIT_TAG"
+            git push https://dark-mango-bot:${{ secrets.gh_pat_token }}@github.com/${{ github.repository }}.git --tags

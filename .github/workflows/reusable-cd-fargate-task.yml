@@ -1,0 +1,98 @@
+name: Reusable CI Lambda Function
+
+on:
+  workflow_call:
+    inputs:
+      working_dir:
+        description: 'Fargate Task Directory'
+        type: string
+        required: true
+      tf_config_dir:
+        description: 'Infrastructure handler Terraform manifest directory'
+        type: string
+        required: true
+      image_artifact_name:
+        description: 'Fargate Image Artifact Name'
+        type: string
+        required: true
+      image_tar_name:
+        description: 'Fargate Image Tar Name'
+        type: string
+        required: true
+      image_tag:
+        description: 'Fargate Image Tar Name'
+        type: string
+        required: true
+    secrets:
+      gh_pat_token:
+        required: true
+      aws_id:
+        required: true
+      aws_key:
+        required: true
+      tf_api_token:
+        required: true
+
+env:
+    AWS_REGION: "eu-west-2"
+
+jobs:
+    push-fargate:
+        name: "Push fargate task"
+        runs-on: ubuntu-latest
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v3
+          with:
+            fetch-depth: 0
+            token: ${{ secrets.gh_pat_token }}
+
+        - name: Configure AWS credentials
+          uses: aws-actions/configure-aws-credentials@0e613a0980cbf65ed5b322eb7a1e075d28913a83
+          with:
+            aws-access-key-id: ${{ secrets.aws_id }}
+            aws-secret-access-key: ${{ secrets.aws_key }}
+            aws-region: ${{ env.AWS_REGION }}
+
+        - name: Login to ECR
+          id: login-ecr
+          uses: aws-actions/amazon-ecr-login@v1
+
+        - name: Setup Terraform
+          uses: hashicorp/setup-terraform@v2
+          with:
+            terraform_version: 1.4.4
+            cli_config_credentials_token: ${{ secrets.tf_api_token }}
+            terraform_wrapper: false
+            
+        - name: Initialize Terraform Env
+          working-directory: ${{ inputs.tf_config_dir }}
+          env:
+            TF_TOKEN_app_terraform_io: ${{ secrets.tf_api_token }}
+          run: |
+            terraform init
+
+            # Get Terraform outputs
+            ECR_REPO_NAME=$(terraform output -raw ecr_repository_name)
+
+            # Create Env Vars
+            echo "ECR_REPO_NAME=$ECR_REPO_NAME" >> $GITHUB_ENV
+
+            # Hide the Environment Variables
+            echo "::add-mask::$ECR_REPO_NAME"
+
+        - name: Download Docker image from artifact
+          uses: actions/download-artifact@v2
+          with:
+            name: ${{ inputs.image_artifact_name }}
+        
+        - name: Load Docker image
+          run: |
+            docker load < ${{ inputs.image_tar_name }}
+
+        - name: Push Fargate Image
+          working-directory: ${{ inputs.working_dir }}
+          env:
+            REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          run: |
+            docker push ${{ env.REGISTRY }}/${{ env.ECR_REPO_NAME }}:${{ inputs.IMAGE_TAG }}

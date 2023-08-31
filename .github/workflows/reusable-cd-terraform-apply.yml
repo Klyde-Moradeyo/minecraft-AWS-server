@@ -1,0 +1,81 @@
+name: Reusable CI Lambda Function
+
+on:
+  workflow_call:
+    inputs:
+      filter:
+        description: 'Filter'
+        type: string
+        required: true
+      tf_workspace:
+        description: 'Terraform Workspace Directory'
+        type: string
+        required: true
+      tf_cloud_org:
+        description: 'Terraform Cloud Organization'
+        type: string
+        required: true
+      config_dir:
+        description: 'Terraform Config Directory'
+        type: string
+        required: true
+    secrets:
+      gh_pat_token:
+        required: true
+      tf_api_token:
+        required: true
+
+env:
+    GIT_TAG_PREFIX: "SIOS" # Serverless Infrastructure Orchestration System
+
+jobs:
+  terraform-apply:
+    name: "Terraform Apply"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Set Environment vars
+        run: |
+          echo "TF_CLOUD_ORGANIZATION=${{ inputs.tf_cloud_org }}" >> $GITHUB_ENV
+          echo "TF_API_TOKEN=${{ secrets.tf_api_token }}" >> $GITHUB_ENV
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.gh_pat_token }}
+
+      - name: Download lambda function payload
+        uses: actions/download-artifact@v2
+        with:
+          name: lambda-artifact
+          path: ${{ inputs.config_dir }}
+
+      - name: Upload Configuration
+        uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
+        id: apply-upload
+        with:
+          workspace: ${{ inputs.tf_workspace }}
+          directory: ${{ inputs.config_dir }}
+          organization: ${{ inputs.tf_cloud_org }}
+          token: ${{ secrets.tf_api_token }}
+
+      - name: Create Apply Run
+        uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
+        id: apply-run
+        with:
+          workspace: ${{ inputs.tf_workspace }}
+          configuration_version: ${{ steps.apply-upload.outputs.configuration_version_id }}
+          organization: ${{ inputs.tf_cloud_org }}
+          token: ${{ secrets.tf_api_token }}
+
+      - name: Apply
+        uses: hashicorp/tfc-workflows-github/actions/apply-run@v1.0.0
+        if: fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable
+        id: apply
+        with:
+          run: ${{ steps.apply-run.outputs.run_id }}
+          comment: "Apply Run from GitHub Actions CI ${{ github.event.head_commit.message }} | ${{ github.sha }}"
+          organization: ${{ inputs.tf_cloud_org }}
+          token: ${{ secrets.tf_api_token }}
