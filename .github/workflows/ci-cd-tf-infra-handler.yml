@@ -41,6 +41,7 @@ jobs:
           ##### DEVELOPMENT ENVIRONMENT #####
           if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
             TERRAFORM_WORKSPACE="dev-minecraft-infra"
+            INFRA_HANDLER_DIR="./terraform/dev/infrastructure_handler"
 
           ##### PRODUCTION ENVIRONMENT #####
           if [ "${{ github.ref }}" == "refs/heads/main" ]; then
@@ -49,6 +50,7 @@ jobs:
           fi
 
           echo "TF_WORKSPACE=$TERRAFORM_WORKSPACE" >> $GITHUB_ENV
+          echo "CONFIG_DIRECTORY=$INFRA_HANDLER_DIR" >> $GITHUB_ENV
 
   ci-lambda:
     uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-ci-lambda_func.yml@github_workflows
@@ -62,7 +64,7 @@ jobs:
     needs: [ ci-lambda ]
     uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-cd-terraform-apply.yml@github_workflows
     with:
-      tf_workspace: ${{ env.TERRAFORM_WORKSPACE }}
+      tf_workspace: ${{ env.TF_WORKSPACE }}
       tf_cloud_org: ${{ env.TF_CLOUD_ORGANIZATION }}
       config_dir: ${{ env.CONFIG_DIRECTORY }}
       filter: ${{ needs.filter.outputs.terraform }}
