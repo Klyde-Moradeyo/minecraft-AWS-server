@@ -435,7 +435,6 @@ def server_handler(command):
         "paths": {
             "tf_mc_infra_manifests": os.path.join(repo_name, "terraform", "minecraft_infrastructure"),
             "tf_mc_infra_handler": os.path.join(repo_name, "terraform", "infrastructure_handler"),
-            "tf_private_key_folder": os.path.join(repo_name, "terraform", "minecraft_infrastructure", "private-key"),
             "tf_mc_infra_scripts": os.path.join(repo_name, "scripts")
         }
     }
