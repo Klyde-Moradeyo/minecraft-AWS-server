@@ -16,30 +16,33 @@ env:
   WORKING_DIR: "./fargate_task"
 
 jobs:
-  setup-env:
+  set-env-vars:
     runs-on: ubuntu-latest
+    outputs:
+      tf_workspace: ${{ steps.set-env.outputs.tf_workspace }}
+      config_directory: ${{ steps.set-env.outputs.config_directory }}
     steps:
-      - name: Set Env Vars
-        id: set-env
-        run: |
-          ##### DEVELOPMENT ENVIRONMENT #####
-          if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
-            TERRAFORM_WORKSPACE="dev-minecraft-infra"
-            INFRA_HANDLER_DIR="./terraform/dev/infrastructure_handler"
-
-          ##### PRODUCTION ENVIRONMENT #####
-          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
-            TERRAFORM_WORKSPACE="prod-minecraft-infra"
-            INFRA_HANDLER_DIR="./terraform/prod/infrastructure_handler"
-          fi
-
-          echo "TF_WORKSPACE=$TERRAFORM_WORKSPACE" >> $GITHUB_ENV
-          echo "CONFIG_DIRECTORY=$INFRA_HANDLER_DIR" >> $GITHUB_ENV
+    - name: Set Env Vars 
+      id: set-env
+      run: |
+        ##### DEVELOPMENT ENVIRONMENT #####
+        if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+          TERRAFORM_WORKSPACE="dev-minecraft-infra"
+          INFRA_HANDLER_DIR="./terraform/dev/infrastructure_handler"
+  
+        ##### PRODUCTION ENVIRONMENT #####
+        elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          TERRAFORM_WORKSPACE="prod-minecraft-infra"
+          INFRA_HANDLER_DIR="./terraform/prod/infrastructure_handler"
+        fi
+  
+        echo "::set-output name=tf_workspace::$TERRAFORM_WORKSPACE"
+        echo "::set-output name=config_directory::$INFRA_HANDLER_DIR"
 
   ci-fargate:
     uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-ci-fargate-task.yml@github_workflows
     with:
-      TF_CONFIG_DIR: ${{ env.CONFIG_DIRECTORY }}
+      TF_CONFIG_DIR: ${{ needs.set-env-vars.outputs.config_directory }}
       WORKING_DIR: ${{ env.WORKING_DIR }}
     secrets:
       gh_pat_token: ${{ secrets.GH_PAT }}
@@ -51,7 +54,7 @@ jobs:
     uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-cd-fargate-task.yml@github_workflows
     needs: ci-fargate
     with:
-      tf_config_dir: ${{ env.CONFIG_DIRECTORY }}
+      tf_config_dir: ${{ needs.set-env-vars.outputs.config_directory }}
       working_dir: ${{ env.WORKING_DIR }}
       image_artifact_name: ${{ steps.ci-fargate.outputs.artifact_name }}
       image_tar_name: ${{ steps.ci-fargate.outputs.docker_tar_file_name }}
