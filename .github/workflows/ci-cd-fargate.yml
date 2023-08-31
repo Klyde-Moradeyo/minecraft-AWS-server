@@ -28,7 +28,6 @@ jobs:
         ##### PRODUCTION ENVIRONMENT #####
         elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
           INFRA_HANDLER_DIR="./terraform/prod/infrastructure_handler"
-          
         fi
 
         GIT_TAG_PREFIX="MSMC" # MSMC means Minecraft Server Management Container

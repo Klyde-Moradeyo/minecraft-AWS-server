@@ -39,12 +39,12 @@ jobs:
       run: |
         ##### DEVELOPMENT ENVIRONMENT #####
         if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
-          TERRAFORM_WORKSPACE="dev-minecraft-infra"
+          TERRAFORM_WORKSPACE="dev-minecraft-infra-handler"
           INFRA_HANDLER_DIR="./terraform/dev/infrastructure_handler"
   
         ##### PRODUCTION ENVIRONMENT #####
         elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
-          TERRAFORM_WORKSPACE="prod-minecraft-infra"
+          TERRAFORM_WORKSPACE="prod-minecraft-infra-handler"
           INFRA_HANDLER_DIR="./terraform/prod/infrastructure_handler"
           
         fi
