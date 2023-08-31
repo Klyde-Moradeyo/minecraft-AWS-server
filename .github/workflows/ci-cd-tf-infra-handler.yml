@@ -1,5 +1,5 @@
 # Doc: https://developer.hashicorp.com/terraform/tutorials/automation/github-actions
-name: CI/CD Infra handler
+name: CI/CD Infra handler + lambda
 
 on:
   push:
@@ -9,12 +9,6 @@ on:
     paths:
       - "terraform/infrastructure_handler/**"
       - "lambda_function/**"
-env:
-  TF_CLOUD_ORGANIZATION: "mango-dev"
-  TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
-  TF_WORKSPACE: "minecraft-infra-handler"
-  CONFIG_DIRECTORY: "./terraform/infrastructure_handler"
-  GIT_TAG_PREFIX: "MCI" # MCI means Minecraft Infrastructure Coordinator
 
 jobs:
   filter:
@@ -37,6 +31,8 @@ jobs:
     outputs:
       tf_workspace: ${{ steps.set-env.outputs.tf_workspace }}
       config_directory: ${{ steps.set-env.outputs.config_directory }}
+      git_tag_prefix: ${{ steps.set-env.outputs.git_tag_prefix }}
+      tf_cloud_org: ${{ steps.set-env.outputs.tf_cloud_org }}
     steps:
     - name: Set Env Vars 
       id: set-env
@@ -50,14 +46,20 @@ jobs:
         elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
           TERRAFORM_WORKSPACE="prod-minecraft-infra"
           INFRA_HANDLER_DIR="./terraform/prod/infrastructure_handler"
+          
         fi
+
+        GIT_TAG_PREFIX="MSIH"  # MSIH means Minecraft Server Infrastructure Handler
+        TF_CLOUD_ORG="mango-dev"
   
         echo "::set-output name=tf_workspace::$TERRAFORM_WORKSPACE"
         echo "::set-output name=config_directory::$INFRA_HANDLER_DIR"
+        echo "::set-output name=git_tag_prefix::$GIT_TAG_PREFIX"
+        echo "::set-output name=tf_cloud_org::$TF_CLOUD_ORG"
 
   ci-lambda:
     uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-ci-lambda_func.yml@github_workflows
-    needs: filter
+    needs: [ filter, set-env-vars ]   
     with:
       filter: ${{ needs.filter.outputs.lambda }}
     secrets:
@@ -68,9 +70,17 @@ jobs:
     uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-cd-terraform-apply.yml@github_workflows
     with:
       tf_workspace: ${{ needs.set-env-vars.outputs.tf_workspace }}
-      tf_cloud_org: ${{ env.TF_CLOUD_ORGANIZATION }}
+      tf_cloud_org: ${{ needs.set-env-vars.outputs.tf_cloud_org }}
       config_dir: ${{ needs.set-env-vars.outputs.config_directory }}
       filter: ${{ needs.filter.outputs.terraform }}
     secrets:
       gh_pat_token: ${{ secrets.GH_PAT }}
       tf_api_token: ${{ secrets.TF_API_TOKEN }}
+
+  git-tag:
+    uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-git-tag.yml@github_workflows
+    needs: [ cd-terraform-apply ]
+    with:
+      git_tag_prefix: ${{ needs.set-env-vars.outputs.git_tag_prefix }}
+    secrets:
+      gh_pat_token: ${{ secrets.GH_PAT }}
