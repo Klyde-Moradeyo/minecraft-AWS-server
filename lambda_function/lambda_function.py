@@ -57,11 +57,40 @@ def check_mc_server(ip: str, port: str) -> Dict[str, Any]:
             'version': 'unknown'
         }
 
-def get_env_variables() -> Dict[str, str]:
-    env_vars = ['MC_PORT', 'MC_SERVER_IP', 'CLUSTER', 'CONTAINER_NAME', 'DEFAULT_SUBNET_ID', 'DEFAULT_SECURITY_GROUP_ID', 
-                'TF_USER_TOKEN', 'TAG_NAME', 'TAG_NAMESPACE', 'TAG_ENVIRONMENT', 'TAG_RUNNING_COMMAND']
+def get_env_variables() -> Dict[str, Any]:
+    # List of required environment variables
+    required_vars = [
+        'MC_PORT', 'MC_SERVER_IP', 'CLUSTER', 'CONTAINER_NAME', 
+        'DEFAULT_SUBNET_ID', 'DEFAULT_SECURITY_GROUP_ID', 
+        'TF_USER_TOKEN', 'BOT_COMMAND_NAME'
+    ]
 
-    return {var: os.getenv(var) for var in env_vars}
+    env_vars = {var: os.getenv(var) for var in required_vars}
+
+    # Decode the TAGS_JSON environment variable
+    tags_json = os.getenv('TAGS_JSON')
+    if not tags_json:
+        raise ValueError("Missing environment variable: TAGS_JSON")
+
+    try:
+        tags = json.loads(tags_json)
+    except json.JSONDecodeError:
+        raise ValueError("Error decoding TAGS_JSON. Ensure it's a valid JSON string.")
+
+    # Add the Tags
+    env_vars.update({
+        'TAG_NAME': tags.get('Name'),
+        'TAG_NAMESPACE': tags.get('Namespace'),
+        'TAG_ENVIRONMENT': tags.get('Stage'),
+    })
+
+    # Check if any required environment variable is missing
+    missing_vars = [key for key, value in env_vars.items() if value is None]
+    if missing_vars:
+        raise ValueError(f"Missing environment variables: {', '.join(missing_vars)}")
+
+    return env_vars
+
 
 def seconds_to_minutes(seconds: int) -> float:
     if not isinstance(seconds, int) or seconds < 0:
