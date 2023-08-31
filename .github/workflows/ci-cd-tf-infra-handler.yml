@@ -52,10 +52,10 @@ jobs:
         GIT_TAG_PREFIX="MSIH"  # MSIH means Minecraft Server Infrastructure Handler
         TF_CLOUD_ORG="mango-dev"
   
-        echo "::set-output name=tf_workspace::$TERRAFORM_WORKSPACE"
-        echo "::set-output name=config_directory::$INFRA_HANDLER_DIR"
-        echo "::set-output name=git_tag_prefix::$GIT_TAG_PREFIX"
-        echo "::set-output name=tf_cloud_org::$TF_CLOUD_ORG"
+        echo "tf_workspace=$TERRAFORM_WORKSPACE" >> "$GITHUB_OUTPUT"
+        echo "config_directory=$INFRA_HANDLER_DIR" >> "$GITHUB_OUTPUT"
+        echo "git_tag_prefix=$GIT_TAG_PREFIX" >> "$GITHUB_OUTPUT"
+        echo "tf_cloud_org=$TF_CLOUD_ORG" >> "$GITHUB_OUTPUT"
 
   ci-lambda:
     uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-ci-lambda_func.yml@github_workflows
