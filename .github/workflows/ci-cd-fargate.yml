@@ -1,0 +1,72 @@
+# Doc: https://developer.hashicorp.com/terraform/tutorials/automation/github-actions
+name: CI/CD Infra handler
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+    paths:
+      - "fargate_task/**"
+env:
+  TF_CLOUD_ORGANIZATION: "mango-dev"
+  TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
+  CONFIG_DIRECTORY: "./terraform/infrastructure_handler"
+  GIT_TAG_PREFIX: "MCI" # MCI means Minecraft Infrastructure Coordinator
+  WORKING_DIR: "./fargate_task"
+
+jobs:
+  setup-env:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set Env Vars
+        id: set-env
+        run: |
+          ##### DEVELOPMENT ENVIRONMENT #####
+          if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+            TERRAFORM_WORKSPACE="dev-minecraft-infra"
+            INFRA_HANDLER_DIR="./terraform/dev/infrastructure_handler"
+
+          ##### PRODUCTION ENVIRONMENT #####
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            TERRAFORM_WORKSPACE="prod-minecraft-infra"
+            INFRA_HANDLER_DIR="./terraform/prod/infrastructure_handler"
+          fi
+
+          echo "TF_WORKSPACE=$TERRAFORM_WORKSPACE" >> $GITHUB_ENV
+          echo "CONFIG_DIRECTORY=$INFRA_HANDLER_DIR" >> $GITHUB_ENV
+
+  ci-fargate:
+    uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-ci-fargate-task.yml@github_workflows
+    with:
+      TF_CONFIG_DIR: ${{ env.CONFIG_DIRECTORY }}
+      WORKING_DIR: ${{ env.WORKING_DIR }}
+    secrets:
+      gh_pat_token: ${{ secrets.GH_PAT }}
+      aws_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      tf_api_token: ${{ secrets.TF_API_TOKEN }}
+
+  cd-fargate:
+    uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-cd-fargate-task.yml@github_workflows
+    needs: ci-fargate
+    with:
+      tf_config_dir: ${{ env.CONFIG_DIRECTORY }}
+      working_dir: ${{ env.WORKING_DIR }}
+      image_artifact_name: ${{ steps.ci-fargate.outputs.artifact_name }}
+      image_tar_name: ${{ steps.ci-fargate.outputs.docker_tar_file_name }}
+      image_tag: ${{ steps.ci-fargate.outputs.image_tag }}
+    secrets:
+      gh_pat_token: ${{ secrets.GH_PAT }}
+      aws_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      tf_api_token: ${{ secrets.TF_API_TOKEN }}
+
+  git-tag:
+    uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-git-tag.yml@github_workflows
+    needs: cd-fargate
+    with:
+      git_tag_prefix: ${{ env.GIT_TAG_PREFIX }}
+    secrets:
+      gh_pat_token: ${{ secrets.GH_PAT }}
+

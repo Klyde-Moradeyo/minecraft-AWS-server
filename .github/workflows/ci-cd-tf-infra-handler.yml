@@ -5,10 +5,10 @@ on:
   push:
     branches:
       - main
+      - dev
     paths:
       - "terraform/infrastructure_handler/**"
       - "lambda_function/**"
-      - "fargate_task/**"
 env:
   TF_CLOUD_ORGANIZATION: "mango-dev"
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
@@ -22,7 +22,6 @@ jobs:
     outputs:
       lambda: ${{ steps.filter.outputs.lambda }}
       terraform: ${{ steps.filter.outputs.terraform }}
-      fargate: ${{ steps.filter.outputs.fargate }}
     steps:
       - uses: actions/checkout@v3
       - uses: dorny/paths-filter@v2
@@ -33,35 +32,39 @@ jobs:
               - 'lambda_function/**'
             terraform:
               - 'terraform/infrastructure_handler/**'
-            fargate:
-              - 'fargate_task/**'
+  set-env-vars:
+    runs-on: ubuntu-latest
+    steps:  
+      - name: Set Env Vars 
+        id: set-env
+        run: |
+          ##### DEVELOPMENT ENVIRONMENT #####
+          if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+            TERRAFORM_WORKSPACE="dev-minecraft-infra"
+
+          ##### PRODUCTION ENVIRONMENT #####
+          if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            TERRAFORM_WORKSPACE="prod-minecraft-infra"
+            INFRA_HANDLER_DIR="./terraform/prod/infrastructure_handler"
+          fi
+
+          echo "TF_WORKSPACE=$TERRAFORM_WORKSPACE" >> $GITHUB_ENV
 
   ci-lambda:
-    uses: ./.github/workflows/reusable-ci-lambda_func.yml
+    uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-ci-lambda_func.yml@github_workflows
     needs: filter
     with:
       filter: ${{ needs.filter.outputs.lambda }}
     secrets:
       gh_pat_token: ${{ secrets.GH_PAT }}
 
-  ci-fargate:
-    uses: ./.github/workflows/reusable-ci-fargate-task.yml
-    needs: filter
-    with:
-      filter: ${{ needs.filter.outputs.fargate }}
-    secrets:
-      gh_pat_token: ${{ secrets.GH_PAT }}
-      aws_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      aws_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      tf_api_token: ${{ secrets.TF_API_TOKEN }}
-
   cd-terraform-apply:
-    needs: [ ci-fargate, ci-lambda ]
-    uses: ./.github/workflows/reusable-cd-terraform-apply.yml
+    needs: [ ci-lambda ]
+    uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-cd-terraform-apply.yml@github_workflows
     with:
-      tf_workspace: "minecraft-infra-handler"
-      tf_cloud_org: "mango-dev"
-      config_dir: "./terraform/infrastructure_handler"
+      tf_workspace: ${{ env.TERRAFORM_WORKSPACE }}
+      tf_cloud_org: ${{ env.TF_CLOUD_ORGANIZATION }}
+      config_dir: ${{ env.CONFIG_DIRECTORY }}
       filter: ${{ needs.filter.outputs.terraform }}
     secrets:
       gh_pat_token: ${{ secrets.GH_PAT }}
