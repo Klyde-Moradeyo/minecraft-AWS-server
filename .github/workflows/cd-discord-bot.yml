@@ -6,9 +6,6 @@ on:
       - main
     paths:
       - "discord_bot/**"
-
-env:
-  GIT_TAG_PREFIX: "SMB" # SMB means Server Management Bot
   
 jobs:
   deploy:
@@ -60,30 +57,11 @@ jobs:
           flyctl secrets set DEV_DISCORD_ACCOUNT_ID=${{ secrets.DEV_DISCORD_ACCOUNT_ID }}
           flyctl deploy --remote-only
 
-      - name: Tag Git
-        run: |
-          latest_tag=$(git tag | grep '^${{ env.GIT_TAG_PREFIX }}_' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)
-          if [[ -z "$latest_tag" ]]; then
-            echo "No tags found starting with ${{ env.GIT_TAG_PREFIX }}_"
-            exit 1
-          fi
-  
-          # Remove the prefix from the tag
-          version_string=${latest_tag#${{ env.GIT_TAG_PREFIX }}_}
-  
-          # Split the version string into an array
-          version=(${version_string//./ })
-  
-          # Increment patch version
-          version[2]=$((version[2] + 1))
-  
-          # Construct new tag
-          SMB_TAG="${{ env.GIT_TAG_PREFIX }}_${version[0]}.${version[1]}.${version[2]}"
-  
-          echo "New tag is $SMB_TAG"
-  
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git tag "$SMB_TAG"
-          git push https://dark-mango-bot:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git --tags
+  git-tag:
+    uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-git-tag.yml@github_workflows
+    needs: deploy
+    with:
+      git_tag_prefix: "SMB" # SMB means Server Management Bot
+    secrets:
+      gh_pat_token: ${{ secrets.GH_PAT }}
         

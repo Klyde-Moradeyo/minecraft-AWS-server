@@ -1,20 +1,14 @@
 # Doc: https://developer.hashicorp.com/terraform/tutorials/automation/github-actions
-name: CI/CD Infra handler
+name: CI/CD Infra handler + lambda
 
 on:
   push:
     branches:
       - main
+      - dev
     paths:
       - "terraform/infrastructure_handler/**"
       - "lambda_function/**"
-      - "fargate_task/**"
-env:
-  TF_CLOUD_ORGANIZATION: "mango-dev"
-  TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
-  TF_WORKSPACE: "minecraft-infra-handler"
-  CONFIG_DIRECTORY: "./terraform/infrastructure_handler"
-  GIT_TAG_PREFIX: "MCI" # MCI means Minecraft Infrastructure Coordinator
 
 jobs:
   filter:
@@ -22,7 +16,6 @@ jobs:
     outputs:
       lambda: ${{ steps.filter.outputs.lambda }}
       terraform: ${{ steps.filter.outputs.terraform }}
-      fargate: ${{ steps.filter.outputs.fargate }}
     steps:
       - uses: actions/checkout@v3
       - uses: dorny/paths-filter@v2
@@ -33,36 +26,61 @@ jobs:
               - 'lambda_function/**'
             terraform:
               - 'terraform/infrastructure_handler/**'
-            fargate:
-              - 'fargate_task/**'
+  set-env-vars:
+    runs-on: ubuntu-latest
+    outputs:
+      tf_workspace: ${{ steps.set-env.outputs.tf_workspace }}
+      config_directory: ${{ steps.set-env.outputs.config_directory }}
+      git_tag_prefix: ${{ steps.set-env.outputs.git_tag_prefix }}
+      tf_cloud_org: ${{ steps.set-env.outputs.tf_cloud_org }}
+    steps:
+    - name: Set Env Vars 
+      id: set-env
+      run: |
+        ##### DEVELOPMENT ENVIRONMENT #####
+        if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+          TERRAFORM_WORKSPACE="dev-minecraft-infra-handler"
+          INFRA_HANDLER_DIR="./terraform/dev/infrastructure_handler"
+  
+        ##### PRODUCTION ENVIRONMENT #####
+        elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+          TERRAFORM_WORKSPACE="prod-minecraft-infra-handler"
+          INFRA_HANDLER_DIR="./terraform/prod/infrastructure_handler"
+          
+        fi
+
+        GIT_TAG_PREFIX="MSIH"  # MSIH means Minecraft Server Infrastructure Handler
+        TF_CLOUD_ORG="mango-dev"
+  
+        echo "tf_workspace=$TERRAFORM_WORKSPACE" >> "$GITHUB_OUTPUT"
+        echo "config_directory=$INFRA_HANDLER_DIR" >> "$GITHUB_OUTPUT"
+        echo "git_tag_prefix=$GIT_TAG_PREFIX" >> "$GITHUB_OUTPUT"
+        echo "tf_cloud_org=$TF_CLOUD_ORG" >> "$GITHUB_OUTPUT"
 
   ci-lambda:
-    uses: ./.github/workflows/reusable-ci-lambda_func.yml
-    needs: filter
+    uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-ci-lambda_func.yml@github-workflows
+    needs: [ filter, set-env-vars ]   
     with:
       filter: ${{ needs.filter.outputs.lambda }}
     secrets:
       gh_pat_token: ${{ secrets.GH_PAT }}
 
-  ci-fargate:
-    uses: ./.github/workflows/reusable-ci-fargate-task.yml
-    needs: filter
-    with:
-      filter: ${{ needs.filter.outputs.fargate }}
-    secrets:
-      gh_pat_token: ${{ secrets.GH_PAT }}
-      aws_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      aws_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      tf_api_token: ${{ secrets.TF_API_TOKEN }}
-
   cd-terraform-apply:
-    needs: [ ci-fargate, ci-lambda ]
-    uses: ./.github/workflows/reusable-cd-terraform-apply.yml
+    needs: [ ci-lambda, set-env-vars ]
+    uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-cd-terraform-apply.yml@github-workflows
     with:
-      tf_workspace: "minecraft-infra-handler"
-      tf_cloud_org: "mango-dev"
-      config_dir: "./terraform/infrastructure_handler"
+      tf_workspace: ${{ needs.set-env-vars.outputs.tf_workspace }}
+      tf_cloud_org: ${{ needs.set-env-vars.outputs.tf_cloud_org }}
+      config_dir: ${{ needs.set-env-vars.outputs.config_directory }}
       filter: ${{ needs.filter.outputs.terraform }}
     secrets:
       gh_pat_token: ${{ secrets.GH_PAT }}
       tf_api_token: ${{ secrets.TF_API_TOKEN }}
+
+  git-tag:
+    uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-git-tag.yml@github-workflows
+    needs: [ cd-terraform-apply ]
+    with:
+      git_tag_prefix: ${{ needs.set-env-vars.outputs.git_tag_prefix }}
+    secrets:
+      gh_pat_token: ${{ secrets.GH_PAT }}
