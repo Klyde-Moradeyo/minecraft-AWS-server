@@ -117,7 +117,7 @@ module "lambda" {
   lambda_timeout = var.lambda_timeout
 
   # SSM
-  bot_command_name = module.ssm_mc_server_private_key.ssm_parameter_name
+  bot_command_name = module.ssm_bot_command.ssm_parameter_name
   terraform_token_name = var.terraform_token_name
   discord_token_name = var.discord_token_name
 
