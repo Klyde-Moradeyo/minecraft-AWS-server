@@ -67,7 +67,7 @@ jobs:
 
   git-tag:
     uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-git-tag.yml@github-workflows
-    needs: [ ci-fargate, set-env-vars ]
+    needs: [ cd-fargate, set-env-vars ]
     with:
       git_tag_prefix: ${{ needs.set-env-vars.outputs.git_tag_prefix }}
     secrets:
