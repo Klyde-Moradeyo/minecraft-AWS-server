@@ -31,7 +31,7 @@ resource "aws_iam_role_policy_attachment" "ssm_access" {
 # IAM policy to allow Lambda to access specific 
 # SSM Parameter Store parameters
 resource "aws_iam_policy" "ssm_access" {
-  name        = "${var.label_id}-ssm-access"
+  name        = "${var.label_id}-lambda-ssm-access"
   description = "IAM policy to allow Lambda access to specific SSM Parameter Store parameters"
 
   policy = jsonencode({
