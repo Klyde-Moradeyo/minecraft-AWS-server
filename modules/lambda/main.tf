@@ -22,6 +22,7 @@ resource "aws_lambda_function" "lambda_function" {
       TF_USER_TOKEN = var.terraform_token_name
       CLUSTER = var.ecs_cluster_name
       BOT_COMMAND_NAME = var.bot_command_name
+      TASK_DEFINITION_NAME = var.ecs_task_definition_family
 
       # Tags
       TAGS_JSON = jsonencode(var.label_tags)
