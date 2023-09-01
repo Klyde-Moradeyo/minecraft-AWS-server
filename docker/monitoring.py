@@ -192,7 +192,7 @@ if __name__ == "__main__":
     RCON_IP = 'mc-server'
     RCON_PORT = envs["RCON_PORT"]
     RCON_PASS = envs["RCON_PASS"]
-    API_GATEWAY_URL = envs["API_URL"] + "/minecraft-prod/command"
+    API_GATEWAY_URL = envs["API_URL"] + "/command"
     INACTIVE_TIME =  1800  # 30 minutes
     CHECK_INTERVAL = 60  # Time in seconds for the check interval
     LOG_FILE = 'server_monitoring.log'  # Log file name
