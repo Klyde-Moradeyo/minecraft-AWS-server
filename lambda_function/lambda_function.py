@@ -61,7 +61,7 @@ def get_env_variables() -> Dict[str, Any]:
     # List of required environment variables
     required_vars = [
         'MC_PORT', 'MC_SERVER_IP', 'CLUSTER', 'CONTAINER_NAME', 
-        'DEFAULT_SUBNET_ID', 'DEFAULT_SECURITY_GROUP_ID', 
+        'SUBNET_ID', 'SECURITY_GROUP_ID', 
         'TF_USER_TOKEN', 'BOT_COMMAND_NAME'
     ]
 
@@ -363,3 +363,15 @@ def lambda_handler(event, context):
             "statusCode": 500,
             "body": json.dumps({"error": str(error)}, cls=DateTimeEncoder)
         }
+    
+# For testing 
+# if __name__ == '__main__':
+#     event = {
+#         "body": { 
+#             "commnad": "status"
+#         }
+#     }
+#     # for key, value in os.environ.items():
+#     #     print(f"{key}={value}")
+#     result = lambda_handler(event, None)
+#     print(result)
