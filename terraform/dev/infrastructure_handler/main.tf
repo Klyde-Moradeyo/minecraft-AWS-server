@@ -128,6 +128,7 @@ module "lambda" {
   security_group_id = module.vpc.security_group_id
   mc_server_ip = module.eip.eip_public_ip
   mc_port =  var.mc_port
+  ecs_task_definition_family = module.ecs_cluster.ecs_task_definition_family
 
   # Module labels
   label_id                         = module.labels.label_id

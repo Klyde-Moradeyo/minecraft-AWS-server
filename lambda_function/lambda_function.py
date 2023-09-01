@@ -61,8 +61,8 @@ def get_env_variables() -> Dict[str, Any]:
     # List of required environment variables
     required_vars = [
         'MC_PORT', 'MC_SERVER_IP', 'CLUSTER', 'CONTAINER_NAME', 
-        'SUBNET_ID', 'SECURITY_GROUP_ID', 
-        'TF_USER_TOKEN', 'BOT_COMMAND_NAME'
+        'SUBNET_ID', 'SECURITY_GROUP_ID', 'TF_USER_TOKEN', 'BOT_COMMAND_NAME',
+        'TASK_DEFINITION_NAME'
     ]
 
     env_vars = {var: os.getenv(var) for var in required_vars}
@@ -254,7 +254,7 @@ def lambda_handler(event, context):
                     task_running = is_task_with_tags_exists(ecs_client, envs['CLUSTER'], task_tags)
                     if not task_running: # Launch new Fargate task and exit if there is no task running
                         send_command(command)
-                        task_arn = create_fargate_container(ecs_client, "minecraft_task_definition", envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
+                        task_arn = create_fargate_container(ecs_client, envs['TASK_DEFINITION_NAME'], envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
                                                             environment_variables, task_tags)
                         logger.info(f"New Fargate task launched: {task_arn}")
 
@@ -276,7 +276,7 @@ def lambda_handler(event, context):
             else:
                 logger.info(f"Else statement")
                 send_command(command)
-                task_arn = create_fargate_container(ecs_client, "minecraft_task_definition", envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
+                task_arn = create_fargate_container(ecs_client, envs['TASK_DEFINITION_NAME'], envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
                                                     environment_variables, task_tags)
                 logger.info(f"New Fargate task launched: {task_arn}")
                 task_status = check_task_status(ecs_client, envs['CLUSTER'], task_tags)
@@ -302,7 +302,7 @@ def lambda_handler(event, context):
             # Sends command to SSM param store
             send_command(command)
 
-            task_arn = create_fargate_container(ecs_client, "minecraft_task_definition", envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
+            task_arn = create_fargate_container(ecs_client, envs['TASK_DEFINITION_NAME'], envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
                                                 environment_variables, task_tags)
 
             task_status = check_task_status(ecs_client, envs['CLUSTER'], task_tags)
