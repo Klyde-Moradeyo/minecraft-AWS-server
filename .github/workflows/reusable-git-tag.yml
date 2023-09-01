@@ -16,11 +16,11 @@ jobs:
         name: "Git Tag"
         runs-on: ubuntu-latest
         steps:
-        # - name: Checkout code
-        #   uses: actions/checkout@v3
-        #   with:
-        #     fetch-depth: 0
-        #     token: ${{ secrets.gh_pat_token }}
+        - name: Checkout code
+          uses: actions/checkout@v3
+          with:
+            fetch-depth: 0
+            token: ${{ secrets.gh_pat_token }}
         - name: Tag Git
           run: |
             latest_tag=$(git tag | grep '^${{ inputs.git_tag_prefix }}_' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)
