@@ -40,10 +40,6 @@ jobs:
 
   ci-fargate:
     uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-ci-fargate-task.yml@github-workflows
-    outputs:
-      artifact_name: ${{ steps.YOUR_STEP_ID.outputs.artifact_name }}
-      docker_tar_file_name: ${{ steps.YOUR_STEP_ID.outputs.docker_tar_file_name }}
-      image_tag: ${{ steps.YOUR_STEP_ID.outputs.image_tag }}
     needs: set-env-vars
     with:
       TF_CONFIG_DIR: ${{ needs.set-env-vars.outputs.config_directory }}
