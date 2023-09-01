@@ -11,21 +11,6 @@ on:
       - "lambda_function/**"
 
 jobs:
-  filter:
-    runs-on: ubuntu-latest
-    outputs:
-      lambda: ${{ steps.filter.outputs.lambda }}
-      terraform: ${{ steps.filter.outputs.terraform }}
-    steps:
-      - uses: actions/checkout@v3
-      - uses: dorny/paths-filter@v2
-        id: filter
-        with:
-          filters: |
-            lambda:
-              - 'lambda_function/**'
-            terraform:
-              - 'terraform/infrastructure_handler/**'
   set-env-vars:
     runs-on: ubuntu-latest
     outputs:
@@ -56,6 +41,23 @@ jobs:
         echo "config_directory=$INFRA_HANDLER_DIR" >> "$GITHUB_OUTPUT"
         echo "git_tag_prefix=$GIT_TAG_PREFIX" >> "$GITHUB_OUTPUT"
         echo "tf_cloud_org=$TF_CLOUD_ORG" >> "$GITHUB_OUTPUT"
+
+  filter:
+    runs-on: ubuntu-latest
+    needs: [ set-env-vars ] 
+    outputs:
+      lambda: ${{ steps.filter.outputs.lambda }}
+      terraform: ${{ steps.filter.outputs.terraform }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            lambda:
+              - 'lambda_function/**'
+            terraform:
+              - '${{ needs.set-env-vars.outputs.config_directory }}/**'
 
   ci-lambda:
     uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-ci-lambda_func.yml@github-workflows
