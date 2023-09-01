@@ -79,7 +79,7 @@ module "ecs_cluster" {
   # SSM
   git_private_key_name = "dark-mango-bot-private-key"
   ec2_private_key_name = module.ssm_mc_server_private_key.ssm_parameter_name
-  bot_command_name = module.ssm_mc_server_private_key.ssm_bot_command
+  bot_command_name = module.ssm_bot_command.ssm_parameter_name
   terraform_token_name = "terraform-cloud-user-api"
 
   # IAM
