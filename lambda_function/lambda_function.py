@@ -22,19 +22,19 @@ class DateTimeEncoder(json.JSONEncoder):
 
         return super(DateTimeEncoder, self).default(o)
     
-def send_command(command: str) -> None:
+def send_command(command: str, ssm_path: str) -> None:
     ssm_client = boto3.client('ssm')
     ssm_client.put_parameter(
-        Name='/mc_server/BOT_COMMAND',
+        Name=ssm_path,
         Value=command,
         Type='String',
         Overwrite=True
     )
 
-def get_ssm_command() -> str:
+def get_ssm_command(ssm_path: str) -> str:
     ssm_client = boto3.client('ssm', region_name='eu-west-2')
 
-    param = ssm_client.get_parameter(Name="/mc_server/BOT_COMMAND", WithDecryption=True)
+    param = ssm_client.get_parameter(Name=ssm_path, WithDecryption=True)
     command = param["Parameter"]["Value"]
     logger.debug(f"Retrieved SSM Comman: {command}")
     return command
@@ -253,7 +253,7 @@ def lambda_handler(event, context):
                 while time_elapsed < time_limit:  
                     task_running = is_task_with_tags_exists(ecs_client, envs['CLUSTER'], task_tags)
                     if not task_running: # Launch new Fargate task and exit if there is no task running
-                        send_command(command)
+                        send_command(command, envs["BOT_COMMAND_NAME"])
                         task_arn = create_fargate_container(ecs_client, envs['TASK_DEFINITION_NAME'], envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
                                                             environment_variables, task_tags)
                         logger.info(f"New Fargate task launched: {task_arn}")
@@ -275,7 +275,7 @@ def lambda_handler(event, context):
                 response = { "STATUS": f"MC_WORLD_ARCHIVE_FAILED_START", "INFO": f"Timed out" }
             else:
                 logger.info(f"Else statement")
-                send_command(command)
+                send_command(command, envs["BOT_COMMAND_NAME"])
                 task_arn = create_fargate_container(ecs_client, envs['TASK_DEFINITION_NAME'], envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
                                                     environment_variables, task_tags)
                 logger.info(f"New Fargate task launched: {task_arn}")
@@ -300,7 +300,7 @@ def lambda_handler(event, context):
                 }
             
             # Sends command to SSM param store
-            send_command(command)
+            send_command(command, envs["BOT_COMMAND_NAME"])
 
             task_arn = create_fargate_container(ecs_client, envs['TASK_DEFINITION_NAME'], envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
                                                 environment_variables, task_tags)
@@ -319,7 +319,7 @@ def lambda_handler(event, context):
                 else:
                     task_status = "MC_SERVER_DOWN"
 
-            response = {'STATUS': task_status, 'PREVIOUS_COMMAND': get_ssm_command()}
+            response = {'STATUS': task_status, 'PREVIOUS_COMMAND': get_ssm_command(envs["BOT_COMMAND_NAME"])}
         else:
             raise ValueError(f"Invalid command: {command}")
 
