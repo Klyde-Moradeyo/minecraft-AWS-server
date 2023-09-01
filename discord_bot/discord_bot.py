@@ -106,7 +106,7 @@ def send_to_api(data):
         print("API_URL is not set in the environment variables")
         return None
 
-    url += "/minecraft-prod/command"
+    url += "/command"
     
     headers = {'Content-Type': 'application/json'}
     
