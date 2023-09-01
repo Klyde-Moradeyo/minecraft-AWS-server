@@ -8,6 +8,7 @@ on:
       - dev
     paths:
       - "fargate_task/**"
+      - ".github/workflows/ci-cd-fargate.yml"
 
 jobs:
   set-env-vars:

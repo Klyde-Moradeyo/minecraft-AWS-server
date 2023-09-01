@@ -10,6 +10,7 @@ on:
       - "terraform/dev/infrastructure_handler/**"
       - "terraform/prod/infrastructure_handler/**"
       - "lambda_function/**"
+      - ".github/workflows/ci-cd-tf-infra-handler.yml"
 
 jobs:
   set-env-vars:
