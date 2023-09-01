@@ -232,8 +232,8 @@ def lambda_handler(event, context):
         task_tags = [ {'key': key, 'value': value} for key, value in envs.items() if key.startswith('TAG_') ]
         fargate_network_configuration = {
             "awsvpcConfiguration": {
-                "subnets": [ envs['DEFAULT_SUBNET_ID'] ], 
-                "securityGroups": [ envs['DEFAULT_SECURITY_GROUP_ID'] ],
+                "subnets": [ envs['SUBNET_ID'] ], 
+                "securityGroups": [ envs['SECURITY_GROUP_ID'] ],
                 "assignPublicIp": "ENABLED"
             }   
         }
