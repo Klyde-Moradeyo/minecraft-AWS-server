@@ -15,7 +15,8 @@ resource "aws_lambda_function" "lambda_function" {
     variables = {
       MC_SERVER_IP = var.mc_server_ip
       MC_PORT = var.mc_port
-      DISCORD_TOKEN = var.discord_token_name
+      GIT_PRIVATE_KEY = var.discord_token_name
+      EC2_PRIVATE_KEY = var.ec2_private_key_name
       SUBNET_ID = var.subnet_id  # These vars need to be changed in lambda python
       SECURITY_GROUP_ID = var.security_group_id# These vars need to be changed in lambda python
       CONTAINER_NAME = var.ecs_container_name

@@ -36,13 +36,16 @@ variable "bot_command_name" {
 variable "terraform_token_name" {
   description = "Terraform token name in Systems Manager Parameter Store"
   type        = string
-  default     = "terraform-cloud-user-api"
 }
 
-variable "discord_token_name" {
-  description = "Discord token name in Systems Manager Parameter Store"
+variable "git_private_key_name" {
+  description = "Private Key name for Github SSH in Systems Manager Parameter Store"
   type        = string
-  default     = "discord-mango-machine-bot"
+}
+
+variable "ec2_private_key_name" {
+  description = "Private Key name for EC2 in Systems Manager Parameter Store"
+  type        = string
 }
 
 ########################
