@@ -62,7 +62,7 @@ def get_env_variables() -> Dict[str, Any]:
     required_vars = [
         'MC_PORT', 'MC_SERVER_IP', 'CLUSTER', 'CONTAINER_NAME', 
         'SUBNET_ID', 'SECURITY_GROUP_ID', 'TF_USER_TOKEN', 'BOT_COMMAND_NAME',
-        'TASK_DEFINITION_NAME'
+        'TASK_DEFINITION_NAME', 'GIT_PRIVATE_KEY', 'EC2_PRIVATE_KEY'
     ]
 
     env_vars = {var: os.getenv(var) for var in required_vars}
@@ -228,7 +228,11 @@ def lambda_handler(event, context):
             raise ValueError('Command must be a string')
 
         ecs_client = boto3.client("ecs")
-        environment_variables = [ {'name': 'TF_TOKEN_app_terraform_io', 'value': envs['TF_USER_TOKEN'] }]
+        environment_variables = [ 
+            {'name': 'TF_USER_TOKEN', 'value': envs['TF_USER_TOKEN'] },
+            {'name': 'GIT_PRIVATE_KEY', 'value': envs['GIT_PRIVATE_KEY'] },
+            {'name': 'EC2_PRIVATE_KEY', 'value': envs['EC2_PRIVATE_KEY'] },
+            ]
         task_tags = [ {'key': key, 'value': value} for key, value in envs.items() if key.startswith('TAG_') ]
         fargate_network_configuration = {
             "awsvpcConfiguration": {

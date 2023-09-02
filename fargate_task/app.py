@@ -418,9 +418,14 @@ def run_terraform_command(directory, *commands):
 #                       Server Handler                               #
 ######################################################################
 def server_handler(command):
-    ssh_key = get_ssm_param("dark-mango-bot-private-key") # SSH Key name from system manager parameter store
-    tf_api_key = get_ssm_param("terraform-cloud-user-api") # terraform cloud api keyget_ssm_param(ssh_key_name))
-    ec2_private_key_name = "/mc_server/private_key"
+    # Terraform Cloud Token
+    os.environ['TF_TOKEN_app_terraform_io'] = get_ssm_param(os.environ['TF_USER_TOKEN'])
+
+    # Git SSH Key
+    git_ssh_key = get_ssm_param(os.environ['GIT_PRIVATE_KEY']) # SSH Key name from system manager parameter store
+
+    # EC2 Private Key
+    ec2_private_key_name = os.environ['EC2_PRIVATE_KEY']
 
     # aws region
     aws_region = get_region()
@@ -431,7 +436,7 @@ def server_handler(command):
         "name": repo_name,
         "url": "git@github.com:Klyde-Moradeyo/minecraft-AWS-server.git", 
         "branch": "main",
-        "ssh_key": f"{write_to_tmp_file(ssh_key)}",
+        "ssh_key": f"{write_to_tmp_file(git_ssh_key)}",
         "paths": {
             "tf_mc_infra_manifests": os.path.join(repo_name, "terraform", "minecraft_infrastructure"),
             "tf_mc_infra_handler": os.path.join(repo_name, "terraform", "infrastructure_handler"),
@@ -443,7 +448,6 @@ def server_handler(command):
     # Git Clone and copy files to minecraft_infra directory
     git_clone(tf_manifest_repo["url"], repo_name, tf_manifest_repo["branch"], tf_manifest_repo["ssh_key"])
     shutil.copytree(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "scripts")) # Copy tf_mc_infra_scripts folder to tf_mc_infra_manifests folder
-    os.environ['TF_TOKEN_app_terraform_io'] = tf_api_key
 
     run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_handler"], "init")
     api_url = run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_handler"], "output", "api_gateway_url")
