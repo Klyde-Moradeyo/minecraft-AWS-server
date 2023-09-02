@@ -119,7 +119,6 @@ module "lambda" {
   # SSM
   bot_command_name = module.ssm_bot_command.ssm_parameter_name
   terraform_token_name = var.terraform_token_name
-  discord_token_name = var.discord_token_name
 
   # Lambda Environment vars
   ecs_cluster_name = module.ecs_cluster.ecs_cluster_name
@@ -129,6 +128,8 @@ module "lambda" {
   mc_server_ip = module.eip.eip_public_ip
   mc_port =  var.mc_port
   ecs_task_definition_family = module.ecs_cluster.ecs_task_definition_family
+  git_private_key_name = var.git_private_key_name
+  ec2_private_key_name = module.ssm_mc_server_private_key.ssm_parameter_name
 
   # Module labels
   label_id                         = module.labels.label_id
@@ -149,7 +150,7 @@ module "s3_mc_world" {
   source = "github.com/Klyde-Moradeyo/minecraft-AWS-server//modules/s3?ref=tf-infra-service-modules"
   
   # S3 Bucket 
-  bucket_name = "s3-${random_string.unique_bucket_suffix.result}"
+  bucket_name = "world-s3-${random_string.unique_bucket_suffix.result}"
 
   # Module labels
   label_id                         = module.labels.label_id
