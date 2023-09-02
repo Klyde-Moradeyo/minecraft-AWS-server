@@ -37,6 +37,9 @@ terraform/minecraft_infrastructure/scripts
 lambda_function/package
 lambda_function_payload.zip
 
+# Docker folder
+minecraft-data
+
 # test folder
 test/sandbox/minecraft-world*
 test/
