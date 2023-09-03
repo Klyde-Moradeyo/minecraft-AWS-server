@@ -50,51 +50,6 @@ def write_to_tmp_file(content):
         dir = temp_file.name
     return dir
 
-def create_ec2_key_pair(key_name):
-    # Generate an RSA key pair
-    # - public_exponent: The public exponent (e) is a value used in the RSA algorithm, usually set to 65537
-    # - key_size: The size of the key in bits, here set to 2048 bits
-    # - backend: The backend used for cryptographic operations, here we use the default_backend
-    private_key = rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=2048,
-        backend=default_backend()
-    )
-
-    # Serialize the private key in PEM format (Privacy-Enhanced Mail, a widely used format for storing and sending cryptographic keys)
-    # - encoding: The format used to encode the key, here PEM
-    # - format: The format used for the private key, here PKCS8 (Public-Key Cryptography Standards #8)
-    # - encryption_algorithm: The algorithm used to encrypt the key, here no encryption is used
-    private_key_pem = private_key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.TraditionalOpenSSL,
-        encryption_algorithm=serialization.NoEncryption()
-    )
-
-    # Get the public key and serialize it in OpenSSH format
-    public_key = private_key.public_key()
-    public_key_ssh = public_key.public_bytes(
-        encoding=serialization.Encoding.OpenSSH,
-        format=serialization.PublicFormat.OpenSSH
-    )
-
-    private_key_str = private_key_pem.decode('utf-8')
-    public_key_str = public_key_ssh.decode('utf-8')
-
-    # Create a new key pair on AWS
-    ec2_client = boto3.client('ec2', region_name='eu-west-2')
-
-    try:
-        # Delete the existing key pair
-        ec2_client.delete_key_pair(KeyName=key_name)
-    except:
-        pass  # If the key pair doesn't exist, ignore the error
-
-    # Create a new key pair
-    response = ec2_client.import_key_pair(KeyName=key_name, PublicKeyMaterial=public_key_str)
-
-    return private_key_str
-
 def get_region():
     return boto3.session.Session().region_name
 
@@ -456,15 +411,7 @@ def server_handler(command):
     username = "ubuntu"
     print(f"EIP: {machine_ip} | S3_URI: {s3_uri}")
     
-    if command == "start":
-        private_key = create_ec2_key_pair("terraform-key")
-
-        # Put private key in SSM and to Tmp file
-        put_ssm_param(ec2_private_key_name, private_key)
-        key_file = write_to_tmp_file(private_key)
-        os.chmod(key_file, 0o600)
-        print(f"key_file: {key_file}")
-        
+    if command == "start":      
         # Install Script Paths
         local_install_script_path = os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], "ec2_install.sh")
         remote_install_script_path = "setup/scripts/ec2_install.sh"
@@ -487,9 +434,14 @@ def server_handler(command):
         # Terraform commands
         run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "init")
         run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "apply")
+        
+        # Get EC2 Private Key and write to tmp file
+        private_key = get_ssm_param(ec2_private_key_name)
+        key_file = write_to_tmp_file(private_key)
+        os.chmod(key_file, 0o600)
+        print(f"key_file: {key_file}")
 
         # Check for connection to ec2 instance
-        print(key_file)
         establish_ssh_connection(machine_ip, username, key_file)
 
         ssh_and_run_command(machine_ip, username, key_file, False, "mkdir -p", "setup/logs", "setup/scripts")
