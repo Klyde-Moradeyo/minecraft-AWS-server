@@ -53,10 +53,10 @@ def write_to_tmp_file(content):
 def get_region():
     return boto3.session.Session().region_name
 
-def get_command():
+def get_command(param_name):
     ssm_client = boto3.client('ssm', region_name='eu-west-2')
     response = ssm_client.get_parameter(
-        Name='/mc_server/BOT_COMMAND',
+        Name=param_name,
         WithDecryption=True
     )
     return response['Parameter']['Value']
@@ -498,5 +498,5 @@ def server_handler(command):
     print("Server Handler Completed Successfully")
         
 if __name__ == "__main__":
-    job = get_command()
+    job = get_command(os.environ['BOT_COMMAND_NAME'])
     server_handler(job)
