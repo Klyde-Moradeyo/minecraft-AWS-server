@@ -9,7 +9,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 from mcstatus import JavaServer
 
 logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 ######################################################################
 #                         Helper Functions                           #
@@ -25,7 +25,7 @@ class DateTimeEncoder(json.JSONEncoder):
 def send_command(command: str, ssm_path: str) -> None:
     ssm_client = boto3.client('ssm')
     ssm_client.put_parameter(
-        Name=f"/{ssm_path}",
+        Name=ssm_path,
         Value=command,
         Type='String',
         Overwrite=True
@@ -34,7 +34,7 @@ def send_command(command: str, ssm_path: str) -> None:
 def get_ssm_command(ssm_path: str) -> str:
     ssm_client = boto3.client('ssm', region_name='eu-west-2')
 
-    param = ssm_client.get_parameter(Name=f"/{ssm_path}", WithDecryption=True)
+    param = ssm_client.get_parameter(Name=ssm_path, WithDecryption=True)
     command = param["Parameter"]["Value"]
     logger.debug(f"Retrieved SSM Comman: {command}")
     return command
