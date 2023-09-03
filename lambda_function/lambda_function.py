@@ -235,6 +235,7 @@ def lambda_handler(event, context):
             {'name': 'TF_USER_TOKEN', 'value': envs['TF_USER_TOKEN'] },
             {'name': 'GIT_PRIVATE_KEY', 'value': envs['GIT_PRIVATE_KEY'] },
             {'name': 'EC2_PRIVATE_KEY', 'value': envs['EC2_PRIVATE_KEY'] },
+            {'name': 'BOT_COMMAND_NAME', 'value': envs['BOT_COMMAND_NAME'] },
             ]
         task_tags = [ {'key': key, 'value': value} for key, value in envs.items() if key.startswith('TAG_') ]
         fargate_network_configuration = {
