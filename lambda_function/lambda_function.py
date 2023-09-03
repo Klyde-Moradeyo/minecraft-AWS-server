@@ -9,7 +9,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 from mcstatus import JavaServer
 
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 ######################################################################
 #                         Helper Functions                           #
@@ -88,6 +88,9 @@ def get_env_variables() -> Dict[str, Any]:
     missing_vars = [key for key, value in env_vars.items() if value is None]
     if missing_vars:
         raise ValueError(f"Missing environment variables: {', '.join(missing_vars)}")
+    
+    for key, value in env_vars.items():
+        logger.debug(f"{key}: {value}")
 
     return env_vars
 
