@@ -393,8 +393,8 @@ def server_handler(command):
         "branch": "main",
         "ssh_key": f"{write_to_tmp_file(git_ssh_key)}",
         "paths": {
-            "tf_mc_infra_manifests": os.path.join(repo_name, "terraform", os.environ['TAG_ENVIRONMENT'], "minecraft_infrastructure"),
-            "tf_mc_infra_handler": os.path.join(repo_name, "terraform", os.environ['TAG_ENVIRONMENT'], "infrastructure_handler"),
+            "tf_mc_infra_manifests": os.path.join(repo_name, "terraform", os.environ['ENVIRONMENT'], "minecraft_infrastructure"),
+            "tf_mc_infra_handler": os.path.join(repo_name, "terraform", os.environ['ENVIRONMENT'], "infrastructure_handler"),
             "tf_mc_infra_scripts": os.path.join(repo_name, "scripts")
         }
     }
