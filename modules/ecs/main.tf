@@ -41,7 +41,7 @@ resource "aws_ecs_task_definition" "my_task" {
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "/ecs/${local.container_definition_name}-logs",
+          "awslogs-group": "/ecs/${local.container_definition_name}",
           "awslogs-region": "${var.aws_region}",
           "awslogs-stream-prefix": "ecs"
         }
