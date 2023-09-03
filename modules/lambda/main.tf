@@ -15,14 +15,14 @@ resource "aws_lambda_function" "lambda_function" {
     variables = {
       MC_SERVER_IP = var.mc_server_ip
       MC_PORT = var.mc_port
-      GIT_PRIVATE_KEY = var.git_private_key_name
-      EC2_PRIVATE_KEY = var.ec2_private_key_name
+      GIT_PRIVATE_KEY = "/${var.git_private_key_name}"
+      EC2_PRIVATE_KEY = "/${var.ec2_private_key_name}"
+      BOT_COMMAND_NAME = "/${var.bot_command_name}"
       SUBNET_ID = var.subnet_id  # These vars need to be changed in lambda python
       SECURITY_GROUP_ID = var.security_group_id# These vars need to be changed in lambda python
       CONTAINER_NAME = var.ecs_container_name
       TF_USER_TOKEN = var.terraform_token_name
       CLUSTER = var.ecs_cluster_name
-      BOT_COMMAND_NAME = var.bot_command_name
       TASK_DEFINITION_NAME = var.ecs_task_definition_family
 
       # Tags
