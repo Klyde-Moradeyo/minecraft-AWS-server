@@ -291,11 +291,14 @@ async def on_message(message):
 
 # Start minecraft server
 @bot.command()
-async def start(context):
+async def start(context, game_mode: str = 'VANILLA'):
     """
     Starts the Minecraft server.
     """
-    command = Command(context, "start")
+    # if game_mode.upper() not in ['VANILLA']:
+    #     await context.send(f"Invalid game mode: {game_mode}. Please use a valid game mode.")
+    #     return
+    command = Command(context, "start", game_mode)
     await command.execute()
 
 # Check Server Status
