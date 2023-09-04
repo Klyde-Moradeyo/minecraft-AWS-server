@@ -135,20 +135,6 @@ Here are some areas for potential future development:
 - **Fargate Container hangs in stop command**: The fargate container hangs while running the `stop` command in cases where it has been called and the minecraft infrastrucutre is not present. I've updated lambda function to stop this case from happening but investigation needs to occur as to why it is hanging and not exiting in the first place
 - **DynamoDB for monitoring**: Alot of the infra in this project is not running 24/7. I'm thinkng dynamodb for persisting important information such as run durations.
 
-### Order of work.
-
-1. **Create Dev Environment**: Create a Dev environment in aws for testing changes
-2. **Minecraft Archive Bundle in seperate s3 bucket**
-3. **Grafana/Prometheus server monitoring:**: I want to be able to monitor changes in performance. For lets say, if i increase the fargate instances 
-4. **API Gateway authentication:** -- honestly this should be 3 but I'm excited about prometheus
-5.  **Fargate Python Code:**  
-6. **DynamoDB for monitoring**
-7. **Public Domain for Minecraft server:**
-8. **Custom AMI for the ec2 instance:**
-9. **Git Bundle:**
-10. **Fargate Container hangs in stop command**
-11. - **Multi Minecraft server worlds:** Modify the Discord bot to load up multiple Minecraft worlds and even modded worlds!
-
 ## Troubleshooting
 
 If you encounter any issues while setting up or running the Minecraft server, check the following:
