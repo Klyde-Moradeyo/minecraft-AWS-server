@@ -1,0 +1,14 @@
+name: Release Workflow
+
+on:
+  push:
+    tags:
+      - 'RELEASE'
+
+jobs:
+  release:
+    uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-release-version.yml@github-workflows
+    with:
+      git_tag_prefix: "TF_"
+    secrets:
+      gh_pat_token: ${{ secrets.GH_PAT }}
