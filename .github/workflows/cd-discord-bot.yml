@@ -58,7 +58,7 @@ jobs:
           flyctl deploy --remote-only
 
   git-tag:
-    uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-git-tag.yml@github_workflows
+    uses: Klyde-Moradeyo/minecraft-AWS-server/.github/workflows/reusable-git-tag.yml@github-workflows
     needs: deploy
     with:
       git_tag_prefix: "SMB" # SMB means Server Management Bot
