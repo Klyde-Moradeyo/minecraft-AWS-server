@@ -1,0 +1,56 @@
+name: Release Version Tag
+
+on:
+    workflow_call:
+        inputs:
+            git_tag_prefix:
+                description: 'Unique prefix for version tag'
+                required: true
+                type: string
+        secrets:
+            gh_pat_token:
+                description: 'GitHub token to authorize operations.'
+                required: true
+
+jobs:
+  create-version-tag:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create and Push Version Tag
+      id: create-tag
+      run: |
+        # Get the latest tag with the git_tag_prefix
+        latest_tag=$(git tag | grep "^${{ inputs.git_tag_prefix}}_" | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)
+
+        if [[ -z "$latest_tag" ]]; then
+          GIT_TAG="0.0.1" # If there's no existing version tag, start with 0.0.1
+        else
+          # Extract version part
+          version_string=${latest_tag#${{ inputs.git_tag_prefix}}_}
+          
+          # Split version into array
+          version=(${version_string//./ })
+          
+          # Increment patch version
+          version[2]=$((version[2] + 1))
+          
+          GIT_TAG="${{ inputs.git_tag_prefix}}_${version[0]}.${version[1]}.${version[2]}"
+        fi
+
+        echo "New tag is $GIT_TAG"
+
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
+        git tag "$GIT_TAG"
+        git push https://dark-mango-bot:${{ secrets.gh_pat_token }}@github.com/${{ github.repository }}.git --tags
+
+    - name: Delete 'RELEASE' Tag
+      run: |
+        git push --delete https://dark-mango-bot:${{ secrets.gh_pat_token }}@github.com/${{ github.repository }}.git "RELEASE"
