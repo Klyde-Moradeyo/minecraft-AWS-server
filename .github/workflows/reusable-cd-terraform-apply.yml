@@ -1,4 +1,4 @@
-name: Reusable CI Lambda Function
+name: Reusable Terraform apply
 
 on:
   workflow_call:

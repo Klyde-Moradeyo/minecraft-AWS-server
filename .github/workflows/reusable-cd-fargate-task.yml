@@ -1,4 +1,4 @@
-name: Reusable CI Lambda Function
+name: Reusable fargate Task
 
 on:
   workflow_call:
