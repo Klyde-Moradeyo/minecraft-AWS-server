@@ -40,7 +40,7 @@ class BotConfig:
     # Server status messages: - `HEALTHY💚` - `MAINTENANCE🔧`` - `Issues⚠️ - [REASON] ``
     ENABLE_MAINTENANCE = True
     MAINTENANCE_BYPASS_USERS = [ os.environ["DEV_DISCORD_ACCOUNT_ID"] ]
-    INFRASTRUCTURE_STATUS_MSG = "`HEALTHY💚`"
+    INFRASTRUCTURE_STATUS_MSG = "`MAINTENANCE🔧`"
 
     HELP_MESSAGES = { 
         "header": "🥭 **Mango Minecraft Guidebook** 🗺️\n\n" +
