@@ -168,6 +168,23 @@ def check_mc_bundle_size(file_size, api_url):
         logging.error(f"An error occurred while checking Minecraft bundle size: {str(e)}")
         raise
 
+def get_git_branch() -> str:
+    dev_env = "DEV"
+    prod_env = "PROD"
+    current_env = os.environ.get('ENVIRONMENT')
+
+    if current_env is None:
+        raise ValueError("ENVIRONMENT variable is not set.")
+    
+    current_env = current_env.upper()
+    
+    if current_env == dev_env:
+        return 'dev'
+    elif current_env == prod_env:
+        return 'main'
+    else:
+        raise ValueError(f"Unsupported ENVIRONMENT value: {current_env}. Supported values are '{dev_env}' and '{prod_env}'.")
+
 ################################
 #            SSH               #
 ################################   
@@ -390,8 +407,8 @@ def server_handler(command):
     tf_manifest_repo = { 
         "name": repo_name,
         "url": "git@github.com:Klyde-Moradeyo/minecraft-AWS-server.git", 
-        "branch": "main",
-        "ssh_key": f"{write_to_tmp_file(git_ssh_key)}",
+        "branch": get_git_branch(),
+        "ssh_key": write_to_tmp_file(git_ssh_key),
         "paths": {
             "tf_mc_infra_manifests": os.path.join(repo_name, "terraform", os.environ['ENVIRONMENT'], "minecraft_infrastructure"),
             "tf_mc_infra_handler": os.path.join(repo_name, "terraform", os.environ['ENVIRONMENT'], "infrastructure_handler"),
