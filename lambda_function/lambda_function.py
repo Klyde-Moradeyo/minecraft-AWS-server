@@ -301,6 +301,13 @@ def lambda_handler(event, context):
                     'body': json.dumps({'STATUS': task_status}, cls=DateTimeEncoder)
                 }
             
+            if command == "start" and mc_server_status["online"]:
+                task_status = "MC_SERVER_UP"
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps({'STATUS': task_status}, cls=DateTimeEncoder)
+                }
+            
             if task_running:
                 task_status = check_task_status(ecs_client, envs['CLUSTER'], task_tags)
                 return {
