@@ -41,8 +41,7 @@ variable "instance_type" {
   description = "EC2 Instance Type"
   type = string
   # default = "t4g.2xlarge" 
-  default = "t4g.small" 
-  // default = "m6a.xlarge" -- Sim distance: 25 - it struggled due to cpu usage when there was 2 or mroe users
+  default = "t4g.xlarge" 
   // For tests: default =  "t2.medium" | https://amazon-aws-ec2-pricing-comparison.pcapps.com/
 }
 
