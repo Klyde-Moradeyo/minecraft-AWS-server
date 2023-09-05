@@ -46,7 +46,7 @@ variable "tf_cloud_infra_handler_workspace" {
 variable "instance_type" {
   description = "EC2 Instnace Type"
   type = string
-  default = "t4g.small" // "t4g.medium" // "m6a.xlarge" -- Sim distance: 25 - it struggled potentially due to cpu usage	// For tests: "t2.medium" | https://amazon-aws-ec2-pricing-comparison.pcapps.com/
+  default = "t4g.xlarge" // "t4g.2xlarge" // "m6a.xlarge" -- Sim distance: 25 - it struggled potentially due to cpu usage	// For tests: "t2.medium" | https://amazon-aws-ec2-pricing-comparison.pcapps.com/
 }
 
 variable "ami" {
