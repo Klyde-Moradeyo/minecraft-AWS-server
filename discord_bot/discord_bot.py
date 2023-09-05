@@ -38,7 +38,7 @@ class BotConfig:
 
     # maintenance config
     # Server status messages: - `HEALTHY💚` - `MAINTENANCE🔧`` - `Issues⚠️ - [REASON] ``
-    ENABLE_MAINTENANCE = False
+    ENABLE_MAINTENANCE = True
     MAINTENANCE_BYPASS_USERS = [ os.environ["DEV_DISCORD_ACCOUNT_ID"] ]
     INFRASTRUCTURE_STATUS_MSG = "`HEALTHY💚`"
 
