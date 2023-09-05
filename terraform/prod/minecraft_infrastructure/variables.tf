@@ -16,7 +16,7 @@ variable "tf_cloud_org" {
 variable "tf_cloud_infra_handler_workspace" {
   description = "Terraform Cloud workspace name"
   type = string
-  default = "dev-minecraft-infra-handler"
+  default = "prod-minecraft-infra-handler"
 }
 
 ########################
