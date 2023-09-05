@@ -29,7 +29,7 @@ jobs:
         latest_tag=$(git tag | grep "^${{ inputs.git_tag_prefix}}_" | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)
 
         if [[ -z "$latest_tag" ]]; then
-          GIT_TAG="0.0.1" # If there's no existing version tag, start with 0.0.1
+          GIT_TAG="${{ inputs.git_tag_prefix}}_0.0.1" # If there's no existing version tag, start with 0.0.1
         else
           # Extract version part
           version_string=${latest_tag#${{ inputs.git_tag_prefix}}_}
