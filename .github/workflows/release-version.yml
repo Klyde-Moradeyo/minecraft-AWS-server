@@ -2,6 +2,8 @@ name: Release Workflow
 
 on:
   push:
+    branches:
+      - tf-infra-service-modules
     tags:
       - RELEASE
 
