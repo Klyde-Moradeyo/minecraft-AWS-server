@@ -18,7 +18,6 @@ services:
       MAX_PLAYERS: "20"
       VIEW_DISTANCE: "27"
       SIMULATION_DISTANCE: "15"
-      MEMORY: "12G"
       MOTD: "Mango Minecraft Server" # Server Message
       TYPE: "VANILLA"
       # OPS: "TheBlackMango__"

@@ -38,9 +38,9 @@ class BotConfig:
 
     # maintenance config
     # Server status messages: - `HEALTHY💚` - `MAINTENANCE🔧`` - `Issues⚠️ - [REASON] ``
-    ENABLE_MAINTENANCE = True
+    ENABLE_MAINTENANCE = False
     MAINTENANCE_BYPASS_USERS = [ os.environ["DEV_DISCORD_ACCOUNT_ID"] ]
-    INFRASTRUCTURE_STATUS_MSG = "`MAINTENANCE🔧`"
+    INFRASTRUCTURE_STATUS_MSG = "`HEALTHY💚`"
 
     HELP_MESSAGES = { 
         "header": "🥭 **Mango Minecraft Guidebook** 🗺️\n\n" +
@@ -106,7 +106,7 @@ def send_to_api(data):
         print("API_URL is not set in the environment variables")
         return None
 
-    url += "/minecraft-prod/command"
+    url += "/command"
     
     headers = {'Content-Type': 'application/json'}
     
@@ -291,11 +291,14 @@ async def on_message(message):
 
 # Start minecraft server
 @bot.command()
-async def start(context):
+async def start(context, game_mode: str = 'VANILLA'):
     """
     Starts the Minecraft server.
     """
-    command = Command(context, "start")
+    # if game_mode.upper() not in ['VANILLA']:
+    #     await context.send(f"Invalid game mode: {game_mode}. Please use a valid game mode.")
+    #     return
+    command = Command(context, "start", game_mode)
     await command.execute()
 
 # Check Server Status

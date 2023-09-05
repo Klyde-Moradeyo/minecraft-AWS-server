@@ -50,58 +50,13 @@ def write_to_tmp_file(content):
         dir = temp_file.name
     return dir
 
-def create_ec2_key_pair(key_name):
-    # Generate an RSA key pair
-    # - public_exponent: The public exponent (e) is a value used in the RSA algorithm, usually set to 65537
-    # - key_size: The size of the key in bits, here set to 2048 bits
-    # - backend: The backend used for cryptographic operations, here we use the default_backend
-    private_key = rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=2048,
-        backend=default_backend()
-    )
-
-    # Serialize the private key in PEM format (Privacy-Enhanced Mail, a widely used format for storing and sending cryptographic keys)
-    # - encoding: The format used to encode the key, here PEM
-    # - format: The format used for the private key, here PKCS8 (Public-Key Cryptography Standards #8)
-    # - encryption_algorithm: The algorithm used to encrypt the key, here no encryption is used
-    private_key_pem = private_key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.TraditionalOpenSSL,
-        encryption_algorithm=serialization.NoEncryption()
-    )
-
-    # Get the public key and serialize it in OpenSSH format
-    public_key = private_key.public_key()
-    public_key_ssh = public_key.public_bytes(
-        encoding=serialization.Encoding.OpenSSH,
-        format=serialization.PublicFormat.OpenSSH
-    )
-
-    private_key_str = private_key_pem.decode('utf-8')
-    public_key_str = public_key_ssh.decode('utf-8')
-
-    # Create a new key pair on AWS
-    ec2_client = boto3.client('ec2', region_name='eu-west-2')
-
-    try:
-        # Delete the existing key pair
-        ec2_client.delete_key_pair(KeyName=key_name)
-    except:
-        pass  # If the key pair doesn't exist, ignore the error
-
-    # Create a new key pair
-    response = ec2_client.import_key_pair(KeyName=key_name, PublicKeyMaterial=public_key_str)
-
-    return private_key_str
-
 def get_region():
     return boto3.session.Session().region_name
 
-def get_command():
+def get_command(param_name):
     ssm_client = boto3.client('ssm', region_name='eu-west-2')
     response = ssm_client.get_parameter(
-        Name='/mc_server/BOT_COMMAND',
+        Name=param_name,
         WithDecryption=True
     )
     return response['Parameter']['Value']
@@ -178,7 +133,7 @@ def send_to_api(data, url):
         print("API_URL is not set in the environment variables")
         return None
 
-    url += "/minecraft-prod/command"
+    url += "/command"
     
     headers = {'Content-Type': 'application/json'}
     
@@ -212,6 +167,23 @@ def check_mc_bundle_size(file_size, api_url):
     except Exception as e:
         logging.error(f"An error occurred while checking Minecraft bundle size: {str(e)}")
         raise
+
+def get_git_branch() -> str:
+    dev_env = "DEV"
+    prod_env = "PROD"
+    current_env = os.environ.get('ENVIRONMENT')
+
+    if current_env is None:
+        raise ValueError("ENVIRONMENT variable is not set.")
+    
+    current_env = current_env.upper()
+    
+    if current_env == dev_env:
+        return 'dev'
+    elif current_env == prod_env:
+        return 'main'
+    else:
+        raise ValueError(f"Unsupported ENVIRONMENT value: {current_env}. Supported values are '{dev_env}' and '{prod_env}'.")
 
 ################################
 #            SSH               #
@@ -418,9 +390,14 @@ def run_terraform_command(directory, *commands):
 #                       Server Handler                               #
 ######################################################################
 def server_handler(command):
-    ssh_key = get_ssm_param("dark-mango-bot-private-key") # SSH Key name from system manager parameter store
-    tf_api_key = get_ssm_param("terraform-cloud-user-api") # terraform cloud api keyget_ssm_param(ssh_key_name))
-    ec2_private_key_name = "/mc_server/private_key"
+    # Terraform Cloud Token
+    os.environ['TF_TOKEN_app_terraform_io'] = get_ssm_param(os.environ['TF_USER_TOKEN'])
+
+    # Git SSH Key
+    git_ssh_key = get_ssm_param(os.environ['GIT_PRIVATE_KEY']) # SSH Key name from system manager parameter store
+
+    # EC2 Private Key
+    ec2_private_key_name = os.environ['EC2_PRIVATE_KEY']
 
     # aws region
     aws_region = get_region()
@@ -430,12 +407,11 @@ def server_handler(command):
     tf_manifest_repo = { 
         "name": repo_name,
         "url": "git@github.com:Klyde-Moradeyo/minecraft-AWS-server.git", 
-        "branch": "main",
-        "ssh_key": f"{write_to_tmp_file(ssh_key)}",
+        "branch": get_git_branch(),
+        "ssh_key": write_to_tmp_file(git_ssh_key),
         "paths": {
-            "tf_mc_infra_manifests": os.path.join(repo_name, "terraform", "minecraft_infrastructure"),
-            "tf_mc_infra_handler": os.path.join(repo_name, "terraform", "infrastructure_handler"),
-            "tf_private_key_folder": os.path.join(repo_name, "terraform", "minecraft_infrastructure", "private-key"),
+            "tf_mc_infra_manifests": os.path.join(repo_name, "terraform", os.environ['ENVIRONMENT'], "minecraft_infrastructure"),
+            "tf_mc_infra_handler": os.path.join(repo_name, "terraform", os.environ['ENVIRONMENT'], "infrastructure_handler"),
             "tf_mc_infra_scripts": os.path.join(repo_name, "scripts")
         }
     }
@@ -443,7 +419,6 @@ def server_handler(command):
     # Git Clone and copy files to minecraft_infra directory
     git_clone(tf_manifest_repo["url"], repo_name, tf_manifest_repo["branch"], tf_manifest_repo["ssh_key"])
     shutil.copytree(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "scripts")) # Copy tf_mc_infra_scripts folder to tf_mc_infra_manifests folder
-    os.environ['TF_TOKEN_app_terraform_io'] = tf_api_key
 
     run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_handler"], "init")
     api_url = run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_handler"], "output", "api_gateway_url")
@@ -452,15 +427,7 @@ def server_handler(command):
     username = "ubuntu"
     print(f"EIP: {machine_ip} | S3_URI: {s3_uri}")
     
-    if command == "start":
-        private_key = create_ec2_key_pair("terraform-key")
-
-        # Put private key in SSM and to Tmp file
-        put_ssm_param(ec2_private_key_name, private_key)
-        key_file = write_to_tmp_file(private_key)
-        os.chmod(key_file, 0o600)
-        print(f"key_file: {key_file}")
-        
+    if command == "start":      
         # Install Script Paths
         local_install_script_path = os.path.join(tf_manifest_repo["paths"]["tf_mc_infra_scripts"], "ec2_install.sh")
         remote_install_script_path = "setup/scripts/ec2_install.sh"
@@ -483,9 +450,14 @@ def server_handler(command):
         # Terraform commands
         run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "init")
         run_terraform_command(tf_manifest_repo["paths"]["tf_mc_infra_manifests"], "apply")
+        
+        # Get EC2 Private Key and write to tmp file
+        private_key = get_ssm_param(ec2_private_key_name)
+        key_file = write_to_tmp_file(private_key)
+        os.chmod(key_file, 0o600)
+        print(f"key_file: {key_file}")
 
         # Check for connection to ec2 instance
-        print(key_file)
         establish_ssh_connection(machine_ip, username, key_file)
 
         ssh_and_run_command(machine_ip, username, key_file, False, "mkdir -p", "setup/logs", "setup/scripts")
@@ -542,5 +514,5 @@ def server_handler(command):
     print("Server Handler Completed Successfully")
         
 if __name__ == "__main__":
-    job = get_command()
+    job = get_command(os.environ['BOT_COMMAND_NAME'])
     server_handler(job)

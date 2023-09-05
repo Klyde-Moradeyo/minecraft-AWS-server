@@ -7,12 +7,11 @@ terraform {
       version = "~> 4.0"
     }
   }
-
   cloud {
     organization = "mango-dev"
-
+    
     workspaces {
-      name = "minecraft-infra-handler"
+      name = "prod-minecraft-infrastructure"
     }
   }
 }
@@ -20,10 +19,4 @@ terraform {
 # Provider Block
 provider "aws" {
   region  = var.aws_region
-}
-
-data "aws_caller_identity" "aws" {}
-
-locals {
-  user_name = split("/", data.aws_caller_identity.aws.arn)[2]
 }

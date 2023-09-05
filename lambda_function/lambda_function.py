@@ -22,19 +22,19 @@ class DateTimeEncoder(json.JSONEncoder):
 
         return super(DateTimeEncoder, self).default(o)
     
-def send_command(command: str) -> None:
+def send_command(command: str, ssm_path: str) -> None:
     ssm_client = boto3.client('ssm')
     ssm_client.put_parameter(
-        Name='/mc_server/BOT_COMMAND',
+        Name=ssm_path,
         Value=command,
         Type='String',
         Overwrite=True
     )
 
-def get_ssm_command() -> str:
+def get_ssm_command(ssm_path: str) -> str:
     ssm_client = boto3.client('ssm', region_name='eu-west-2')
 
-    param = ssm_client.get_parameter(Name="/mc_server/BOT_COMMAND", WithDecryption=True)
+    param = ssm_client.get_parameter(Name=ssm_path, WithDecryption=True)
     command = param["Parameter"]["Value"]
     logger.debug(f"Retrieved SSM Comman: {command}")
     return command
@@ -57,11 +57,43 @@ def check_mc_server(ip: str, port: str) -> Dict[str, Any]:
             'version': 'unknown'
         }
 
-def get_env_variables() -> Dict[str, str]:
-    env_vars = ['MC_PORT', 'MC_SERVER_IP', 'CLUSTER', 'CONTAINER_NAME', 'DEFAULT_SUBNET_ID', 'DEFAULT_SECURITY_GROUP_ID', 
-                'TF_USER_TOKEN', 'TAG_NAME', 'TAG_NAMESPACE', 'TAG_ENVIRONMENT', 'TAG_RUNNING_COMMAND']
+def get_env_variables() -> Dict[str, Any]:
+    # List of required environment variables
+    required_vars = [
+        'MC_PORT', 'MC_SERVER_IP', 'CLUSTER', 'CONTAINER_NAME', 
+        'SUBNET_ID', 'SECURITY_GROUP_ID', 'TF_USER_TOKEN', 'BOT_COMMAND_NAME',
+        'TASK_DEFINITION_NAME', 'GIT_PRIVATE_KEY', 'EC2_PRIVATE_KEY'
+    ]
 
-    return {var: os.getenv(var) for var in env_vars}
+    env_vars = {var: os.getenv(var) for var in required_vars}
+
+    # Decode the TAGS_JSON environment variable
+    tags_json = os.getenv('TAGS_JSON')
+    if not tags_json:
+        raise ValueError("Missing environment variable: TAGS_JSON")
+
+    try:
+        tags = json.loads(tags_json)
+    except json.JSONDecodeError:
+        raise ValueError("Error decoding TAGS_JSON. Ensure it's a valid JSON string.")
+
+    # Add the Tags
+    env_vars.update({
+        'TAG_NAME': tags.get('Name'),
+        'TAG_NAMESPACE': tags.get('Namespace'),
+        'TAG_ENVIRONMENT': tags.get('Stage'),
+    })
+
+    # Check if any required environment variable is missing
+    missing_vars = [key for key, value in env_vars.items() if value is None]
+    if missing_vars:
+        raise ValueError(f"Missing environment variables: {', '.join(missing_vars)}")
+    
+    for key, value in env_vars.items():
+        logger.debug(f"{key}: {value}")
+
+    return env_vars
+
 
 def seconds_to_minutes(seconds: int) -> float:
     if not isinstance(seconds, int) or seconds < 0:
@@ -199,12 +231,18 @@ def lambda_handler(event, context):
             raise ValueError('Command must be a string')
 
         ecs_client = boto3.client("ecs")
-        environment_variables = [ {'name': 'TF_TOKEN_app_terraform_io', 'value': envs['TF_USER_TOKEN'] }]
+        environment_variables = [ 
+            {'name': 'TF_USER_TOKEN', 'value': envs['TF_USER_TOKEN'] },
+            {'name': 'GIT_PRIVATE_KEY', 'value': envs['GIT_PRIVATE_KEY'] },
+            {'name': 'EC2_PRIVATE_KEY', 'value': envs['EC2_PRIVATE_KEY'] },
+            {'name': 'BOT_COMMAND_NAME', 'value': envs['BOT_COMMAND_NAME'] },
+            {'name': 'ENVIRONMENT', 'value': envs['TAG_ENVIRONMENT'] },
+            ]
         task_tags = [ {'key': key, 'value': value} for key, value in envs.items() if key.startswith('TAG_') ]
         fargate_network_configuration = {
             "awsvpcConfiguration": {
-                "subnets": [ envs['DEFAULT_SUBNET_ID'] ], 
-                "securityGroups": [ envs['DEFAULT_SECURITY_GROUP_ID'] ],
+                "subnets": [ envs['SUBNET_ID'] ], 
+                "securityGroups": [ envs['SECURITY_GROUP_ID'] ],
                 "assignPublicIp": "ENABLED"
             }   
         }
@@ -224,8 +262,8 @@ def lambda_handler(event, context):
                 while time_elapsed < time_limit:  
                     task_running = is_task_with_tags_exists(ecs_client, envs['CLUSTER'], task_tags)
                     if not task_running: # Launch new Fargate task and exit if there is no task running
-                        send_command(command)
-                        task_arn = create_fargate_container(ecs_client, "minecraft_task_definition", envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
+                        send_command(command, envs["BOT_COMMAND_NAME"])
+                        task_arn = create_fargate_container(ecs_client, envs['TASK_DEFINITION_NAME'], envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
                                                             environment_variables, task_tags)
                         logger.info(f"New Fargate task launched: {task_arn}")
 
@@ -246,8 +284,8 @@ def lambda_handler(event, context):
                 response = { "STATUS": f"MC_WORLD_ARCHIVE_FAILED_START", "INFO": f"Timed out" }
             else:
                 logger.info(f"Else statement")
-                send_command(command)
-                task_arn = create_fargate_container(ecs_client, "minecraft_task_definition", envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
+                send_command(command, envs["BOT_COMMAND_NAME"])
+                task_arn = create_fargate_container(ecs_client, envs['TASK_DEFINITION_NAME'], envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
                                                     environment_variables, task_tags)
                 logger.info(f"New Fargate task launched: {task_arn}")
                 task_status = check_task_status(ecs_client, envs['CLUSTER'], task_tags)
@@ -263,6 +301,13 @@ def lambda_handler(event, context):
                     'body': json.dumps({'STATUS': task_status}, cls=DateTimeEncoder)
                 }
             
+            if command == "start" and mc_server_status["online"]:
+                task_status = "MC_SERVER_UP"
+                return {
+                    'statusCode': 200,
+                    'body': json.dumps({'STATUS': task_status}, cls=DateTimeEncoder)
+                }
+            
             if task_running:
                 task_status = check_task_status(ecs_client, envs['CLUSTER'], task_tags)
                 return {
@@ -271,9 +316,9 @@ def lambda_handler(event, context):
                 }
             
             # Sends command to SSM param store
-            send_command(command)
+            send_command(command, envs["BOT_COMMAND_NAME"])
 
-            task_arn = create_fargate_container(ecs_client, "minecraft_task_definition", envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
+            task_arn = create_fargate_container(ecs_client, envs['TASK_DEFINITION_NAME'], envs['CLUSTER'], envs['CONTAINER_NAME'], fargate_network_configuration,
                                                 environment_variables, task_tags)
 
             task_status = check_task_status(ecs_client, envs['CLUSTER'], task_tags)
@@ -290,7 +335,7 @@ def lambda_handler(event, context):
                 else:
                     task_status = "MC_SERVER_DOWN"
 
-            response = {'STATUS': task_status, 'PREVIOUS_COMMAND': get_ssm_command()}
+            response = {'STATUS': task_status, 'PREVIOUS_COMMAND': get_ssm_command(envs["BOT_COMMAND_NAME"])}
         else:
             raise ValueError(f"Invalid command: {command}")
 
@@ -334,3 +379,15 @@ def lambda_handler(event, context):
             "statusCode": 500,
             "body": json.dumps({"error": str(error)}, cls=DateTimeEncoder)
         }
+    
+# For testing 
+# if __name__ == '__main__':
+#     event = {
+#         "body": { 
+#             "commnad": "status"
+#         }
+#     }
+#     # for key, value in os.environ.items():
+#     #     print(f"{key}={value}")
+#     result = lambda_handler(event, None)
+#     print(result)

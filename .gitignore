@@ -29,19 +29,16 @@ override.tf.json
 # example: *tfplan*
 .gitsecret/keys/random_seed
 !*.secret
-terraform/minecraft_infrastructure/private-key/terraform-key.pem
-minecraft_infrastructure/ec2_public_ip.txt
 
 # Terraform EIP and Lambda minecraft_infrastructure
-terraform/minecraft_infrastructure/EIP.txt
 terraform/minecraft_infrastructure/scripts
 
 # Lambda Folder
 lambda_function/package
-lambda_function/lambda_function_payload.zip
+lambda_function_payload.zip
 
-# Terraform EIP and Lambda
-terraform/infrastructure_handler/lambda_function_payload.zip
+# Docker folder
+minecraft-data
 
 # test folder
 test/sandbox/minecraft-world*
