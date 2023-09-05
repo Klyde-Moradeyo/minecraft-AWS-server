@@ -12,7 +12,7 @@ terraform {
     organization = "mango-dev"
 
     workspaces {
-      name = "dev-minecraft-infra-handler"
+      name = "prod-minecraft-infra-handler"
     }
   }
 }

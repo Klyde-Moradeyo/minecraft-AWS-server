@@ -11,7 +11,7 @@ terraform {
     organization = "mango-dev"
     
     workspaces {
-      name = "dev-minecraft-infrastructure"
+      name = "prod-minecraft-infrastructure"
     }
   }
 }
