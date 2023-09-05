@@ -1,4 +1,4 @@
-name: Reusable CI Lambda Function
+name: Reusable Git Tag
 
 on:
   workflow_call:
@@ -24,25 +24,26 @@ jobs:
         - name: Tag Git
           run: |
             latest_tag=$(git tag | grep '^${{ inputs.git_tag_prefix }}_' | sort -t. -k1,1n -k2,2n -k3,3n | tail -n1)
+
+            # If there are no tags found, create the first one
             if [[ -z "$latest_tag" ]]; then
-              echo "No tags found starting with ${{ inputs.git_tag_prefix }}_"
-              exit 1
+              GIT_TAG="${{ inputs.git_tag_prefix }}_0.0.1"
+            else
+              # Remove the prefix from the tag
+              version_string=${latest_tag#${{ inputs.git_tag_prefix }}_}
+
+              # Split the version string into an array
+              version=(${version_string//./ })
+
+              # Increment patch version
+              version[2]=$((version[2] + 1))
+
+              # Construct new tag
+              GIT_TAG="${{ inputs.git_tag_prefix }}_${version[0]}.${version[1]}.${version[2]}"
             fi
-    
-            # Remove the prefix from the tag
-            version_string=${latest_tag#${{ inputs.git_tag_prefix }}_}
-    
-            # Split the version string into an array
-            version=(${version_string//./ })
-    
-            # Increment patch version
-            version[2]=$((version[2] + 1))
-    
-            # Construct new tag
-            GIT_TAG="${{ inputs.git_tag_prefix }}_${version[0]}.${version[1]}.${version[2]}"
-    
+
             echo "New tag is $GIT_TAG"
-    
+
             git config --local user.email "action@github.com"
             git config --local user.name "GitHub Action"
             git tag "$GIT_TAG"
