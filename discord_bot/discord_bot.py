@@ -298,7 +298,7 @@ async def start(context, game_mode: str = 'VANILLA'):
     # if game_mode.upper() not in ['VANILLA']:
     #     await context.send(f"Invalid game mode: {game_mode}. Please use a valid game mode.")
     #     return
-    command = Command(context, "start", game_mode)
+    command = Command(context, "start")
     await command.execute()
 
 # Check Server Status
