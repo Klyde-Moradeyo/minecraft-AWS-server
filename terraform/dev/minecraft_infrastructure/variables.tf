@@ -40,7 +40,9 @@ variable "mc_backup_freq" {
 variable "instance_type" {
   description = "EC2 Instance Type"
   type = string
-  default = "t4g.small" // "t4g.medium" // "m6a.xlarge" -- Sim distance: 25 - it struggled potentially due to cpu usage	// For tests: "t2.medium" | https://amazon-aws-ec2-pricing-comparison.pcapps.com/
+  # default = "t4g.2xlarge" 
+  default = "t4g.xlarge" 
+  // For tests: default =  "t2.medium" | https://amazon-aws-ec2-pricing-comparison.pcapps.com/
 }
 
 variable "ami" {
