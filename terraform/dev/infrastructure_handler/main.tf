@@ -156,26 +156,3 @@ module "s3_mc_world" {
   label_id                         = module.labels.label_id
   label_tags                       = module.labels.label_tags
 }
-
-
-
-#### Dev
-resource "aws_route53_zone" "minecraft_zone" {
-  name = "mango-minecraft.com"
-}
-
-output "hosted_zone_name" {
-  value = aws_route53_zone.minecraft_zone.name
-  description = "The name of the hosted zone."
-}
-
-output "hosted_zone_id" {
-  value = aws_route53_zone.minecraft_zone.zone_id
-  description = "The id of the hosted zone."
-}
-
-output "route53_name_servers" {
-  description = "The nameservers for the Route53 hosted zone."
-  value      = aws_route53_zone.minecraft_zone.name_servers
-}
-
