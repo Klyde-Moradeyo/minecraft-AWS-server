@@ -21,6 +21,8 @@ locals {
   ec2_key_pair = data.terraform_remote_state.infra_handler_state.outputs.ec2_key_pair
   label_id = data.terraform_remote_state.infra_handler_state.outputs.label_id
   label_tags = data.terraform_remote_state.infra_handler_state.outputs.label_tags
+  hosted_zone_name = data.terraform_remote_state.infra_handler_state.outputs.hosted_zone_name
+  hosted_zone_id  = data.terraform_remote_state.infra_handler_state.outputs.hosted_zone_id
 }
 
 ################################
@@ -60,4 +62,14 @@ module "minecraft_server" {
   # Module labels
   label_id                         = local.label_id
   label_tags                       = local.label_tags
+}
+
+
+### DEv
+resource "aws_route53_record" "minecraft_A_record" {
+  zone_id = local.hosted_zone_id
+  name    = local.hosted_zone_name
+  type    = "A"
+  ttl     = "300"
+  records = [ local.public_ip ] #  module.minecraft_server.public_ip ]
 }
