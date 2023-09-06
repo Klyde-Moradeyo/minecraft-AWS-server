@@ -44,7 +44,7 @@ class BotConfig:
 
     HELP_MESSAGES = { 
         "header": "🥭 **Mango Minecraft Guidebook** 🗺️\n\n" +
-                   f"🏡 IP: `{SERVER_IP}:{SERVER_PORT}`\n" +
+                   f"🏡 IP: `{SERVER_IP}:{SERVER_PORT}` 🔔NEW!🔔\n" +
                    f"⚙️ Version: `{SERVER_VERSION}`\n" +
                    f"🛡️ System HP: {INFRASTRUCTURE_STATUS_MSG}\n",
 
