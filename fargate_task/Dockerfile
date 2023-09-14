@@ -5,7 +5,7 @@ WORKDIR /app
 COPY . .
 
 # Set environment variables
-ENV TERRAFORM_VERSION=1.4.4
+ENV TERRAFORM_VERSION=1.5.7
 ENV AWSCLI_VERSION=2.7.31
 
 # Install necessary packages
@@ -37,4 +37,4 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN pip install -r requirements.txt 
 
-CMD ["python", "app.py"]
+CMD ["python", "main.py"]
