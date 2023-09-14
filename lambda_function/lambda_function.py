@@ -312,7 +312,7 @@ def lambda_handler(event, context):
                 task_status = check_task_status(ecs_client, envs['CLUSTER'], task_tags)
                 return {
                     'statusCode': 200,
-                    'body': json.dumps({'STATUS': task_status}, cls=DateTimeEncoder)
+                    'body': json.dumps({'STATUS': task_status, 'PREVIOUS_COMMAND': get_ssm_command(envs["BOT_COMMAND_NAME"])}, cls=DateTimeEncoder)
                 }
             
             # Sends command to SSM param store
