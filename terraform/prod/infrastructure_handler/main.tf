@@ -3,7 +3,7 @@
 ########################
 module "labels" {
   # source = "../modules/ec2_instance"
-  source = "github.com/Klyde-Moradeyo/minecraft-AWS-server//modules/labels?ref=TF_0.0.1"
+  source = "github.com/Klyde-Moradeyo/minecraft-AWS-server//modules/labels?ref=TF_0.0.2"
 
   environment = "prod"
 }
@@ -12,7 +12,7 @@ module "labels" {
 #        VPC           #
 ########################
 module "vpc" {
-  source = "github.com/Klyde-Moradeyo/minecraft-AWS-server//modules/vpc?ref=TF_0.0.1"
+  source = "github.com/Klyde-Moradeyo/minecraft-AWS-server//modules/vpc?ref=TF_0.0.2"
 }
 
 
@@ -20,7 +20,7 @@ module "vpc" {
 #         EIP          #
 ########################
 module "eip" {
-  source = "github.com/Klyde-Moradeyo/minecraft-AWS-server//modules/eip?ref=TF_0.0.1"
+  source = "github.com/Klyde-Moradeyo/minecraft-AWS-server//modules/eip?ref=TF_0.0.2"
 
   # Module labels
   label_id                         = module.labels.label_id
@@ -42,7 +42,7 @@ module "ec2_key_pair" {
 #    Systems Manager   #
 ########################
 module "ssm_mc_server_private_key" {
-  source = "github.com/Klyde-Moradeyo/minecraft-AWS-server//modules/ssm?ref=TF_0.0.1"
+  source = "github.com/Klyde-Moradeyo/minecraft-AWS-server//modules/ssm?ref=TF_0.0.2"
 
   parameter_name = "mc_server/private_key"
   parameter_type = "SecureString"
@@ -54,7 +54,7 @@ module "ssm_mc_server_private_key" {
 }
 
 module "ssm_bot_command" {
-  source = "github.com/Klyde-Moradeyo/minecraft-AWS-server//modules/ssm?ref=TF_0.0.1"
+  source = "github.com/Klyde-Moradeyo/minecraft-AWS-server//modules/ssm?ref=TF_0.0.2"
 
   parameter_name = var.bot_command_name
   parameter_type = "String"
@@ -68,7 +68,7 @@ module "ssm_bot_command" {
 #         ECS          #
 ########################
 module "ecs_cluster" {
-  source = "github.com/Klyde-Moradeyo/minecraft-AWS-server//modules/ecs?ref=TF_0.0.1"
+  source = "github.com/Klyde-Moradeyo/minecraft-AWS-server//modules/ecs?ref=TF_0.0.2"
 
   # ECS
   ecr_repo_name = "mc-infra-runner"
@@ -94,7 +94,7 @@ module "ecs_cluster" {
 #     API Gateway      #
 ########################
 module "api_gateway" {
-  source = "github.com/Klyde-Moradeyo/minecraft-AWS-server//modules/api_gateway?ref=TF_0.0.1"
+  source = "github.com/Klyde-Moradeyo/minecraft-AWS-server//modules/api_gateway?ref=TF_0.0.2"
 
   # lambda integration
   lambda_function_name = module.lambda.lambda_function_name
@@ -109,7 +109,7 @@ module "api_gateway" {
 #    Lambda Function   #
 ########################
 module "lambda" {
-  source = "github.com/Klyde-Moradeyo/minecraft-AWS-server//modules/lambda?ref=TF_0.0.1"
+  source = "github.com/Klyde-Moradeyo/minecraft-AWS-server//modules/lambda?ref=TF_0.0.2"
   depends_on = [ module.ecs_cluster ]
 
   # Lambda Config
@@ -147,7 +147,7 @@ resource "random_string" "unique_bucket_suffix" {
 }
 
 module "s3_mc_world" {
-  source = "github.com/Klyde-Moradeyo/minecraft-AWS-server//modules/s3?ref=TF_0.0.1"
+  source = "github.com/Klyde-Moradeyo/minecraft-AWS-server//modules/s3?ref=TF_0.0.2"
   
   # S3 Bucket 
   bucket_name = "world-s3-${random_string.unique_bucket_suffix.result}"

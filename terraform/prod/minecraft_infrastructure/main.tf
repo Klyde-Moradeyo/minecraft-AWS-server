@@ -13,6 +13,7 @@ data "terraform_remote_state" "infra_handler_state" {
 }
 
 locals {
+  mc_port = data.terraform_remote_state.infra_handler_state.outputs.mc_port
   mc_s3_bucket_arn = data.terraform_remote_state.infra_handler_state.outputs.mc_s3_bucket_arn
   mc_s3_bucket_uri= data.terraform_remote_state.infra_handler_state.outputs.mc_s3_bucket_uri
   vpc_id = data.terraform_remote_state.infra_handler_state.outputs.vpc_id
@@ -43,7 +44,7 @@ module "minecraft_server" {
   instance_type                    = var.instance_type
 
   # Security group
-  mc_port                          = var.mc_port # minecraft port
+  mc_port                          = local.mc_port
   allowed_cidrs                    = var.allowed_cidrs
 
   # IAM
