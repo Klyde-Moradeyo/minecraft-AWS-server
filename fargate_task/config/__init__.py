@@ -30,7 +30,6 @@ GIT_REPO_CONFIG =   {
                             "tf_mc_infra_scripts": os.path.join(GIT_REPO_NAME, "scripts")
                         }
                     }
-GIT_UTIL = GitUtil(ssh_key_path=GIT_REPO_CONFIG["paths"]["git_ssh_key"])
 
 # --- Terraform ---
 os.environ['TF_TOKEN_app_terraform_io'] = get_ssm_param(os.environ['TF_USER_TOKEN']) # Terraform Cloud Token

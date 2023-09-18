@@ -43,9 +43,12 @@ class ServerManager:
         return True
     
     def server_handler(self, command):
-        # Git Clone and copy files to minecraft_infra directory
-        GIT_UTIL.clone(GIT_REPO_CONFIG["url"], GIT_REPO_CONFIG["name"], GIT_REPO_CONFIG["branch"], GIT_REPO_CONFIG["ssh_key"])
-        shutil.copytree(GIT_REPO_CONFIG["paths"]["tf_mc_infra_scripts"], os.path.join(GIT_REPO_CONFIG["paths"]["tf_mc_infra_manifests"], "scripts")) # Copy tf_mc_infra_scripts folder to tf_mc_infra_manifests folder
+        # Initilize Git Util and Clone tf_manfiests repo
+        GIT_UTIL = GitUtil(GIT_REPO_CONFIG["paths"]["git_ssh_key"])
+        GIT_UTIL.clone(GIT_REPO_CONFIG["url"], GIT_REPO_CONFIG["name"], GIT_REPO_CONFIG["branch"])
+
+        # Copy scripts folder to tf_mc_infra_manifests folder
+        shutil.copytree(GIT_REPO_CONFIG["paths"]["tf_mc_infra_scripts"], os.path.join(GIT_REPO_CONFIG["paths"]["tf_mc_infra_manifests"], "scripts"))
 
         # Configure Infrastructure Handler
         TF_INFRA_HANDLER = TerraformHelper(GIT_REPO_CONFIG["paths"]["tf_mc_infra_handler"])
