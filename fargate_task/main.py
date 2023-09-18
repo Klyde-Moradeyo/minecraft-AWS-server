@@ -44,7 +44,7 @@ class ServerManager:
     
     def server_handler(self, command):
         # Git Clone and copy files to minecraft_infra directory
-        GIT_UTIL.git_clone(GIT_REPO_CONFIG["url"], GIT_REPO_CONFIG["name"], GIT_REPO_CONFIG["branch"], GIT_REPO_CONFIG["ssh_key"])
+        GIT_UTIL.clone(GIT_REPO_CONFIG["url"], GIT_REPO_CONFIG["name"], GIT_REPO_CONFIG["branch"], GIT_REPO_CONFIG["ssh_key"])
         shutil.copytree(GIT_REPO_CONFIG["paths"]["tf_mc_infra_scripts"], os.path.join(GIT_REPO_CONFIG["paths"]["tf_mc_infra_manifests"], "scripts")) # Copy tf_mc_infra_scripts folder to tf_mc_infra_manifests folder
 
         # Configure Infrastructure Handler
