@@ -10,7 +10,7 @@ from utils.terraform import TerraformHelper, TerraformError
 AWS_REGION = get_region()
 
 # --- AWS SSM ---
-SSM_FARGATE_COMMAND_NAME = os.getenv['BOT_COMMAND_NAME']
+SSM_FARGATE_COMMAND_NAME = os.getenv()'BOT_COMMAND_NAME')
 SSM_GIT_PRIVATE_KEY_NAME = os.getenv('GIT_PRIVATE_KEY')
 SSM_EC2_PRIVATE_KEY_NAME = os.getenv('EC2_PRIVATE_KEY')
 
