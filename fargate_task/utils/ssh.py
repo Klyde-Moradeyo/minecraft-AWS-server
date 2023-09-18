@@ -1,7 +1,7 @@
 import os
 import paramiko
 import time
-from .logger import setup_logging
+from logger import setup_logging
 
 # Setting up logging
 logger = setup_logging()

@@ -1,9 +1,9 @@
 from config import *
 import shutil
-from .utils.logger import setup_logging
-from .utils.ssh import SSHUtil
-from .utils.file_operations import *
-from .utils.script_runner import *
+from utils.logger import setup_logging
+from utils.ssh import SSHUtil
+from utils.file_operations import *
+from utils.script_runner import *
 
 # Setting up logging
 logger = setup_logging()
