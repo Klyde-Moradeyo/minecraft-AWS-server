@@ -22,7 +22,7 @@ class GitUtil:
         :return: None
         """
         try:
-            repo = Repo.clone_from(repo_url, target_directory, branch)
+            repo = Repo.clone_from(url=repo_url, to_path=target_directory, branch=branch)
         except Exception as e:
             raise Exception(f"Git clone failed:\n{str(e)}")
         
