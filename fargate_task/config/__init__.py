@@ -18,7 +18,7 @@ SSM_EC2_PRIVATE_KEY_NAME = os.getenv('EC2_PRIVATE_KEY')
 GIT_REPO_NAME = "tf_manifests"
 GIT_REPO_URL = "git@github.com:Klyde-Moradeyo/minecraft-AWS-server.git"
 GIT_BRANCH = GitUtil.get_git_branch()
-SSH_KEY_STR = get_ssm_param(SSM_EC2_PRIVATE_KEY_NAME)
+SSH_KEY_STR = get_ssm_param(SSM_GIT_PRIVATE_KEY_NAME)
 GIT_REPO_CONFIG =   { 
                         "name": GIT_REPO_NAME,
                         "url": GIT_REPO_URL, 
