@@ -53,6 +53,21 @@ variable "git_private_key_name" {
   default     = "dark-mango-bot-private-key"
 }
 
+########################
+#     Minecraft        #
+########################
+variable "mc_port" {
+  description = "TCP port for minecraft"
+  type        = number
+  default     = 25565
+}
+
+# variable "mc_backup_freq" {
+#   description = "How often (mins) to sync to S3"
+#   type        = number
+#   default     = 5
+# }
+
 
 
 

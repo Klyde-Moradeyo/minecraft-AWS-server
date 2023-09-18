@@ -117,3 +117,11 @@ output "label_tags" {
   description = "Label tags"
   value     = module.labels.label_tags
 }
+
+########################
+#     Minecraft        #
+########################
+output "mc_port" {
+  description = "Minecraft Server Port"
+  value       = var.mc_port
+}

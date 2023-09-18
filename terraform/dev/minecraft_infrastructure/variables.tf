@@ -20,21 +20,6 @@ variable "tf_cloud_infra_handler_workspace" {
 }
 
 ########################
-#     Minecraft        #
-########################
-variable "mc_port" {
-  description = "TCP port for minecraft"
-  type        = number
-  default     = 25565
-}
-
-variable "mc_backup_freq" {
-  description = "How often (mins) to sync to S3"
-  type        = number
-  default     = 5
-}
-
-########################
 #       AWS EC2        #
 ########################
 variable "instance_type" {
