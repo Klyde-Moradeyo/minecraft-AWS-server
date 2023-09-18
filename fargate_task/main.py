@@ -78,7 +78,7 @@ class ServerManager:
 
             # Configure Minecraft Infrastructure
             TF_MINECRAFT_INFRA = TerraformHelper(GIT_REPO_CONFIG["paths"]["tf_mc_infra_handler"])
-            TF_MINECRAFT_INFRA.run_command(GIT_REPO_CONFIG["paths"]["tf_mc_infra_manifests"], "apply")
+            TF_MINECRAFT_INFRA.run_command("apply")
 
             # Initilize SSH Util
             SSH_UTIL = SSHUtil(MACHINE_IP, EC2_USERNAME, EC2_PRIVATE_KEY_PATH)
