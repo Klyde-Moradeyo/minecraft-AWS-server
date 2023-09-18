@@ -21,7 +21,7 @@ GIT_BRANCH = GitUtil.get_git_branch()
 SSH_KEY_STR = get_ssm_param(SSM_EC2_PRIVATE_KEY_NAME)
 GIT_REPO_CONFIG =   { 
                         "name": GIT_REPO_NAME,
-                        "url": GIT_REPO_NAME, 
+                        "url": GIT_REPO_URL, 
                         "branch": GIT_BRANCH,
                         "paths": {
                             "git_ssh_key": write_to_tmp_file(SSH_KEY_STR),
