@@ -43,15 +43,24 @@ class GitUtil:
             raise
         
     @staticmethod
-    def get_git_branch():
+    def get_git_branch() -> str:
         """
-        Get the active Git branch.
+        Get the Environment's Git Branch
 
-        :return: Name of the current branch.
+        :return: Name of the Environment's branch.
         """
-        try:
-            branch = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).strip().decode('utf-8')
-            return branch
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Failed to get the active Git branch. Error: {e}")
-            raise
+        dev_env = "DEV"
+        prod_env = "PROD"
+        current_env = os.environ.get('ENVIRONMENT')
+
+        if current_env is None:
+            raise ValueError("ENVIRONMENT variable is not set.")
+        
+        current_env = current_env.upper()
+        
+        if current_env == dev_env:
+            return 'dev'
+        elif current_env == prod_env:
+            return 'main'
+        else:
+            raise ValueError(f"Unsupported ENVIRONMENT value: {current_env}. Supported values are '{dev_env}' and '{prod_env}'.")
