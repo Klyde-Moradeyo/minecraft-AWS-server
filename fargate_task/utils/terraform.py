@@ -4,39 +4,6 @@ from .logger import setup_logging
 
 logger = setup_logging()
 
-# example usage
-# # import the required classes and exceptions
-# from utils.terraform import TerraformHelper, TerraformError
-
-# # instantiate the helper with the directory where your Terraform configurations reside
-# terraform = TerraformHelper("/path/to/your/terraform/configuration")
-
-# # Examples of using run_command:
-
-# # To initialize the Terraform configuration
-# try:
-#     output = terraform.run_command("init")
-#     print(output)
-# except TerraformError as e:
-#     print(f"Error: {e}")
-
-# # To apply the Terraform configuration
-# try:
-#     output = terraform.run_command("apply")
-#     print(output)
-# except TerraformError as e:
-#     print(f"Error: {e}")
-
-# # To get output values from the Terraform configuration
-# try:
-#     output_value = terraform.run_command("output", "some_output_variable_name")
-#     print(f"The output value is: {output_value}")
-# except TerraformError as e:
-#     print(f"Error: {e}")
-
-# # ... and similarly for other Terraform commands.
-
-
 class TerraformError(Exception):
     pass
 

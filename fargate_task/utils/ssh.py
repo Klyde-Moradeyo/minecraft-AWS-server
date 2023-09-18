@@ -6,30 +6,6 @@ from .logger import setup_logging
 # Setting up logging
 logger = setup_logging()
 
-# # Importing the necessary classes and functions
-# from your_module import SSHUtil
-
-# # Initialize the SSHUtil object with required parameters.
-# ssh_util = SSHUtil(machine_ip="machine_ip_here", username="your_username", key_file="path_to_key_file")
-
-# # Running a command on the remote machine.
-# output = ssh_util.run_command("ls -la", capture_output=True)
-# print("Output of the command:\n", output)
-
-# # Copying a file to the remote machine.
-# local_file_path = "/path/to/local/file.txt"
-# remote_file_path = "/path/on/remote/machine/file.txt"
-# ssh_util.scp_to_ec2(local_file_path, remote_file_path)
-
-# # Reading the content of a file from the remote machine.
-# file_content = ssh_util.ssh_and_read_file_output(remote_file_path)
-# print("Content of the remote file:\n", file_content)
-
-# # The connection will be closed automatically when the ssh_util object is garbage collected. 
-# # If you want to close it explicitly, you can delete the object:
-# # del ssh_util
-
-
 class SSHUtil:
     def __init__(self, machine_ip, username, key_file, retries=5, wait=10):
         self.machine_ip = machine_ip
