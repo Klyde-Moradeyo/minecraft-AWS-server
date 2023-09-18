@@ -41,7 +41,8 @@ class GitUtil:
         except subprocess.CalledProcessError as e:
             logger.error(f"Failed to checkout to branch: '{branch}'. Error: {e}")
             raise
-
+        
+    @staticmethod
     def get_git_branch(self):
         """
         Get the active Git branch.

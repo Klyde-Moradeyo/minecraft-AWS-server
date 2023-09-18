@@ -49,13 +49,34 @@ class TerraformHelper:
         Parameters:
             path (str): The working directory for Terraform commands.
         """
-        # Check if directory exists
+        self._validate_directory(path)
+        self._check_terraform_installed()
+        
+        self.path = path
+
+        # Run Terraform init during initialization
+        self.run_command("init")
+
+    def _validate_directory(self, path: str):
+        """
+        Validates if the directory exists and is a directory.
+        """
         if not os.path.exists(path):
             raise ValueError(f"Directory {path} does not exist.")
         if not os.path.isdir(path):
             raise ValueError(f"{path} is not a directory.")
-        
-        self.path = path
+
+    def _check_terraform_installed(self):
+        """
+        Checks if Terraform is installed.
+        """
+        try:
+            subprocess.run(["terraform", "-v"], check=True, capture_output=True)
+        except subprocess.CalledProcessError:
+            raise TerraformError("Terraform command failed.")
+        except FileNotFoundError:
+            raise TerraformError("Terraform is not installed or not in PATH.")
+    
 
     def run_command(self, *args):
         """
@@ -67,15 +88,6 @@ class TerraformHelper:
         Returns:
             str: The output of the command.
         """
-        
-        # Check Terraform is installed
-        try:
-            subprocess.run(["terraform", "-v"], check=True, capture_output=True)
-        except subprocess.CalledProcessError:
-            raise TerraformError("Terraform command failed.")
-        except FileNotFoundError:
-            raise TerraformError("Terraform is not installed or not in PATH.")
-
         # Prepare the command
         terraform_command = ["terraform"] + list(args)
         if args[0] in ["apply", "destroy"]:
