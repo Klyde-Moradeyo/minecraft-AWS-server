@@ -25,7 +25,7 @@ GIT_REPO_CONFIG =   {
                         "branch": GIT_BRANCH,
                         "paths": {
                             "git_ssh_key": write_to_tmp_file(SSH_KEY_STR),
-                            "tf_mc_infra_manifests": os.path.join(GIT_REPO_NAME, "terraform", os.environ['ENVIRONMENT'], "minecraft_infrastructure"),
+                            "tf_mc_infra": os.path.join(GIT_REPO_NAME, "terraform", os.environ['ENVIRONMENT'], "minecraft_infrastructure"),
                             "tf_mc_infra_handler": os.path.join(GIT_REPO_NAME, "terraform", os.environ['ENVIRONMENT'], "infrastructure_handler"),
                             "tf_mc_infra_scripts": os.path.join(GIT_REPO_NAME, "scripts")
                         }

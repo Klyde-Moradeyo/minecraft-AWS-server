@@ -77,7 +77,7 @@ class ServerManager:
             remote_helper_script_path = "setup/scripts/helper_functions.sh"
 
             # Configure Minecraft Infrastructure
-            TF_MINECRAFT_INFRA = TerraformHelper(GIT_REPO_CONFIG["paths"]["tf_mc_infra_handler"])
+            TF_MINECRAFT_INFRA = TerraformHelper(GIT_REPO_CONFIG["paths"]["tf_mc_infra"])
             TF_MINECRAFT_INFRA.run_command("apply")
 
             # Initilize SSH Util
@@ -120,7 +120,7 @@ class ServerManager:
             mc_world_size = SSH_UTIL.run_command(True, f"stat -c%s {mincraft_bundle_path}")
 
             # Terraform commands
-            TF_MINECRAFT_INFRA = TerraformHelper(GIT_REPO_CONFIG["paths"]["tf_mc_infra_handler"])
+            TF_MINECRAFT_INFRA = TerraformHelper(GIT_REPO_CONFIG["paths"]["tf_mc_infra"])
             TF_MINECRAFT_INFRA.run_command("destroy")
 
             # If the minecraft bundle is over a certain size -> start new job to compress it
