@@ -46,3 +46,13 @@ test/
 
 # log files
 *.log
+
+# Python-related entries
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info
+*.egg
+.venv/
+.idea/
+.vscode/

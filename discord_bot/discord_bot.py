@@ -128,7 +128,7 @@ def send_to_api(data):
 async def reset_command_scroll():
     try:
         for guild_id, command in latest_guild_commands.items():
-            if datetime.now() - command.datetime > timedelta(minutes=2):  # Reset after 2 minutes
+            if datetime.now() - command.datetime > timedelta(minutes=4):  # Reset after 4 minutes
                 # Fetch the channel and bot message specific to the guild
                 channel = await BotConfig.get_command_scroll_channel(guild_id)
                 bot_message = await BotConfig.get_command_scroll_msg(guild_id, channel)
