@@ -47,8 +47,8 @@ class ServerManager:
         GIT_UTIL = GitUtil(GIT_REPO_CONFIG["paths"]["git_ssh_key"])
         GIT_UTIL.clone(GIT_REPO_CONFIG["url"], GIT_REPO_CONFIG["name"], GIT_REPO_CONFIG["branch"])
 
-        # Copy scripts folder to tf_mc_infra_manifests folder
-        shutil.copytree(GIT_REPO_CONFIG["paths"]["tf_mc_infra_scripts"], os.path.join(GIT_REPO_CONFIG["paths"]["tf_mc_infra_manifests"], "scripts"))
+        # Copy scripts folder to tf_mc_infra folder
+        shutil.copytree(GIT_REPO_CONFIG["paths"]["tf_mc_infra_scripts"], os.path.join(GIT_REPO_CONFIG["paths"]["tf_mc_infra"], "scripts"))
 
         # Configure Infrastructure Handler
         TF_INFRA_HANDLER = TerraformHelper(GIT_REPO_CONFIG["paths"]["tf_mc_infra_handler"])
