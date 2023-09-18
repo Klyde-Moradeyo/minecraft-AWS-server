@@ -43,7 +43,7 @@ class GitUtil:
             raise
         
     @staticmethod
-    def get_git_branch(self):
+    def get_git_branch():
         """
         Get the active Git branch.
 
