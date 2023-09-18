@@ -107,7 +107,7 @@ class SSHUtil:
             exit_status = stdout.channel.recv_exit_status()
 
             if exit_status != 0:
-                script_logs = self.ssh_and_read_file_output(log_file_path)
+                script_logs = self.read_file_output(log_file_path)
                 logger.error(f"{script_logs} \nScript exited with status code {exit_status}.")
                 raise Exception(f"Script exited with status code {exit_status}.")
         except Exception as e:
