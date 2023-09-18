@@ -84,7 +84,7 @@ class ServerManager:
             SSH_UTIL = SSHUtil(MACHINE_IP, EC2_USERNAME, EC2_PRIVATE_KEY_PATH)
 
             # Create Logs and scripts folder
-            SSH_UTIL.run_command(False, "mkdir -p setup/logs setup/scripts")
+            SSH_UTIL.run_command("mkdir -p setup/logs setup/scripts", False)
 
             # Copy Scripts to EC2 Instance
             SSH_UTIL.scp_to_machine(local_helper_script_path, remote_helper_script_path)
@@ -117,7 +117,7 @@ class ServerManager:
 
             # Check minecraft-world.bundle size - need to add an option for output in ssh_andrun_command.
             mincraft_bundle_path = os.path.join("minecraft-AWS-server", "docker", "minecraft-data", "minecraft-world.bundle")
-            mc_world_size = SSH_UTIL.run_command(True, f"stat -c%s {mincraft_bundle_path}")
+            mc_world_size = SSH_UTIL.run_command(f"stat -c%s {mincraft_bundle_path}", True)
 
             # Terraform commands
             TF_MINECRAFT_INFRA = TerraformHelper(GIT_REPO_CONFIG["paths"]["tf_mc_infra"])
