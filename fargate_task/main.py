@@ -26,7 +26,7 @@ class ServerManager:
             EC2_USERNAME, EC2_PRIVATE_KEY, EC2_PRIVATE_KEY_PATH,
 
             # Git
-            GIT_REPO_NAME, GIT_REPO_URL, GIT_BRANCH, SSH_KEY_STR, GIT_REPO_CONFIG, GIT_UTIL,
+            GIT_REPO_NAME, GIT_REPO_URL, GIT_BRANCH, SSH_KEY_STR, GIT_REPO_CONFIG,
 
             # Terraform Cloud
             os.environ.get('TF_TOKEN_app_terraform_io'),
