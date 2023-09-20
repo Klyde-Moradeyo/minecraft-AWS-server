@@ -37,7 +37,8 @@ function install_dependencies {
     unzip \
     zip \
     bc \
-    rsync
+    rsync \
+    wget
 }
 
 ########################
@@ -95,12 +96,19 @@ function install_git {
   echo "Git install complete"
 }
 
+function install_cloudwatch_agent {
+  local config_file_path="./amazon-cloudwatch-agent.json"
+  wget https://amazoncloudwatch-agent.s3.amazonaws.com/ubuntu/arm64/latest/amazon-cloudwatch-agent.deb
+  sudo dpkg -i -E ./amazon-cloudwatch-agent.deb
+  sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m onPremise -s -c file:$config_file_path
+}
+
 ########################
 #     Post Install     #
 ########################
 function post_install {
     # Remove AWS zip
-    rm -rfv aws awscliv2.zip
+    rm -rfv aws awscliv2.zip amazon-cloudwatch-agent.deb # Update this to happen in abandoned shell
 
     echo "-------------------------------------"
     echo "              Installed              "
@@ -125,6 +133,21 @@ function post_install {
     else
         echo "GIT: Not Installed"
     fi
+
+    # Check if the CloudWatch agent is installed
+    if command -v /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent > /dev/null 2>&1; then
+        isCloudwatchAgentInstalled="True"
+        agentOutput=$(sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a status)
+        if [[ $agentOutput == *"running"* ]]; then
+            isCloudwatchAgentRunning="Running"
+        else
+            isCloudwatchAgentRunning="Not Running"
+        fi
+    else
+        isCloudwatchAgentInstalled="False"
+        isCloudwatchAgentRunning="Not Running"
+    fi
+    echo "Cloudwatch Agent: $isCloudwatchAgentInstalled | $isCloudwatchAgentRunning"
     echo "-------------------------------------"
 }
 
@@ -135,7 +158,8 @@ function run {
   run_parallel \
       "install_docker" \
       "install_aws_cli" \
-      "install_git"
+      "install_git" \
+      "install_cloudwatch_agent"
 
   post_install
 }
