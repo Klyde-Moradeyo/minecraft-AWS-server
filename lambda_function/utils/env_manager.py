@@ -6,9 +6,10 @@ from typing import Dict, Any, List
 logger = logging.getLogger(__name__)
 
 class EnvironmentVariables:
-    def __init__(self) -> None:
+    def __init__(self, action) -> None:
         self.configured = self.check_configuration()
         self.env_vars: Dict[str, Any] = {}
+        self.action = action
 
     def check_configuration(self):
         # Check for required configurations
@@ -53,7 +54,7 @@ class EnvironmentVariables:
         self._log_env_variables()
 
         return self.env_vars
-
+        
     def _fetch_required_variables(self) -> None:
         """
         Fetches required environment variables.
@@ -77,6 +78,7 @@ class EnvironmentVariables:
             'TAG_NAME': tags.get('Name'),
             'TAG_NAMESPACE': tags.get('Namespace'),
             'TAG_ENVIRONMENT': tags.get('Stage'),
+            'TAG_RUNNING_COMMAND': self.action
         })
 
     def _verify_missing_variables(self) -> None:
