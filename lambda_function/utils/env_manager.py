@@ -6,13 +6,7 @@ from typing import Dict, Any, List
 logger = logging.getLogger(__name__)
 
 class EnvironmentVariables:
-    """
-    Class to manage and retrieve environment variables.
-    """
     def __init__(self) -> None:
-        """
-        Initializes the EnvironmentVariables class.
-        """
         self.configured = self.check_configuration()
         self.env_vars: Dict[str, Any] = {}
 

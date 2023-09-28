@@ -1,6 +1,6 @@
 import boto3
-from .logger import setup_logging
 from .env_manager import EnvironmentVariables
+from .logger import setup_logging
 
 # Setting up logging
 logger = setup_logging()
