@@ -6,9 +6,9 @@ from .logger import setup_logging
 logger = setup_logging()
 
 class Fargate:
-    def __init__(self, cluster, region_name='eu-west-2'):
+    def __init__(self, cluster):
         self.cluster = cluster
-        self.client = boto3.client('ecs', region_name=region_name)
+        self.client = boto3.client('ecs')
         self.env_vars = EnvironmentVariables().get_vars()
         self.cluster = self.env_var["CLUSTER"]
         self.task_definition = self.env_var["TASK_DEFINITION_NAME"]
@@ -111,6 +111,15 @@ class Fargate:
         }
         return fargate_network_configuration
     
-    def is_task_with_tags_exists(self):
+    def get_env_vars(self):
+        environment_variables = [ 
+            {'name': 'TF_USER_TOKEN', 'value': self.env_vars["TF_USER_TOKEN"] },
+            {'name': 'GIT_PRIVATE_KEY', 'value': self.env_vars["GIT_PRIVATE_KEY"] },
+            {'name': 'EC2_PRIVATE_KEY', 'value': self.env_vars["EC2_PRIVATE_KEY"] },
+            {'name': 'BOT_COMMAND_NAME', 'value': self.env_vars["BOT_COMMAND_NAME"] },
+            {'name': 'ENVIRONMENT', 'value': self.env_vars["TAG_ENVIRONMENT"] },
+            ]
+        return environment_variables
         
-    
+    def get_task_tags(self):
+        return self.tags
