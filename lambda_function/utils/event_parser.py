@@ -14,7 +14,7 @@ class APIEventParser:
         print(self.parse_path_parameters(event))
 
     def parse(self):
-        action = self.extract_key("COMMAND")
+        action = self.extract_key("command")
 
         return {
             "action": action,
