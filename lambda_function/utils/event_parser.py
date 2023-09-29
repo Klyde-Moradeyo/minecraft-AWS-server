@@ -9,7 +9,7 @@ class APIEventParser:
     def __init__(self, event):
         self.body = self._parse_body(event)
         self.header = self._parse_headers(event)
-        self.isAuthorized = Authorization.check("ssm_param_name")
+        # self.isAuthorized = Authorization.check("ssm_param_name")
 
         # For debuging later
         print(self.parse_query_parameters(event))
