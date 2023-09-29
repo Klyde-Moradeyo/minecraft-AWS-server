@@ -1,6 +1,6 @@
 import boto3
 from .logger import setup_logging
-from ssm import SSMUtil
+from .ssm import SSMUtil
 
 class AuthorizationError(Exception):
     pass
