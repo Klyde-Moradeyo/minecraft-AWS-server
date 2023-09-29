@@ -17,5 +17,5 @@ class SSMUtil:
     def get_param(self, ssm_path: str) -> str:
         response = self.client.get_parameter(Name=ssm_path, WithDecryption=True)
         value = response["Parameter"]["Value"]
-        logger.debug(f"Retrieved from SSM Parameter Store: '{value}'")
+        self.logger.debug(f"Retrieved from SSM Parameter Store: '{value}'")
         return value
