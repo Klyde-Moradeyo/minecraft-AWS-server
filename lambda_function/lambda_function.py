@@ -8,7 +8,7 @@ from utils.minecraft import MinecraftServerChecker
 from utils.fargate import Fargate
 from utils.time_utils import seconds_to_minutes, DateTimeEncoder
 from utils.ssm import SSMUtil
-from utils.logger import setup_self.logger
+from utils.logger import setup_logging
 
 class LambdaHandler:
     def __init__(self, event):
