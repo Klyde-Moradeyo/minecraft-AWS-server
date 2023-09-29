@@ -2,14 +2,12 @@ import json
 from .logger import setup_logging
 from .authorizer import Authorization
 
-# Setting up logging
-logger = setup_logging()
-
 class APIEventParser:
     def __init__(self, event):
         self.body = self._parse_body(event)
         self.header = self._parse_headers(event)
         # self.isAuthorized = Authorization.check("ssm_param_name")
+        self.logger = setup_logging() # Setting up logging
 
         # For debuging later
         print(self.parse_query_parameters(event))

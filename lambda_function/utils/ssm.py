@@ -1,12 +1,10 @@
 import boto3
 from .logger import setup_logging
 
-# Setting up logging
-logger = setup_logging()
-
 class SSMUtil:
     def __init__(self):
         self.client = boto3.client('ssm')
+        self.logger = setup_logging() # Setting up logging
 
     def send_param(self, command: str, type: str, ssm_path: str) -> None:
         self.client.put_parameter(

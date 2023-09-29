@@ -8,17 +8,14 @@ from utils.minecraft import MinecraftServerChecker
 from utils.fargate import Fargate
 from utils.time_utils import seconds_to_minutes, DateTimeEncoder
 from utils.ssm import SSMUtil
-from utils.logger import setup_logger
-
-# Setting up logger
-logger = setup_logger()
+from utils.logger import setup_self.logger
 
 class LambdaHandler:
     def __init__(self, event):
         # Parse the event
         event_parser = APIEventParser(event)
         event_body = event_parser.parse()
-        logger.info(f"Event Body: \n{event_body}")
+        self.logger.info(f"Event Body: \n{event_body}")
 
         # Extract the action from the parsed event
         self.ACTION = event_parser.extract_key("action")
@@ -36,6 +33,9 @@ class LambdaHandler:
         # Perform checks
         self.mc_server_status = MinecraftServerChecker.check_mc_server(envs["MC_SERVER_IP"], envs["MC_PORT"])  # Check If minecraft server is online/offline
         self.is_task_running = self.tec_fargate.is_task_with_tags_exists(self.task_tags)  # Check if there's a Fargate task running
+
+        # Setting up logging
+        self.logger = setup_logging() 
     
     def execute_command(self):
         try:
@@ -53,19 +53,19 @@ class LambdaHandler:
                 "body": json.dumps(response, cls=DateTimeEncoder)
             }
         except ValueError as error:
-            logger.error("Value error occurred", extra={"error": str(error)})
+            self.logger.error("Value error occurred", extra={"error": str(error)})
             return {
                 "statusCode": 400,
                 "body": json.dumps({"error": str(error)}, cls=DateTimeEncoder)
             }
         except (BotoCoreError, ClientError) as error:
-            logger.exception("Boto3 related error occurred", extra={"error": str(error)})
+            self.logger.exception("Boto3 related error occurred", extra={"error": str(error)})
             return {
                 "statusCode": 500,
                 "body": json.dumps({"error": str(error)}, cls=DateTimeEncoder)
             }
         except Exception as error:
-            logger.exception("Unhandled exception occurred", extra={"error": str(error)})
+            self.logger.exception("Unhandled exception occurred", extra={"error": str(error)})
             return {
                 "statusCode": 500,
                 "body": json.dumps({"error": str(error)}, cls=DateTimeEncoder)
@@ -79,7 +79,7 @@ class LambdaHandler:
 
         # Launch Fargate Container
         task_arn = self.tec_fargate.create_fargate_container()
-        logger.info(f"New Fargate task launched: {task_arn}")
+        self.logger.info(f"New Fargate task launched: {task_arn}")
 
         # Confirm the task i running
         task_status = self.tec_fargate.check_task_status(self.task_tags)
@@ -130,7 +130,7 @@ class LambdaHandler:
             check_interval = 60
             time_limit = 600
             start_time = time.time()
-            logger.info(f"waiting for {seconds_to_minutes(time_limit)} minutes")
+            self.logger.info(f"waiting for {seconds_to_minutes(time_limit)} minutes")
 
             while (time.time() - start_time) < time_limit:
                 self.is_task_running = self.tec_fargate.is_task_with_tags_exists(self.task_tags)
@@ -140,9 +140,9 @@ class LambdaHandler:
 
                 time.sleep(check_interval)
                 elapsed = time.time() - start_time
-                logger.info(f"time elapsed: {int(elapsed)} seconds")
+                self.logger.info(f"time elapsed: {int(elapsed)} seconds")
 
-            logger.warning(f"Fargate task still running after {seconds_to_minutes(elapsed)} minutes.")
+            self.logger.warning(f"Fargate task still running after {seconds_to_minutes(elapsed)} minutes.")
             return { "STATUS": f"MC_WORLD_ARCHIVE_FAILED_START", "INFO": f"Timed out" }
         
         # If no task is running, directly launch a new one

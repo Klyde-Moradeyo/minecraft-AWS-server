@@ -1,15 +1,14 @@
 import os
 import json
-import logging
 from typing import Dict, Any, List
-
-logger = logging.getLogger(__name__)
+from .logger import setup_logging
 
 class EnvironmentVariables:
     def __init__(self, action) -> None:
         self.configured = self.check_configuration()
         self.env_vars: Dict[str, Any] = {}
         self.action = action
+        self.logger = setup_logging() # Setting up logging
 
     def check_configuration(self):
         # Check for required configurations
@@ -36,13 +35,13 @@ class EnvironmentVariables:
         missing_configs = []
         for config in required_configs:
             if config not in os.environ:
-                logger.error(f"Environment variable for {config} is missing!")
+                self.logger.error(f"Environment variable for {config} is missing!")
                 missing_configs.append(config)
                 
         if missing_configs:
             raise MissingConfigurationException(missing_configs)
         else:
-            logger.info("All configurations are set!")
+            self.logger.info("All configurations are set!")
 
     def get_vars(self) -> Dict[str, Any]:
         """
@@ -93,9 +92,9 @@ class EnvironmentVariables:
         """
         Logs the environment variables.
         """
-        logger.debug(f"Configured Environment Variables")
+        self.logger.debug(f"Configured Environment Variables")
         for key, value in self.env_vars.items():
-            logger.debug(f"{key}: {value}")
+            self.logger.debug(f"{key}: {value}")
 
 class MissingConfigurationException(Exception):
     """

@@ -1,9 +1,5 @@
 import datetime
 import json
-from .logger import setup_logging
-
-# Setting up logging
-logger = setup_logging()
 
 def seconds_to_minutes(seconds: int) -> float:
     if not isinstance(seconds, int) or seconds < 0:
