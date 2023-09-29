@@ -12,6 +12,9 @@ from utils.logger import setup_logging
 
 class LambdaHandler:
     def __init__(self, event):
+        # Setting up logging
+        self.logger = setup_logging() 
+        
         # Parse the event
         event_parser = APIEventParser(event)
         event_body = event_parser.parse()
@@ -33,9 +36,6 @@ class LambdaHandler:
         # Perform checks
         self.mc_server_status = MinecraftServerChecker.check_mc_server(envs["MC_SERVER_IP"], envs["MC_PORT"])  # Check If minecraft server is online/offline
         self.is_task_running = self.tec_fargate.is_task_with_tags_exists(self.task_tags)  # Check if there's a Fargate task running
-
-        # Setting up logging
-        self.logger = setup_logging() 
     
     def execute_command(self):
         try:
