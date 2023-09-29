@@ -1,6 +1,6 @@
 import json
 from .logger import setup_logging
-from authorizer import Authorization
+from .authorizer import Authorization
 
 # Setting up logging
 logger = setup_logging()
