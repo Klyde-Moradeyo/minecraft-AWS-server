@@ -7,9 +7,9 @@ class AuthorizationError(Exception):
 
 class Authorization:
     def __init__(self, ssm_param_name):
+        self.logger = setup_logging() # Setting up logging
         self.ssm_param_name = ssm_param_name
         self.auhorization_token = None
-        self.logger = setup_logging() # Setting up logging
         self._load_token_from_ssm()
 
     def _load_token_from_ssm(self):

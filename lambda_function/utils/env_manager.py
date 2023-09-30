@@ -5,10 +5,11 @@ from .logger import setup_logging
 
 class EnvironmentVariables:
     def __init__(self, action) -> None:
+        self.logger = setup_logging() # Setting up logging
+        
         self.configured = self.check_configuration()
         self.env_vars: Dict[str, Any] = {}
         self.action = action
-        self.logger = setup_logging() # Setting up logging
 
     def check_configuration(self):
         # Check for required configurations
@@ -35,7 +36,7 @@ class EnvironmentVariables:
         missing_configs = []
         for config in required_configs:
             if config not in os.environ:
-                self.logger.error(f"Environment variable for {config} is missing!")
+                self.logger.error(f"Environment variable for '{config}' is missing!")
                 missing_configs.append(config)
                 
         if missing_configs:

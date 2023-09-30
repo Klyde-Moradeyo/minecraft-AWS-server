@@ -4,9 +4,9 @@ from .logger import setup_logging
 
 class MinecraftServerChecker:
     def __init__(self, ip: str, port: str):
+        self.logger = setup_logging()
         self.server_address = f"{ip}:{port}"
         self.java_server = JavaServer.lookup(self.server_address)
-        self.logger = setup_logging()
 
     def check(self) -> Dict[str, Any]:
         """

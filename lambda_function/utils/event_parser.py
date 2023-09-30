@@ -4,10 +4,10 @@ from .authorizer import Authorization
 
 class APIEventParser:
     def __init__(self, event):
+        self.logger = setup_logging() # Setting up logging
         self.body = self._parse_body(event)
         self.header = self._parse_headers(event)
         # self.isAuthorized = Authorization.check("ssm_param_name")
-        self.logger = setup_logging() # Setting up logging
 
         # For debuging later
         print(self.parse_query_parameters(event))

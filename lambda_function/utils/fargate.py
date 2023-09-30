@@ -4,6 +4,7 @@ from .logger import setup_logging
 
 class Fargate:
     def __init__(self, cluster):
+        self.logger = setup_logging() # Setting up logging
         self.cluster = cluster
         self.client = boto3.client('ecs')
         self.env_vars = EnvironmentVariables().get_vars()
@@ -12,8 +13,7 @@ class Fargate:
         self.container_name = self.env_var["CONTAINER_NAME"]
         self.environment_variables = self.set_env_vars()
         self.network_configuration = self.set_network_config()
-        self.tags = self.set_task_tags()
-        self.logger = setup_logging() # Setting up logging
+        self.tags = self.set_task_tags()      
 
     def create_fargate_container(self):
         try:
