@@ -92,9 +92,9 @@ class EnvironmentVariables:
         """
         Logs the environment variables.
         """
-        self.logger.debug(f"Configured Environment Variables")
+        self.logger.info(f"Configured Environment Variables")
         for key, value in self.env_vars.items():
-            self.logger.debug(f"{key}: {value}")
+            self.logger.info(f"{key}: {value}")
 
 class MissingConfigurationException(Exception):
     """
