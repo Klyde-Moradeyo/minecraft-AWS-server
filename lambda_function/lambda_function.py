@@ -21,7 +21,7 @@ class LambdaHandler:
         self.logger.info(f"Event Body: \n{event_body}")
 
         # Extract the action from the parsed event
-        self.ACTION = event_body["command"]
+        self.ACTION = event_body["action"]
 
         # Get the environment variables specific to the action
         envs = EnvironmentVariables(self.ACTION).get_vars()  # Get Environment Variables
