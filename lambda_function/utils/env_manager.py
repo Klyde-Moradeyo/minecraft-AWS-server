@@ -6,35 +6,37 @@ from .logger import setup_logging
 class EnvironmentVariables:
     def __init__(self, action) -> None:
         self.logger = setup_logging() # Setting up logging
-        
+        self.REQUIRED_VARS = self.get_required_vars()
         self.configured = self.check_configuration()
         self.env_vars: Dict[str, Any] = {}
         self.action = action
 
+    def get_required_vars(self):
+        required_configs = [
+                                # Minecraft Specific Env Vars
+                                'MC_PORT', 'MC_SERVER_IP', 
+
+                                # Fargate Specific Env Vars
+                                'CLUSTER', 'CONTAINER_NAME',  'SUBNET_ID', 'SECURITY_GROUP_ID', 'TASK_DEFINITION_NAME',
+
+                                # Terraform Cloud
+                                'TF_USER_TOKEN',
+
+                                # JOB to run
+                                'BOT_COMMAND_NAME',
+                                
+                                # Git
+                                'GIT_PRIVATE_KEY', 
+                                
+                                # EC2 SSH Access
+                                'EC2_PRIVATE_KEY'
+                            ]
+        return required_configs
+
     def check_configuration(self):
         # Check for required configurations
-        required_configs = [
-        # Minecraft Specific Env Vars
-        'MC_PORT', 'MC_SERVER_IP', 
-
-        # Fargate Specific Env Vars
-        'CLUSTER', 'CONTAINER_NAME',  'SUBNET_ID', 'SECURITY_GROUP_ID', 'TASK_DEFINITION_NAME',
-
-        # Terraform Cloud
-        'TF_USER_TOKEN',
-
-        # JOB to run
-        'BOT_COMMAND_NAME',
-        
-        # Git
-        'GIT_PRIVATE_KEY', 
-        
-        # EC2 SSH Access
-        'EC2_PRIVATE_KEY'
-        ]
-
         missing_configs = []
-        for config in required_configs:
+        for config in self.REQUIRED_VARS:
             if config not in os.environ:
                 self.logger.error(f"Environment variable for '{config}' is missing!")
                 missing_configs.append(config)
