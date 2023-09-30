@@ -3,11 +3,11 @@ from .env_manager import EnvironmentVariables
 from .logger import setup_logging
 
 class Fargate:
-    def __init__(self, cluster):
+    def __init__(self, cluster, env_vars):
         self.logger = setup_logging() # Setting up logging
         self.cluster = cluster
         self.client = boto3.client('ecs')
-        self.env_vars = EnvironmentVariables().get_vars()
+        self.env_vars = env_vars
         self.cluster = self.env_var["CLUSTER"]
         self.task_definition = self.env_var["TASK_DEFINITION_NAME"]
         self.container_name = self.env_var["CONTAINER_NAME"]

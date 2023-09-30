@@ -27,7 +27,7 @@ class LambdaHandler:
         envs = EnvironmentVariables(self.ACTION).get_vars()  # Get Environment Variables
 
         # Initialize Fargate class
-        self.tec_fargate = Fargate(envs['CLUSTER'])  # TEC means Terraform Execution Container
+        self.tec_fargate = Fargate(envs['CLUSTER'], envs)  # TEC means Terraform Execution Container
         self.task_tags = self.tec_fargate.get_task_tags()
 
         # Initialize SSM class
