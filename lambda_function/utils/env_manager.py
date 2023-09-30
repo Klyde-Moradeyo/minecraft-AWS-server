@@ -12,7 +12,7 @@ class EnvironmentVariables:
 
     def check_configuration(self):
         # Check for required configurations
-        required_configs = List[str] = [
+        required_configs = [
         # Minecraft Specific Env Vars
         'MC_PORT', 'MC_SERVER_IP', 
 
