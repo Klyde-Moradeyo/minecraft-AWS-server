@@ -92,24 +92,28 @@ class LambdaHandler:
         
     def handle_start(self):
         if self.mc_server_status["online"]:
-            return {"STATUS": "MC_SERVER_ALREADY_UP"}
-        
-        task_arn, task_status = self.launch_new_fargate_task()
+            return {"STATUS": "MC_SERVER_UP", "COMMAND": self.ACTION, "INFO": "MINECRAFT SERVER ALREADY ONLINE"}
 
         if self.is_task_running:
+            task_status = self.tec_fargate.check_task_status(self.task_tags)
             prev_command = self.ssm.get_param(self.envs["BOT_COMMAND_NAME"])
-
-        return {"STATUS": task_status, "PREVIOUS_COMMAND": prev_command}
+            return {'STATUS': task_status, 'COMMAND': prev_command, "INFO": "SERVER IS ALREADY STARTED"}
+        else:
+            task_arn, task_status = self.launch_new_fargate_task()
+            return {"STATUS": task_status, "COMMAND": self.ACTION, "INFO": "STARTING MINECRAFT SERVER"}
 
     def handle_stop(self):
         if not self.mc_server_status["online"]:
-            return {"STATUS": "MC_SERVER_ALREADY_DOWN"}
+            return {"STATUS": "MC_SERVER_DOWN", "COMMAND": self.ACTION, "INFO": "MINECRAFT SERVER ALREADY OFFLINE"}
 
-        task_arn, task_status = self.launch_new_fargate_task()
         if self.is_task_running:
+            task_status = self.tec_fargate.check_task_status(self.task_tags)
             prev_command = self.ssm.get_param(self.envs["BOT_COMMAND_NAME"])
+            return {'STATUS': task_status, 'COMMAND': prev_command, "INFO": "SERVER IS ALREADY STOPPED"}
+        
+        task_arn, task_status = self.launch_new_fargate_task()
 
-        return {"STATUS": task_status, "PREVIOUS_COMMAND": prev_command}
+        return {"STATUS": task_status, "COMMAND": self.ACTION, "INFO": "STOPPING MINECRAFT SERVER"}
 
     def handle_status(self):
         if self.is_task_running:
@@ -121,12 +125,13 @@ class LambdaHandler:
                 task_status = "MC_SERVER_DOWN"
 
         prev_command = self.ssm.get_param(self.envs["BOT_COMMAND_NAME"])
-        return {'STATUS': task_status, 'PREVIOUS_COMMAND': prev_command}
+        return { 'STATUS': task_status, 'COMMAND': prev_command, "INFO": "RETRIEVED MINECRAFT SERVER STATUS"}
 
     def handle_mc_world_archive(self):
         """
         Handle Minecraft world archive tasks. Wait for any running task to finish, then launch a new Fargate task.
         """
+        task_name = "MC_WORLD_ARCHIVE"
         # If a task is currently running, wait for it to finish up to a time limit
         if self.is_task_running:
             check_interval = 60
@@ -138,7 +143,7 @@ class LambdaHandler:
                 self.is_task_running = self.tec_fargate.is_task_with_tags_exists(self.task_tags)
                 if not self.is_task_running:
                     task_arn, task_status = self.launch_new_fargate_task()
-                    return { "STATUS": f"MC_WORLD_ARCHIVE", "INFO": f"New Fargate task launched: {task_arn} | {task_status}" }
+                    return { "STATUS": task_name, "INFO": f"New Fargate task launched: {task_arn} | {task_status}" }
 
                 time.sleep(check_interval)
                 elapsed = time.time() - start_time
@@ -149,7 +154,7 @@ class LambdaHandler:
         
         # If no task is running, directly launch a new one
         self.launch_new_fargate_task()
-        return { "STATUS": f"MC_WORLD_ARCHIVE", "INFO": f"New Fargate task launched: {task_arn} | {task_status}" } # Surely I should be used previous command here instead
+        return { "STATUS": task_name, 'COMMAND': self.ACTION, "INFO": f"New Fargate task launched: {task_arn} | {task_status}" } # Surely I should be used previous command here instead
 
 # Where the magic happens
 def lambda_handler(event, context):
