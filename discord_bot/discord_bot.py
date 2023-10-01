@@ -195,9 +195,13 @@ class Command:
                     BOT_REPLY = bot_response.api_err_msg()
                 else:
                     MC_SERVER_STATUS = response.json().get("STATUS", bot_response.api_err_msg())
-                    COMMAND = response.json().get("COMMAND")
+                    PREVIOUS_COMMAND = response.json().get("PREVIOUS_COMMAND", None)
 
-                    BOT_REPLY = bot_response.msg(COMMAND, MC_SERVER_STATUS)
+                    # If !Status else if start or stop
+                    if PREVIOUS_COMMAND is not None:
+                        BOT_REPLY = bot_response.msg(PREVIOUS_COMMAND, MC_SERVER_STATUS)
+                    else:
+                        BOT_REPLY = bot_response.msg(self.command, MC_SERVER_STATUS)
             else:
                 BOT_REPLY = BotConfig.HELP_MESSAGES["features"]
 
