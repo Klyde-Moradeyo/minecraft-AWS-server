@@ -110,14 +110,7 @@ class Fargate:
         return fargate_network_configuration
     
     def get_env_vars(self):
-        environment_variables = [ 
-            {'name': 'TF_USER_TOKEN', 'value': self.env_vars["TF_USER_TOKEN"] },
-            {'name': 'GIT_PRIVATE_KEY', 'value': self.env_vars["GIT_PRIVATE_KEY"] },
-            {'name': 'EC2_PRIVATE_KEY', 'value': self.env_vars["EC2_PRIVATE_KEY"] },
-            {'name': 'BOT_COMMAND_NAME', 'value': self.env_vars["BOT_COMMAND_NAME"] },
-            {'name': 'ENVIRONMENT', 'value': self.env_vars["TAG_ENVIRONMENT"] },
-            ]
-        return environment_variables
+        return self.environment_variables
         
     def get_task_tags(self):
         return self.tags

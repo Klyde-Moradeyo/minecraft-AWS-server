@@ -12,6 +12,7 @@ from utils.logger import setup_logging
 
 class LambdaHandler:
     def __init__(self, event):
+        # Note: May also need to add to check fargate for if the required image is in ECR.
         # Setting up logging
         self.logger = setup_logging() 
         
@@ -110,10 +111,9 @@ class LambdaHandler:
             task_status = self.tec_fargate.check_task_status(self.task_tags)
             prev_command = self.ssm.get_param(self.envs["BOT_COMMAND_NAME"])
             return {'STATUS': task_status, 'COMMAND': prev_command, "INFO": "SERVER IS ALREADY STOPPED"}
-        
-        task_arn, task_status = self.launch_new_fargate_task()
-
-        return {"STATUS": task_status, "COMMAND": self.ACTION, "INFO": "STOPPING MINECRAFT SERVER"}
+        else:
+            task_arn, task_status = self.launch_new_fargate_task()
+            return {"STATUS": task_status, "COMMAND": self.ACTION, "INFO": "STOPPING MINECRAFT SERVER"}
 
     def handle_status(self):
         if self.is_task_running:
