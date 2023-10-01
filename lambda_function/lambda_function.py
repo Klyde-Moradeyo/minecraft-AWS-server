@@ -4,7 +4,7 @@ import json
 from botocore.exceptions import BotoCoreError, ClientError
 from utils.event_parser import APIEventParser
 from utils.env_manager import EnvironmentVariables
-from utils.minecraft import MinecraftServerChecker
+from utils.minecraft import MinecraftServer
 from utils.fargate import Fargate
 from utils.time_utils import seconds_to_minutes, DateTimeEncoder
 from utils.ssm import SSMUtil
@@ -34,7 +34,7 @@ class LambdaHandler:
         self.ssm = SSMUtil()
 
         # Perform checks
-        self.mc_server_status = MinecraftServerChecker.check_mc_server(envs["MC_SERVER_IP"], envs["MC_PORT"])  # Check If minecraft server is online/offline
+        self.mc_server_status = MinecraftServer.check(envs["MC_SERVER_IP"], envs["MC_PORT"])  # Check If minecraft server is online/offline
         self.is_task_running = self.tec_fargate.is_task_with_tags_exists(self.task_tags)  # Check if there's a Fargate task running
     
     def execute_command(self):

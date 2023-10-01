@@ -2,7 +2,7 @@ from mcstatus import JavaServer
 from typing import Dict, Any
 from .logger import setup_logging
 
-class MinecraftServerChecker:
+class MinecraftServer:
     def __init__(self, ip: str, port: str):
         self.logger = setup_logging()
         self.server_address = f"{ip}:{port}"
