@@ -34,15 +34,17 @@ class LambdaHandler:
         self.ssm = SSMUtil()
 
         # Perform checks
-        self.mc_server_status = MinecraftServer.check(envs["MC_SERVER_IP"], envs["MC_PORT"])  # Check If minecraft server is online/offline
+        self.mc_server_status = MinecraftServer(envs["MC_SERVER_IP"], envs["MC_PORT"]).check()  # Check If minecraft server is online/offline
         self.is_task_running = self.tec_fargate.is_task_with_tags_exists(self.task_tags)  # Check if there's a Fargate task running
     
     def execute_command(self):
         try:
             if self.command == "mc_world_archive":
                 response = self.handle_mc_world_archive()
-            elif self.command in ('start', 'stop'):
-                response = self.handle_start_stop(self.command)
+            elif self.command == 'start':
+                response = self.handle_start()
+            elif self.command == 'stop':
+                response = self.handle_stop()
             elif self.command == 'status':
                 response = self.handle_status()
             else:
