@@ -6,7 +6,7 @@ def setup_logging():
     Setup logging configuration.
     """
     log_format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(level=logging.INFO, format=log_format)
+    logging.basicConfig(level=logging.DEBUG, format=log_format)
 
     # Write logs to a file
     # log_directory = "log/"
