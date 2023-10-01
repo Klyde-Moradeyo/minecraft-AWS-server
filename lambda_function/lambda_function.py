@@ -24,17 +24,17 @@ class LambdaHandler:
         self.ACTION = event_body["action"]
 
         # Get the environment variables specific to the action
-        envs = EnvironmentVariables(self.ACTION).get_vars()  # Get Environment Variables
+        self.envs = EnvironmentVariables(self.ACTION).get_vars()  # Get Environment Variables
 
         # Initialize Fargate class
-        self.tec_fargate = Fargate(envs['CLUSTER'], envs)  # TEC means Terraform Execution Container
+        self.tec_fargate = Fargate(self.envs['CLUSTER'], self.envs)  # TEC means Terraform Execution Container
         self.task_tags = self.tec_fargate.get_task_tags()
 
         # Initialize SSM class
         self.ssm = SSMUtil()
 
         # Perform checks
-        self.mc_server_status = MinecraftServer(envs["MC_SERVER_IP"], envs["MC_PORT"]).check()  # Check If minecraft server is online/offline
+        self.mc_server_status = MinecraftServer(self.envs["MC_SERVER_IP"], self.envs["MC_PORT"]).check()  # Check If minecraft server is online/offline
         self.is_task_running = self.tec_fargate.is_task_with_tags_exists(self.task_tags)  # Check if there's a Fargate task running
     
     def execute_command(self):
@@ -155,28 +155,4 @@ class LambdaHandler:
 def lambda_handler(event, context):
     handler = LambdaHandler(event)
     return handler.execute_command()
-
-def test_api(endpoint_url, api_key=None):
-    headers = {
-        'Content-Type': 'application/json'
-    }
-
-    # If you're using an API Key for authentication, add it to the headers
-    if api_key:
-        headers['x-api-key'] = api_key
-
-    # Sample payload; modify as needed for your API's requirements
-    payload = {
-        "command": "status"
-    }
-
-    response = requests.post(endpoint_url, headers=headers, json=payload)
-
-    # Check the status code
-    if response.status_code == 200:
-        print("API call succeeded!")
-        print("Response:", json.dumps(response.json(), indent=4))
-    else:
-        print("API call failed with status code:", response.status_code)
-        print("Response:", response.text)
 
