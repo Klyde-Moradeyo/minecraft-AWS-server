@@ -26,7 +26,7 @@ RUN chmod 644 "lambda_function.py" "package"
 RUN chmod 755 "lambda_function.py" "package"
 
 # Copy lambda_function.py to the package directory
-RUN cp lambda_function.py package
+RUN cp -r lambda_function.py utils package/
 
 # Create the lambda zip file
 RUN (cd package && zip -r ../lambda_function_payload.zip .)

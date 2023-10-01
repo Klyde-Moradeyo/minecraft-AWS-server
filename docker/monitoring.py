@@ -138,7 +138,7 @@ class MONITOR:
                 log_data["request_error"] = str(req_err)
 
             if i == MAX_RETRIES - 1:
-                log_data["max_ret ries_exceeded"] = True
+                log_data["max_retries_exceeded"] = True
                 log_data["retries"] = i + 1
                 self.log.log(log_data)
 
