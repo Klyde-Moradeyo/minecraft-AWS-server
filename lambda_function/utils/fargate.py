@@ -8,9 +8,9 @@ class Fargate:
         self.cluster = cluster
         self.client = boto3.client('ecs')
         self.env_vars = env_vars
-        self.cluster = self.env_var["CLUSTER"]
-        self.task_definition = self.env_var["TASK_DEFINITION_NAME"]
-        self.container_name = self.env_var["CONTAINER_NAME"]
+        self.cluster = self.env_vars["CLUSTER"]
+        self.task_definition = self.env_vars["TASK_DEFINITION_NAME"]
+        self.container_name = self.env_vars["CONTAINER_NAME"]
         self.environment_variables = self.set_env_vars()
         self.network_configuration = self.set_network_config()
         self.tags = self.set_task_tags()      
