@@ -39,16 +39,16 @@ class LambdaHandler:
     
     def execute_command(self):
         try:
-            if self.command == "mc_world_archive":
+            if self.ACTION == "mc_world_archive":
                 response = self.handle_mc_world_archive()
-            elif self.command == 'start':
+            elif self.ACTION == 'start':
                 response = self.handle_start()
-            elif self.command == 'stop':
+            elif self.ACTION == 'stop':
                 response = self.handle_stop()
-            elif self.command == 'status':
+            elif self.ACTION == 'status':
                 response = self.handle_status()
             else:
-                raise ValueError(f"Invalid command: {self.command}")
+                raise ValueError(f"Invalid command: {self.ACTION}")
             
             return {
                 "statusCode": 200,
@@ -155,3 +155,28 @@ class LambdaHandler:
 def lambda_handler(event, context):
     handler = LambdaHandler(event)
     return handler.execute_command()
+
+def test_api(endpoint_url, api_key=None):
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    # If you're using an API Key for authentication, add it to the headers
+    if api_key:
+        headers['x-api-key'] = api_key
+
+    # Sample payload; modify as needed for your API's requirements
+    payload = {
+        "command": "status"
+    }
+
+    response = requests.post(endpoint_url, headers=headers, json=payload)
+
+    # Check the status code
+    if response.status_code == 200:
+        print("API call succeeded!")
+        print("Response:", json.dumps(response.json(), indent=4))
+    else:
+        print("API call failed with status code:", response.status_code)
+        print("Response:", response.text)
+
