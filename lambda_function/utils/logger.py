@@ -7,22 +7,16 @@ def setup_logging():
     """
     # Get the root logger
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)  # or whichever level you desire
+    log_level = logger.setLevel(logging.INFO)  # or whichever level you desire
 
     # Ensure there is no duplicated handlers
     if not logger.handlers:
-        # Create console handler and set level to info
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.INFO)
-
-        # Create formatter
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-        # Add formatter to ch
-        ch.setFormatter(formatter)
-
-        # Add ch to logger
-        logger.addHandler(ch)
+        # configure the handler and formatter at the root logger level
+        ch = logging.StreamHandler() # Create console handler and
+        ch.setLevel(log_level) # set level to info
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s') # Create formatter
+        ch.setFormatter(formatter) # Add formatter to ch
+        logger.addHandler(ch) # Add ch to logger
 
     # Write logs to a file
     # log_directory = "log/"

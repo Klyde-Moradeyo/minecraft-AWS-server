@@ -1,5 +1,6 @@
 import json
 from .logger import setup_logging
+from .helper import format_dictionary
 from .authorizer import Authorization
 
 class APIEventParser:
@@ -12,7 +13,7 @@ class APIEventParser:
         # For debuging later
         # self.logger.info(f"query params: {self.parse_query_parameters(event)}")
         # self.logger.info(f"path params: \n{self.parse_path_parameters(event)}")
-        self.logger.info(f"body: \n{self.body}")
+        self.logger.info(f"body: \n{format_dictionary(self.body)}")
 
     def parse(self):
         action = self.extract_key("command")
