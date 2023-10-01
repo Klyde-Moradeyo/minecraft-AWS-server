@@ -41,9 +41,9 @@ class Fargate:
 
     def is_task_with_tags_exists(self, desired_tags):
         try:
-            tasks_response = self.ecs_client.list_tasks(cluster=self.cluster)
+            tasks_response = self.client.list_tasks(cluster=self.cluster)
             for task_arn in tasks_response.get('taskArns'):
-                current_task_details = self.ecs_client.describe_tasks(
+                current_task_details = self.client.describe_tasks(
                     cluster=self.cluster,
                     tasks=[task_arn],
                     include=['TAGS'],
@@ -60,9 +60,9 @@ class Fargate:
 
     def check_task_status(self, tags):
         try:
-            list_tasks_response = self.ecs_client.list_tasks(cluster=self.cluster)
+            list_tasks_response = self.client.list_tasks(cluster=self.cluster)
             for task_arn in list_tasks_response.get("taskArns", []):
-                describe_task_response = self.ecs_client.describe_tasks(cluster=self.cluster, tasks=[task_arn], include=['TAGS'])
+                describe_task_response = self.client.describe_tasks(cluster=self.cluster, tasks=[task_arn], include=['TAGS'])
                 task = describe_task_response["tasks"][0]
                 if self._tags_match(task.get('tags', []), tags):
                     self.logger.debug(f"Task Status: {task['lastStatus']}")
