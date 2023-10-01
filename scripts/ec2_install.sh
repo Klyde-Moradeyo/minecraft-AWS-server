@@ -136,7 +136,7 @@ function post_install {
 
     # Check if the CloudWatch agent is installed
     if command -v /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent > /dev/null 2>&1; then
-        isCloudwatchAgentInstalled="True"
+        isCloudwatchAgentInstalled="Installed"
         agentOutput=$(sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a status)
         if [[ $agentOutput == *"running"* ]]; then
             isCloudwatchAgentRunning="Running"
@@ -144,7 +144,7 @@ function post_install {
             isCloudwatchAgentRunning="Not Running"
         fi
     else
-        isCloudwatchAgentInstalled="False"
+        isCloudwatchAgentInstalled="Not Installed"
         isCloudwatchAgentRunning="Not Running"
     fi
     echo "Cloudwatch Agent: $isCloudwatchAgentInstalled | $isCloudwatchAgentRunning"
