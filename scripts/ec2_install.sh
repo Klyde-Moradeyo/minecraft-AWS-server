@@ -159,7 +159,7 @@ function run {
       "install_docker" \
       "install_aws_cli" \
       "install_git" \
-      "install_cloudwatch_agent"
+      # "install_cloudwatch_agent"
 
   post_install
 }
