@@ -1,3 +1,6 @@
+from .logger import setup_logging
+import os
+
 class BotConfig:
     TOKEN = os.environ["DISCORD_TOKEN"]
     API_URL = os.getenv('API_URL')
@@ -7,7 +10,7 @@ class BotConfig:
     FILE_PATH = None
     BOT_MESSAGE_ID = {}  # Initialize as a dictionary
     SERVER_IP = os.environ["SERVER_IP"]
-    SERVER_PORT = "25565"
+    SERVER_PORT = os.environ["SERVER_PORT"]
     SERVER_VERSION = "1.20.1"
 
     # maintenance config

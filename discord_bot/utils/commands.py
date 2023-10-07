@@ -1,15 +1,18 @@
 from .api_helper import send_to_api
-from .bot_reply import Bot_Response
+from .bot_msg import Bot_Response
 from .bot_config import BotConfig
+from .logger import setup_logging
 
-class Command:
+class ExecuteCommand:
     VALID_COMMANDS = ["start", "stop", "status", "features", "mc_world_archive"]
 
     def __init__(self, context, command):
+        self.logger = setup_logging()
         self.context = context
         self.command = command
         self.bot_message = None
         self.datetime = datetime.now()
+        self.bot_response = Bot_Response()
 
     async def execute(self):
         if self.command not in self.VALID_COMMANDS:
@@ -24,13 +27,7 @@ class Command:
             BOT_REPLY = f"User {self.context.author.name} used `{self.command}` command..."
             await self.bot_message.edit(content=BOT_REPLY)
 
-            # Maintenance Mode - Only allow Devs to use Discord bot while maintenance mode is ON.
-            if BotConfig.ENABLE_MAINTENANCE and str(self.context.author.id) not in BotConfig.MAINTENANCE_BYPASS_USERS:
-                BOT_REPLY = bot_response.get_maintenance_msg()
-                await self.bot_message.edit(content=BOT_REPLY)
-                self.datetime = datetime.now() 
-                latest_guild_commands[self.context.guild.id] = self
-                return
+
             
             # 'mc_world_archive' command is for Developers only to use
             if self.command == "mc_world_archive" and str(self.context.author.id) not in BotConfig.MAINTENANCE_BYPASS_USERS:
@@ -50,18 +47,14 @@ class Command:
                     BOT_REPLY = bot_response.api_err_msg()
                 else:
                     MC_SERVER_STATUS = response.json().get("STATUS", bot_response.api_err_msg())
-                    PREVIOUS_COMMAND = response.json().get("PREVIOUS_COMMAND", None)
+                    COMMAND = response.json().get("COMMAND")
 
-                    # If !Status else if start or stop
-                    if PREVIOUS_COMMAND is not None:
-                        BOT_REPLY = bot_response.msg(PREVIOUS_COMMAND, MC_SERVER_STATUS)
-                    else:
-                        BOT_REPLY = bot_response.msg(self.command, MC_SERVER_STATUS)
+                    BOT_REPLY = bot_response.msg(COMMAND, MC_SERVER_STATUS)
             else:
                 BOT_REPLY = BotConfig.HELP_MESSAGES["features"]
 
             # Log Bot Reply
-            logging.info(f"BOT_REPLY: {BOT_REPLY}")
+            self.logger.info(f"BOT_REPLY: {BOT_REPLY}")
 
             # Inform User of their commands status
             await self.bot_message.edit(content=BOT_REPLY)
@@ -71,7 +64,7 @@ class Command:
 
             latest_guild_commands[self.context.guild.id] = self
         except Exception as e:
-            logging.exception(str(e))
+            self.logger.exception(str(e))
             await self.on_error(str(e))
 
     async def on_error(self, error_message):
@@ -79,3 +72,14 @@ class Command:
             await self.bot_message.edit(content=f"Error: \n{error_message}")
         else:
             await self.context.send(f"Error: \n{error_message}")
+
+    def _check_maintenance(self):
+        """
+        Maintenance Mode - Only allow Admins to use Discord bot while maintenance mode is ON.
+        """
+        if BotConfig.ENABLE_MAINTENANCE and str(self.context.author.id) not in BotConfig.MAINTENANCE_BYPASS_USERS:
+            BOT_REPLY = bot_response.get_maintenance_msg()
+            await self.bot_message.edit(content=BOT_REPLY)
+            self.datetime = datetime.now() 
+            latest_guild_commands[self.context.guild.id] = self
+            return        

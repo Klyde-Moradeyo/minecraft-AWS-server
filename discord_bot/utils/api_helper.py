@@ -1,15 +1,18 @@
 import os
 import logging
 import requests
+from .logger import setup_logging
 
-class APIHelper:
+class APIUtil:
     def __init__(self):
         self.url = os.getenv('API_URL')
         if self.url is None:
             logging.error("API_URL is not set in the environment variables")
 
     def send_to_api(self, data):
-        """Sends data to the API and returns the response."""
+        """
+        Sends data to the API and returns the response
+        """
         command_url = f"{self.url}/command"
         headers = {'Content-Type': 'application/json'}
 
