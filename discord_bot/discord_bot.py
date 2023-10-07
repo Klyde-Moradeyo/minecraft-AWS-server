@@ -278,10 +278,8 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
-    # Only process commands in the Mango-Minecraft channel
+    # Only process commands in the specified discord channel
     if message.channel.name == BotConfig.CHANNEL_NAME:
-        if message.content.startswith("Hello"):
-            await message.channel.send("Hello!")
         await message.delete()  # delete the user's message
         await bot.process_commands(message)
 

@@ -1,4 +1,5 @@
 mcstatus==10.0.3
 discord==2.2.3
 requests==2.31.0
-cryptography
+cryptography==41.0.4
+PyYAML==6.0.1
