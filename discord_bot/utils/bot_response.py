@@ -40,13 +40,13 @@ class BotResponse():
         return bot_reply
 
     def api_err_msg(self):   
-        return random.choice(self.data["API_ERROR_MSGS"])
+        return random.choice(self.data["ERRORS_AND_MAINTENANCE"]["API_ERROR_MSGS"])
     
     def get_cmd_scroll_msg(self):
         return random.choice(self.data["COMMAND_SCROLL"])
     
     def get_maintenance_msg(self):
-        return random.choice(self.data["MAINTENANCE_MESSAGES"])
+        return random.choice(self.data["ERRORS_AND_MAINTENANCE"]["MAINTENANCE_MESSAGES"])
     
     def get_admin_only_reply_msg(self):
-        return random.choice(self.data["ADMIN_ONLY_REPLIES"])
+        return random.choice(self.data["ACCESS_RESTRICTIONS"]["ADMIN_ONLY_REPLIES"])

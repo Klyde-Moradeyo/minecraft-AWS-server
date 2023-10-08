@@ -1,85 +1,90 @@
-from .api_helper import send_to_api
-from .bot_response import Bot_Response
-from .bot_config import BotConfig
+from config import *
 from .logger import setup_logging
+from .message_manager import MessageManager
+from .permision_manager import PermissionManager
+from .api_helper import APIUtil
+from .bot_response import BotResponse
+from .env_manager import EnvironmentVariables
 
-class ExecuteCommand:
-    VALID_COMMANDS = ["start", "stop", "status", "features", "mc_world_archive"]
-
-    def __init__(self, context, command):
+class ProcessAPICommand:
+    def __init__(self, context, command, envs, command_scroll_msg: MessageManager, permision_manager: PermissionManager, bot_response: BotResponse):
         self.logger = setup_logging()
         self.context = context
         self.command = command
-        self.bot_message = None
-        self.datetime = datetime.now()
-        self.bot_response = Bot_Response()
+        self.command_scroll_msg = command_scroll_msg
+        # self.datetime = datetime.now()
+        self.bot_response = bot_response
+        self.permision_manager = permision_manager
+        self.envs = envs
 
     async def execute(self):
-        if self.command not in self.VALID_COMMANDS:
-            await self.on_error(f"Invalid command: {self.command}. Please use a valid command.")
-            return
+        self.logger.info(f"Proccessing Command: '{self.command}'")
         try:
-            # Fetch the channel and bot message ID specific to the guild
-            channel = await BotConfig.get_command_scroll_channel(self.context.guild.id)
-            self.bot_message = await BotConfig.get_command_scroll_msg(self.context.guild.id, channel)
+            message = f"User {self.context.author.name} used `{self.command}` command..."
+            await self.command_scroll_msg.edit_msg(self.context.channel, message)
 
-            # Inform User their Command is being processed
-            BOT_REPLY = f"User {self.context.author.name} used `{self.command}` command..."
-            await self.bot_message.edit(content=BOT_REPLY)
+            await self._check_maintenance()
 
+            data = self._create_data()
 
-            
-            # 'mc_world_archive' command is for Developers only to use
-            if self.command == "mc_world_archive" and str(self.context.author.id) not in BotConfig.MAINTENANCE_BYPASS_USERS:
-                BOT_REPLY = bot_response.get_admin_only_reply_msg()
-                await self.bot_message.edit(content=BOT_REPLY)
-                self.datetime = datetime.now() 
-                latest_guild_commands[self.context.guild.id] = self
-                return
+            api = APIUtil(self.envs)
+            reason = f"Discord User used '{self.command}'"
+            response = api.send_to_api(data, reason)
 
-            if self.command != "features":
-                # Send Command to API
-                data = { "command": self.command }
-                response = send_to_api(data)
-    
-                # Response will be none if it was unsuccessful
-                if response is None:
-                    BOT_REPLY = bot_response.api_err_msg()
-                else:
-                    MC_SERVER_STATUS = response.json().get("STATUS", bot_response.api_err_msg())
-                    COMMAND = response.json().get("COMMAND")
-
-                    BOT_REPLY = bot_response.msg(COMMAND, MC_SERVER_STATUS)
+            # Response will be none if it was unsuccessful
+            self.logger.info(f"API Response: {response}")
+            if response is None:
+                message = self.bot_response.api_err_msg()
             else:
-                BOT_REPLY = BotConfig.HELP_MESSAGES["features"]
+                mc_server_status = response.json().get("STATUS")
+                command = response.json().get("COMMAND")
+                message = self.bot_response.cmd_reply(command, mc_server_status) 
 
-            # Log Bot Reply
-            self.logger.info(f"BOT_REPLY: {BOT_REPLY}")
-
-            # Inform User of their commands status
-            await self.bot_message.edit(content=BOT_REPLY)
-
-            # Update the datetime after executing the command
-            self.datetime = datetime.now() 
-
-            latest_guild_commands[self.context.guild.id] = self
+            # Send new message
+            await self.command_scroll_msg.edit_msg(self.context.channel, message)
+            self.logger.info(message)
         except Exception as e:
             self.logger.exception(str(e))
             await self.on_error(str(e))
-
+ 
     async def on_error(self, error_message):
-        if self.bot_message:
-            await self.bot_message.edit(content=f"Error: \n{error_message}")
-        else:
-            await self.context.send(f"Error: \n{error_message}")
+        await self.command_scroll_msg.edit_msg(self.context.channel, error_message)
 
-    def _check_maintenance(self):
+    def _create_data(self):
+        data = {
+            "action": self.command,
+            "user": {
+                "id": str(self.context.author.id),
+                "username": self.context.author.name,
+                # "role": "normal"
+            },
+            "discord_server": {
+                "id": str(self.context.guild.id),
+                "name": self.context.guild.name
+            },
+            # "mc_server_settings": {
+            #     "id": "unknown-id",
+            #     "name": "UnknownServer",
+            #     "version": "latest",
+            #     "mods": []
+            # },
+        }
+
+        self.logger.info(f"API Payload: {data}")
+
+        return data
+
+    async def _check_maintenance(self):
         """
         Maintenance Mode - Only allow Admins to use Discord bot while maintenance mode is ON.
         """
-        if BotConfig.ENABLE_MAINTENANCE and str(self.context.author.id) not in BotConfig.MAINTENANCE_BYPASS_USERS:
-            BOT_REPLY = bot_response.get_maintenance_msg()
-            await self.bot_message.edit(content=BOT_REPLY)
-            self.datetime = datetime.now() 
-            latest_guild_commands[self.context.guild.id] = self
-            return        
+        self.logger.info(f"IS_MAINTENANCE: {IS_MAINTENANCE}")
+        if IS_MAINTENANCE and not self.permision_manager.is_admin(self.context.author.id):
+            message = self.bot_response.get_maintenance_msg()
+            await self.command_scroll_msg.edit_msg(self.context.channel, message)
+            # self.datetime = datetime.now() 
+            # latest_guild_commands[self.context.guild.id] = self
+            return
+        
+    # def _feature_command(self):
+    #     BOT_REPLY = BotConfig.HELP_MESSAGES["features"]

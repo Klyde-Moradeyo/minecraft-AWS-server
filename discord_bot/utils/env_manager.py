@@ -4,12 +4,13 @@ from typing import Dict, Any, List
 from .logger import setup_logging
 
 class EnvironmentVariables:
-    def __init__(self) -> None:
+    def __init__(self, print=False) -> None:
         self.logger = setup_logging() # Setting up logging
         self.REQUIRED_VARS = self.get_required_vars()
         self.configured = self.check_configuration()
         self.env_vars: Dict[str, Any] = {}
         self.SENSITIVE_VARS = ['DISCORD_TOKEN']
+        self.print = print
 
     def get_required_vars(self):
         required_configs = [
@@ -46,7 +47,8 @@ class EnvironmentVariables:
         """
         self._fetch_required_variables()
         self._verify_missing_variables()
-        self._log_env_variables()
+        if self.print:
+            self._log_env_variables()
 
         return self.env_vars
         

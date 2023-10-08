@@ -11,6 +11,8 @@ from utils.file_helper import FileHelper, YamlHelper
 from utils.health_checks import HealthCheck
 from utils.env_manager import EnvironmentVariables
 from utils.bot_response import BotResponse
+from utils.commands import ProcessAPICommand
+from utils.permision_manager import PermissionManager
 
 class MinecraftBot(commands.Cog):
     def __init__(self, bot):
@@ -19,6 +21,7 @@ class MinecraftBot(commands.Cog):
         self.envs = EnvironmentVariables().get_vars()
         self.channel_manager = ChannelManager(DISCORD_CHANNEL_CATEGORY_NAME, DISCORD_CHANNEL_NAME)
         self.file_helper = FileHelper()
+        self.permission_manager = PermissionManager()
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -48,7 +51,6 @@ class MinecraftBot(commands.Cog):
             self.logger.info("Performing Health Checks...")
             health_check = HealthCheck()
             bot_ver, lambda_ver, fargate_ver, infra_ver = health_check.get_version()
-            time.sleep(2)
 
             # Update bot_messages.yml data
             variables = {
@@ -67,8 +69,6 @@ class MinecraftBot(commands.Cog):
             self.logger.info("Sending Version Message...")  
             message = self.info_msg.construct_message_from_dict(bot_message_yml.get_data()["VERSION"])
             await self.info_msg.edit_msg(channel, message)
-            time.sleep(5) 
-
 
             # Update Info Message to show User Guide
             self.logger.info("Sending User Guide Message...")  
@@ -76,11 +76,11 @@ class MinecraftBot(commands.Cog):
             await self.info_msg.edit_msg(channel, message)
 
         # Init Bot Responses
-        bot_response = BotResponse(bot_message_yml.get_data())
+        self.bot_response = BotResponse(bot_message_yml.get_data())
 
         self.logger.info("Sending User Command Scroll Message...")  
         for guild in bot.guilds:
-            message = bot_response.get_cmd_scroll_msg()
+            message = self.bot_response.get_cmd_scroll_msg()
             await self.command_scroll_msg.send_new_msg(channel, message)
 
         # Log connected servers
@@ -94,34 +94,48 @@ class MinecraftBot(commands.Cog):
 
         # Only process commands in the specified channel
         if message.channel.name == DISCORD_CHANNEL_NAME:
+            await message.delete()  # delete the user's message
             if message.content.upper().startswith("PING"):
-                await message.delete()  # delete the user's message
                 await self.command_scroll_msg.edit_msg(message.channel, "PONG")
             await bot.process_commands(message)
 
-    # @commands.command()
-    # async def start(self, context, game_mode: str = 'VANILLA'):
-    #     """
-    #     Starts the Minecraft server.
-    #     """
-    #     command = ExecuteCommand(context, "start")
-    #     await command.execute()
+    @commands.Cog.listener()
+    async def on_command_error(self, context, error):
+        if isinstance(error, commands.CommandNotFound):
+            message = f"Invalid command: `{context.message.content}`. Please use a valid command."
+            await self.command_scroll_msg.edit_msg(context.channel, message)
+
+    @commands.command()
+    async def start(self, context):
+        """
+        Starts the Minecraft server.
+        """
+        command = ProcessAPICommand(context, "start", self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
+        await command.execute()
         
-    # @commands.command(name='status')
-    # async def get_server_status(self, context):
-    #     """
-    #     Checks the status of the Minecraft server.
-    #     """
-    #     command = ExecuteCommand(context, "status")
-    #     await command.execute()
+    @commands.command(name='status')
+    async def get_server_status(self, context):
+        """
+        Checks the status of the Minecraft server.
+        """
+        command = ProcessAPICommand(context, "status", self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
+        await command.execute()
         
-    # @commands.command()
-    # async def stop(self, context):
-    #     """
-    #     Stops the Minecraft server.
-    #     """
-    #     command = ExecuteCommand(context, "stop")
-    #     await command.execute()
+    @commands.command()
+    async def stop(self, context):
+        """
+        Stops the Minecraft server.
+        """
+        command = ProcessAPICommand(context, "stop", self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
+        await command.execute()
+
+    @commands.command()
+    async def mc_world_archive(self, context):
+        """
+        Compress the Minecraft World Repository - Only Developers can use this command
+        """
+        command = ProcessAPICommand(context, "mc_world_archive", self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
+        await command.execute() 
 
     # @commands.command()
     # async def features(self, context):
@@ -131,16 +145,8 @@ class MinecraftBot(commands.Cog):
     #     command = ExecuteCommand(context, "features")
     #     await command.execute()
 
-    # @commands.command()
-    # async def mc_world_archive(self, context):
-    #     """
-    #     Compress the Minecraft World Repository - Only Developers can use this command
-    #     """
-    #     command = ExecuteCommand(context, "mc_world_archive")
-    #     await command.execute()
-
 if __name__ == '__main__':
-    envs = EnvironmentVariables().get_vars()  # Get Environment Variables
+    envs = EnvironmentVariables(True).get_vars()  # Get Environment Variables
     intents = discord.Intents.default()
     intents.message_content = True
     bot = commands.Bot(command_prefix='!', intents=intents)
@@ -149,6 +155,5 @@ if __name__ == '__main__':
         await bot.add_cog(MinecraftBot(bot))
         await bot.start(envs["DISCORD_TOKEN"])
 
-    import asyncio
     asyncio.run(setup_bot())
 
