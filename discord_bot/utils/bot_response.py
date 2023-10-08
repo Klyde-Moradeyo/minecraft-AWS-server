@@ -1,17 +1,10 @@
 import random
-import discord
 
-class BotMsg():
-    def __init__(self, channel_id):
-        self.msg_id = {}
-        
-        help_desk_users = "REPLACE"
+class BotResponse():
+    def __init__(self, data):
+        self.data = data
+        self.help_desk_users = "REPLACE"
 
-    async def send_new_msg(self, msg, channel_id):
-        msg = await channel.send(help_message_content)
-        return msg.id 
-    
-        
     def cmd_reply(self, command, state):
         if state == "MC_SERVER_UP":
             bot_reply = random.choice(self.MC_SERVER_UP)
@@ -47,13 +40,13 @@ class BotMsg():
         return bot_reply
 
     def api_err_msg(self):   
-        return random.choice(self.API_ERROR_MSGS)
+        return random.choice(self.data["API_ERROR_MSGS"])
     
     def get_cmd_scroll_msg(self):
-        return random.choice(self.COMMAND_SCROLL)
+        return random.choice(self.data["COMMAND_SCROLL"])
     
     def get_maintenance_msg(self):
-        return random.choice(self.MAINTENANCE_MESSAGES)
+        return random.choice(self.data["MAINTENANCE_MESSAGES"])
     
     def get_admin_only_reply_msg(self):
-        return random.choice(self.ADMIN_ONLY_REPLIES)
+        return random.choice(self.data["ADMIN_ONLY_REPLIES"])

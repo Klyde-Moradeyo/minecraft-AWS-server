@@ -16,8 +16,7 @@ class HealthCheck:
     def __init__(self):
         self.url = None
         
-
-    def get_version():
+    def get_version(self):
         """
         Placeholder for version checker
         """
@@ -26,3 +25,11 @@ class HealthCheck:
         fargate_verson = 4.59
         infra_handler_version = 3.11
         return discord_bot_version, lambda_version, fargate_verson, infra_handler_version
+    
+    def get_health(self):
+        import random
+        """
+        Placeholder for health check
+        """
+        status = ["`HEALTHY💚`", "`MAINTENANCE🔧`", "`Issues⚠️ - [REASON] `"]
+        return random.choice(status)

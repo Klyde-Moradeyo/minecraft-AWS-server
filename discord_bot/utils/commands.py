@@ -1,5 +1,5 @@
 from .api_helper import send_to_api
-from .bot_msg import Bot_Response
+from .bot_response import Bot_Response
 from .bot_config import BotConfig
 from .logger import setup_logging
 

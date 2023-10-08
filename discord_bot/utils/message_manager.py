@@ -72,25 +72,28 @@ class MessageManager:
         # Helper function to process each value based on its type
         def process_value(value):
             if isinstance(value, list):
-                return "\n".join(value)
+                return "\n".join(map(process_value, value))
             elif isinstance(value, dict):
-                return "\n".join([f"{k}: {v}" for k, v in value.items()])
+                return "\n".join([f"{k}: {process_value(v)}" for k, v in value.items()])
             else:
                 return value
 
-        # Append HEADER if exists
-        if 'HEADER' in data:
-            message_content += process_value(data['HEADER']) + "\n"
+        # If the data is a list, process each item in the list
+        if isinstance(data, list):
+            message_content += "\n".join(map(process_value, data))
+        else:
+            # Append HEADER if exists
+            if 'HEADER' in data:
+                message_content += process_value(data['HEADER']) + "\n"
 
-        # Dynamically process other keys excluding HEADER and FOOTER
-        for key, value in data.items():
-            if key not in ['HEADER', 'FOOTER']:
-                message_content += process_value(value) + "\n"
+            # Dynamically process other keys excluding HEADER and FOOTER
+            for key, value in data.items():
+                if key not in ['HEADER', 'FOOTER']:
+                    message_content += process_value(value) + "\n"
 
-        # Append FOOTER if exists
-        if 'FOOTER' in data:
-            message_content += process_value(data['FOOTER'])
+            # Append FOOTER if exists
+            if 'FOOTER' in data:
+                message_content += process_value(data['FOOTER'])
 
-        return message_content
-
+        return message_content.strip()  # Remove any extra newline at the end
 
