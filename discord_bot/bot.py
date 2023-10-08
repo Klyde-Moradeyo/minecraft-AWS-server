@@ -25,8 +25,8 @@ class MinecraftBot(commands.Cog):
         self.logger.info(f"'{bot.user}' has connected to Discord!")  
 
         # Init MessageManagers
-        info_msg = MessageManager()
-        command_scroll_msg = MessageManager()
+        self.info_msg = MessageManager()
+        self.command_scroll_msg = MessageManager()
 
         # Loop through discord servers and 
         for guild in bot.guilds:
@@ -38,8 +38,8 @@ class MinecraftBot(commands.Cog):
             # Print Initilizing message
             self.logger.info("Sending Initilization Message...")  
             init_yml = YamlHelper(yaml_str=INIT_MSG)
-            message = info_msg.construct_message_from_dict(init_yml.get_data())
-            await info_msg.send_new_msg(channel, message)
+            message = self.info_msg.construct_message_from_dict(init_yml.get_data())
+            await self.info_msg.send_new_msg(channel, message)
              
             # Load yaml file
             bot_message_yml = YamlHelper(BOT_MSG_PATH)
@@ -65,15 +65,15 @@ class MinecraftBot(commands.Cog):
 
             # Send Version Message
             self.logger.info("Sending Version Message...")  
-            message = info_msg.construct_message_from_dict(bot_message_yml.get_data()["VERSION"])
-            await info_msg.edit_msg(channel, message)
+            message = self.info_msg.construct_message_from_dict(bot_message_yml.get_data()["VERSION"])
+            await self.info_msg.edit_msg(channel, message)
             time.sleep(5) 
 
 
             # Update Info Message to show User Guide
             self.logger.info("Sending User Guide Message...")  
-            message = info_msg.construct_message_from_dict(bot_message_yml.get_data()["USER_GUIDE"]) 
-            await info_msg.edit_msg(channel, message)
+            message = self.info_msg.construct_message_from_dict(bot_message_yml.get_data()["USER_GUIDE"]) 
+            await self.info_msg.edit_msg(channel, message)
 
         # Init Bot Responses
         bot_response = BotResponse(bot_message_yml.get_data())
@@ -81,32 +81,29 @@ class MinecraftBot(commands.Cog):
         self.logger.info("Sending User Command Scroll Message...")  
         for guild in bot.guilds:
             message = bot_response.get_cmd_scroll_msg()
-            await command_scroll_msg.send_new_msg(channel, message)
+            await self.command_scroll_msg.send_new_msg(channel, message)
 
         # Log connected servers
         guild_names = [guild.name for guild in bot.guilds]
         self.logger.info(f"Connected to Servers: {guild_names}")
 
-    # @commands.Cog.listener()
-    # async def on_message(self, message):
-    #     if message.author == bot.user:
-    #         return
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.author == bot.user:
+            return
 
-    #     # Only process commands in the Mango-Minecraft channel
-    #     if message.channel.name == BotConfig.CHANNEL_NAME:
-    #         if message.content.startswith("Hello"):
-    #             await message.channel.send("Hello!")
-    #         await message.delete()  # delete the user's message
-    #         await bot.process_commands(message)
+        # Only process commands in the specified channel
+        if message.channel.name == DISCORD_CHANNEL_NAME:
+            if message.content.upper().startswith("PING"):
+                await message.delete()  # delete the user's message
+                await self.command_scroll_msg.edit_msg(message.channel, "PONG")
+            await bot.process_commands(message)
 
     # @commands.command()
     # async def start(self, context, game_mode: str = 'VANILLA'):
     #     """
     #     Starts the Minecraft server.
     #     """
-    #     # if game_mode.upper() not in ['VANILLA']:
-    #     #     await context.send(f"Invalid game mode: {game_mode}. Please use a valid game mode.")
-    #     #     return
     #     command = ExecuteCommand(context, "start")
     #     await command.execute()
         
