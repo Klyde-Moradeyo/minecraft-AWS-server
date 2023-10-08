@@ -13,10 +13,11 @@ class ChannelManager:
             category = await guild.create_category(self.category_name)
 
         # Fetch the channel, create it if it doesn't exist
-        channel = discord.utils.get(category.text_channels, name=self.category_name)
+        channel = discord.utils.get(category.text_channels, name=self.channel_name)
         if channel is None:
-            channel = await category.create_text_channel(self.category_name)
+            channel = await category.create_text_channel(self.channel_name)
 
+        self.add_channel(guild.id, channel.id) # store channel
         return channel
 
     def add_channel(self, guild_id, channel_id):

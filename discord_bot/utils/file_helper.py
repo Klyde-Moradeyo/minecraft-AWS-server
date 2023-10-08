@@ -41,45 +41,52 @@ class FileHelper:
             self.logger.error(f"{file_path} doesn't exist")
         return content
     
-
-
 class YamlHelper:
-    def __init__(self, file_path):
-        self.logger = setup_logging() # Setting up logger
+    def __init__(self, file_path=None, yaml_str=None):
+        self.logger = setup_logging()  # Setting up logger
         self.file_path = file_path
-        self._validate_file()
-        self.data = self._load_yaml_file()
+        self.yaml_str = yaml_str
+        
+        if not self.file_path and not self.yaml_str:
+            raise ValueError("Either 'file_path' or 'yaml_str' must be provided!")
+        
+        if self.file_path:  # Only validate the file if a file path is provided
+            self._validate_file()
+        
+        self.data = self._load_yaml()
 
     def _validate_file(self):
         """
         Validate the file path and file extension.
         """
-        # Ensure the given path is valid
         if not os.path.exists(self.file_path):
             raise FileNotFoundError(f"Error: '{self.file_path}' does not exist!")
         
-        # Ensure the given file is a YAML file
         if not self.file_path.endswith('.yml') and not self.file_path.endswith('.yaml'):
             raise ValueError(f"Error: '{self.file_path}' is not a .yml or .yaml file!")
 
-    def _load_yaml_file(self):
+    def _load_yaml(self):
         """
-        Load the contents of a YAML file into a Python dictionary or list.
+        Load the contents of a YAML from either a file or a string.
         """
-        if not os.path.exists(self.file_path):
-            print(f"Error: File '{self.file_path}' does not exist.")
-            return None
-        
-        try:
-            with open(self.file_path, "r") as file:
-                data = yaml.safe_load(file)
+        if self.file_path:
+            try:
+                with open(self.file_path, "r") as file:
+                    data = yaml.safe_load(file)
+                    return data
+            except yaml.YAMLError as e:
+                print(f"Error parsing YAML file: '{e}'")
+                return None
+            except Exception as e:
+                print(f"Error reading file: '{e}'")
+                return None
+        elif self.yaml_str:
+            try:
+                data = yaml.safe_load(self.yaml_str)
                 return data
-        except yaml.YAMLError as e:
-            print(f"Error parsing YAML file: '{e}'")
-            return None
-        except Exception as e:
-            print(f"Error reading file: '{e}'")
-            return None
+            except yaml.YAMLError as e:
+                print(f"Error parsing YAML string: '{e}'")
+                return None
 
     def reload(self):
         """
@@ -91,7 +98,8 @@ class YamlHelper:
         """
         Recursively replace placeholders in the loaded YAML data with the given variables.
         """
-        return self._resolve_in_value(self.data, variables)
+        self.data = self._resolve_in_value(self.data, variables)
+        return self.data
         
     def _resolve_in_value(self, value, variables):
         """
@@ -107,3 +115,9 @@ class YamlHelper:
             return {key: self._resolve_in_value(val, variables) for key, val in value.items()}
         else:
             return value
+        
+    def get_data(self):
+        """
+        Returns the loaded data from the YAML file.
+        """
+        return self.data

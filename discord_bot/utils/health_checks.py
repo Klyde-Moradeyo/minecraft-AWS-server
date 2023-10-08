@@ -17,7 +17,7 @@ class HealthCheck:
         self.url = None
         
 
-    def get_version(self):
+    def get_version():
         """
         Placeholder for version checker
         """

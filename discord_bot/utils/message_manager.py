@@ -1,14 +1,28 @@
 import discord
 from discord.ext import commands
+from utils.logger import setup_logging
 
 class MessageManager:
     def __init__(self):
+        self.logger = setup_logging() # Setting up logger
         self.message_map = {}
 
     async def send_new_msg(self, channel, content):
         msg = await channel.send(content)
-        self.message_map.add_message(channel.id, msg.id)
+        self.add_message(channel.id, msg.id)
         return msg.id 
+    
+    async def edit_msg(self, channel, content):
+        try:
+            message_id = self.message_map[channel.id]
+            message = await channel.fetch_message(message_id)
+            await message.edit(content=content)
+        except discord.NotFound:
+            self.logger.info(f"Message('{message_id}') not found!")
+        except discord.Forbidden:
+            self.logger.info("Bot lacks permission to edit the message('{message_id}')!")
+        except discord.HTTPException as e:
+            self.logger.info(f"Editing Message('{message_id}') failed due to {e}")
     
     async def delete_msg(self, context, message_id):
         try:
@@ -48,4 +62,35 @@ class MessageManager:
     def list_messages(self):
         """List all message mappings."""
         return self.message_map
+    
+    def construct_message_from_dict(self, data):
+        """
+        Construct a message from the provided YAML data and placeholders.
+        """
+        message_content = ""
+
+        # Helper function to process each value based on its type
+        def process_value(value):
+            if isinstance(value, list):
+                return "\n".join(value)
+            elif isinstance(value, dict):
+                return "\n".join([f"{k}: {v}" for k, v in value.items()])
+            else:
+                return value
+
+        # Append HEADER if exists
+        if 'HEADER' in data:
+            message_content += process_value(data['HEADER']) + "\n"
+
+        # Dynamically process other keys excluding HEADER and FOOTER
+        for key, value in data.items():
+            if key not in ['HEADER', 'FOOTER']:
+                message_content += process_value(value) + "\n"
+
+        # Append FOOTER if exists
+        if 'FOOTER' in data:
+            message_content += process_value(data['FOOTER'])
+
+        return message_content
+
 

@@ -9,6 +9,7 @@ class EnvironmentVariables:
         self.REQUIRED_VARS = self.get_required_vars()
         self.configured = self.check_configuration()
         self.env_vars: Dict[str, Any] = {}
+        self.SENSITIVE_VARS = ['DISCORD_TOKEN']
 
     def get_required_vars(self):
         required_configs = [
@@ -69,7 +70,10 @@ class EnvironmentVariables:
         """
         self.logger.info(f"Configured Environment Variables")
         for key, value in self.env_vars.items():
-            self.logger.info(f"{key}: {value}")
+            if key in self.SENSITIVE_VARS:
+                self.logger.info(f"{key}: {'*' * 8}")  # Logs with masked value
+            else:
+                self.logger.info(f"{key}: {value}")
 
 class MissingConfigurationException(Exception):
     """
