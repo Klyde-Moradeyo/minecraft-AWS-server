@@ -1,6 +1,10 @@
 VERSION:
   HEADER: "------------------------------------------------------------------------------------------------------------"
-  MESSAGE: "             {DISCORD_BOT_VER}     |     {LAMBDA_VER}     |    {FARGATE_VER}   |    {INFRA_VER}             "
+  MESSAGE:
+  - "Discord Bot: `v{DISCORD_BOT_VER}`"
+  - "Lambda Function: `v{LAMBDA_VER}`"
+  - "Fargate: `v{FARGATE_VER}`"
+  - "Infrastructure Handler: `v{INFRA_VER}`"
   FOOTER: "------------------------------------------------------------------------------------------------------------"
 
 USER_GUIDE:
