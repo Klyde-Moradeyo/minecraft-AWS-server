@@ -97,7 +97,6 @@ class MinecraftBot(commands.Cog):
             await message.delete()  # delete the user's message
             if message.content.upper().startswith("PING"):
                 await self.command_scroll_msg.edit_msg(message.channel, "PONG")
-            await bot.process_commands(message)
 
     @commands.Cog.listener()
     async def on_command_error(self, context, error):

@@ -7,33 +7,33 @@ class BotResponse():
 
     def cmd_reply(self, command, state):
         if state == "MC_SERVER_UP":
-            bot_reply = random.choice(self.MC_SERVER_UP)
+            bot_reply = random.choice(self.data["MINECRAFT_SERVER"]["MC_SERVER_UP"])
         elif state == "MC_SERVER_DOWN":
-            bot_reply = random.choice(self.MC_SERVER_DOWN)
+            bot_reply = random.choice(self.data["MINECRAFT_SERVER"]["MC_SERVER_DOWN"])
         elif command == "start":
             if state in ["PROVISIONING", "PENDING"]:
-                bot_reply = random.choice(self.STARTING_REPLIES)
+                bot_reply = random.choice(self.data["FARGATE"]["STARTING_REPLIES"])
             elif state == "ACTIVATING":
-                bot_reply = random.choice(self.ACTIVATING_REPLIES)
+                bot_reply = random.choice(self.data["FARGATE"]["ACTIVATING_REPLIES"])
             elif state == "RUNNING":
-                bot_reply = random.choice(self.RUNNING_REPLIES)
+                bot_reply = random.choice(self.data["FARGATE"]["RUNNING_REPLIES"])
             elif state in ["DEACTIVATING", "STOPPING"]:
-                bot_reply = random.choice(self.STOPPING_REPLIES)
+                bot_reply = random.choice(self.data["FARGATE"]["STOPPING_REPLIES"])
             elif state == "STOPPED":
-                bot_reply = random.choice(self.STOPPED_REPLIES)
+                bot_reply = random.choice(self.data["FARGATE"]["STOPPED_REPLIES"])
             else:
                 bot_reply = "Hmm, we're not sure what's happening. Please check back soon."
         elif command == "stop":
             if state in ["PROVISIONING", "PENDING"]:
-                bot_reply = random.choice(self.STOP_PROVISIONING_REPLIES)
+                bot_reply = random.choice(self.data["FARGATE"]["STOP_PROVISIONING_REPLIES"])
             elif state == "ACTIVATING":
-                bot_reply = random.choice(self.STOP_ACTIVATING_REPLIES)
+                bot_reply = random.choice(self.data["FARGATE"]["STOP_ACTIVATING_REPLIES"])
             elif state == "RUNNING":
-                bot_reply = random.choice(self.STOP_RUNNING_REPLIES)
+                bot_reply = random.choice(self.data["FARGATE"]["STOP_RUNNING_REPLIES"])
             else:
                 bot_reply = "Hmm, we're not sure what's happening. Please check back soon."
         elif command == "mc_world_archive":
-            bot_reply = random.choice(self.WORLD_ARCHIVE_REPO_REPLIES)
+            bot_reply = random.choice(self.data["ARCHIVING_ACTIONS"]["WORLD_ARCHIVE_REPO_REPLIES"])
         else:
             bot_reply = f"Bot Reply not configured for command '{command}'"
 

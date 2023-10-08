@@ -41,7 +41,8 @@ class APIUtil:
         """
         Sends standardized data to the API and returns the response.
         """
-        standardized_data = self._append_metadata(data, reason)
+        data = self._append_metadata(data, reason)
+        self.logger.info(f"API Payload: {data}")
         url = self._construct_url(endpoint)
         headers = self._get_headers()
 
@@ -49,7 +50,7 @@ class APIUtil:
             self.logger.info(f"Sending Data to API at endpoint {endpoint} (Attempt: {attempt + 1})")
 
             try:
-                response = requests.post(url, headers=headers, json=standardized_data, timeout=timeout)
+                response = requests.post(url, headers=headers, json=data, timeout=timeout)
                 response.raise_for_status()
 
                 self.logger.info(f"Received successful response from {endpoint}")

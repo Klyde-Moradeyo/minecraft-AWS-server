@@ -28,7 +28,7 @@ class ProcessAPICommand:
             data = self._create_data()
 
             api = APIUtil(self.envs)
-            reason = f"Discord User used '{self.command}'"
+            reason = f"Discord User used command: '{self.command}'"
             response = api.send_to_api(data, reason)
 
             # Response will be none if it was unsuccessful
@@ -69,8 +69,6 @@ class ProcessAPICommand:
             #     "mods": []
             # },
         }
-
-        self.logger.info(f"API Payload: {data}")
 
         return data
 
