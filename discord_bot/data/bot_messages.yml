@@ -8,12 +8,13 @@ VERSION:
   FOOTER: "------------------------------------------------------------------------------------------------------------"
 
 USER_GUIDE:
-  HEADER: >
-    🥭 **Mango Minecraft Guidebook** 🗺️
-    
-    🏡 IP: `{SERVER_IP}:{SERVER_PORT}`
-    ⚙️ Version: `{SERVER_VERSION}`
-    🛡️ System HP: {INFRASTRUCTURE_STATUS_MSG}
+  HEADER:
+    - "🥭 **Mango Minecraft Guidebook** 🗺️"
+    - ""
+    - "🏡 IP: `{SERVER_IP}:{SERVER_PORT}`"
+    - "⚙️ Version: `{SERVER_VERSION}`"
+    - "🛡️ System HP: {INFRASTRUCTURE_STATUS_MSG}"
+    - ""
   COMMANDS_TITLE: 🛠️ **Commands:**
   START_CMD:
     - "**start**: 🚀 Use this command to start the Minecraft server! Just type `!start` and watch the magic happen."
@@ -24,6 +25,12 @@ USER_GUIDE:
   FEAT_CMD:
     - "**features**: ✨ Type `!features` to learn about the unique capabilities and tools of the Minecraft server."
   FOOTER: "------------------------------------------------------------------------------------------------------------"
+
+COMMAND_SCROLL:
+  - "📜 The command scroll is at your service 🔮"
+  - "📜 Scroll open, awaiting command 🌟"
+  - "📜 Input command to start the magic 🔮"
+  - "🔮 Ready and waiting for your command 📜"
 
 FEATURES:
   ✨ **Features:**
@@ -84,12 +91,6 @@ MINECRAFT_SERVER:
     - "🚫 Our server is currently catching some Z's. Type `!start` to nudge it awake for more crafting."
     - "🚫 The Minecraft server is off on a short adventure. Type `!start` for its return, and be ready for more epic gameplay!"
     - "🚫 The Minecraft server is currently in rest mode. A perfect opportunity to gather your thoughts for your next big project!"
-
-COMMAND_SCROLL:
-  - "📜 The command scroll is at your service 🔮"
-  - "📜 Scroll open, awaiting command 🌟"
-  - "📜 Input command to start the magic 🔮"
-  - "🔮 Ready and waiting for your command 📜"
 
 ERRORS_AND_MAINTENANCE:
   API_ERROR_MSGS:
