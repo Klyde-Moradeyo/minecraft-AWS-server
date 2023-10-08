@@ -20,46 +20,45 @@ class MinecraftBot(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        self.logger.info(f'{bot.user} has connected to Discord!')   
+        self.logger.info(f"'{bot.user}' has connected to Discord!")  
+
+        info_msg = MessageManager()
+        command_scroll_msg = MessageManager()
 
         # Loop through discord servers and 
         for guild in bot.guilds:
-            channel = self.channel_manager.create_channel(guild) # Create channels
-            self.channel_manager.add_channel(guild.id, channel.id) # Store the ID of newly created channel
+            channel = await self.channel_manager.create_channel(guild) # Create channels
 
             # Remove Previous Contents from the channel
             await channel.purge(limit=None)
 
             # Print Initilizing message
-            init_msg = MessageManager()
-            init_msg.send_new_msg(channel, INIT_MSG)
-            self.logger.info(INIT_MSG)   
-
-            # Log Connected Servers to console
-            self.logger.info(f"Connected to Servers: {bot.guilds}")
+            init_yml = YamlHelper(yaml_str=INIT_MSG)
+            message = info_msg.construct_message_from_dict(init_yml.get_data())
+            await info_msg.send_new_msg(channel, message)
+            self.logger.info("Sent Initilization Message...")   
 
             # Load yaml file
-            bot_msg_yml = YamlHelper(BOT_MSG_PATH)
+            bot_message_yml = YamlHelper(BOT_MSG_PATH)
 
             # Perform Health Check - WIP
             self.logger.info("Performing Health Checks...")
+            time.sleep(2)
+
+            # Send Version Message
             bot_ver, lambda_ver, fargate_ver, infra_ver = HealthCheck.get_version()
-            time.sleep(30)
-
-            # Send Version Info
-            self.logger.info("Check Version")
             version_variables = {
-                "DISCORD_BOT_VER": bot_ver,
-                "LAMBDA_VER": lambda_ver,
-                "FARGATE_VER": fargate_ver,
-                "INFRA_VER": infra_ver
+                "DISCORD_BOT_VER": str(bot_ver),
+                "LAMBDA_VER": str(lambda_ver),
+                "FARGATE_VER": str(fargate_ver),
+                "INFRA_VER": str(infra_ver)
             }
-            version_message = bot_msg_yml.resolve_placeholders(version_variables)
-            self.logger.info(f"Version MSG: {version_message}")
-
-            init_version_msg = MessageManager()
-            init_version_msg.send_new_msg(channel, version_message)
-            self.logger.info(init_version_msg)   
+            bot_message_yml.resolve_placeholders(version_variables)
+            version_yml_data = bot_message_yml.get_data()["VERSION"]
+            message = info_msg.construct_message_from_dict(version_yml_data)
+            await info_msg.edit_msg(channel, message)
+            self.logger.info("Sent Version Message...")  
+            time.sleep(5) 
 
             # if not reset_command_scroll.is_running():
             #     reset_command_scroll.start()
@@ -71,6 +70,10 @@ class MinecraftBot(commands.Cog):
             # # Store the bot message ID for this guild
             # BotConfig.BOT_MESSAGE_ID[guild.id] = bot_message.id
             # self.logger.info(f"MESSAGE_ID: {BotConfig.BOT_MESSAGE_ID}")
+
+            # Log Connected Servers to console
+        guild_names = [guild.name for guild in bot.guilds]
+        self.logger.info(f"Connected to Servers: {guild_names}")
 
     # @commands.Cog.listener()
     # async def on_message(self, message):
@@ -129,10 +132,14 @@ class MinecraftBot(commands.Cog):
 
 if __name__ == '__main__':
     envs = EnvironmentVariables().get_vars()  # Get Environment Variables
-
     intents = discord.Intents.default()
     intents.message_content = True
-
     bot = commands.Bot(command_prefix='!', intents=intents)
-    bot.add_cog(MinecraftBot(bot))
-    bot.run(envs["DISCORD_TOKEN"])
+
+    async def setup_bot():
+        await bot.add_cog(MinecraftBot(bot))
+        await bot.start(envs["DISCORD_TOKEN"])
+
+    import asyncio
+    asyncio.run(setup_bot())
+
