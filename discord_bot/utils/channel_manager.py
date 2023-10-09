@@ -28,12 +28,16 @@ class ChannelManager:
         """
         self.channel_mappings[guild_id] = channel_id
 
-    def get_channel(self, guild_id):
+    def get_channel(self, guild):
         """
-        Retrieve the channel name for a given guild_id
+        Retrieve the channel object for a given guild
         Returns None if the guild_id doesn't exist
         """
-        return self.channel_mappings.get(guild_id)
+        channel_id = self.channel_mappings.get(guild.id)
+        if channel_id is None:
+            return None
+        channel = guild.get_channel(channel_id)
+        return channel
 
     def remove_channel(self, guild_id):
         """
