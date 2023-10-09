@@ -1,12 +1,11 @@
-import config
 from config import *
-from .logger import setup_logging
-from .message_manager import MessageManager
-from .permision_manager import PermissionManager
-from .api_helper import APIUtil
-from .bot_response import BotResponse
-from .helpers import BotReady
-import importlib
+from utils.logger import setup_logging
+from utils.message_manager import MessageManager
+from utils.permision_manager import PermissionManager
+from utils.api_helper import APIUtil
+from utils.bot_response import BotResponse
+from utils.helpers import BotReady
+from utils.scheduler import Scheduler
 
 class ProcessAPICommand:
     ADMIN_ONLY_COMMANDS = ["mc_world_archive"]
@@ -20,6 +19,7 @@ class ProcessAPICommand:
         self.permision_manager = permision_manager
         self.envs = envs
         self.bot_ready = bot_ready
+        self.scheduler = Scheduler()
 
     async def execute(self):
         try:
@@ -54,6 +54,7 @@ class ProcessAPICommand:
 
             # Send new message
             await self.command_scroll_msg.edit_msg(self.context.channel, message)
+            await self.scheduler.add_task("reset_command_scroll", self.scheduler.reset_command_scroll, 1, self.command_scroll_msg, self.bot_response, self.context.channel, 5)
             self.logger.info(message)
         except Exception as e:
             self.logger.exception(str(e))

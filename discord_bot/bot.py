@@ -97,7 +97,7 @@ class MinecraftBot(commands.Cog):
         self.logger.info(f"Running in Servers: {guild_names}")
 
         # Start Scheduled Tasks and Checks
-        await self.scheduler.start_task("periodic_health_check", 30)
+        await self.scheduler.add_task("periodic_health_check", self.scheduler.periodic_health_check, 30)
 
         # Bot is now ready to Process commands
         self.bot_ready.set_status(True)

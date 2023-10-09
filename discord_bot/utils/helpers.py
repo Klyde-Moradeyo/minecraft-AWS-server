@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+import pytz
 
 class DateTimeManager:
     def __init__(self):
@@ -9,7 +10,7 @@ class DateTimeManager:
         """
         Get the current date/time as a formatted string.
         """
-        dt = datetime.now()
+        dt = datetime.now(pytz.utc)
         return dt.strftime(self.format_string)
     
     def parse_datetime(self, date_string):
@@ -18,6 +19,12 @@ class DateTimeManager:
         """
         return datetime.strptime(date_string, self.format_string)
     
+    def get_time_delta(self, seconds=0, minutes=0, hours=0, days=0):
+        """
+        Returns a timedelta object representing the specified time delta.
+        """
+        return timedelta(seconds=seconds, minutes=minutes, hours=hours, days=days)
+
 class BotReady:
     def __init__(self):
         # self.logger = setup_logging()

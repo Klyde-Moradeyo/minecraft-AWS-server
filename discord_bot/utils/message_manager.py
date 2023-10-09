@@ -147,5 +147,4 @@ class MessageManager:
             if 'FOOTER' in data:
                 message_content += process_value(data['FOOTER'])
 
-        return message_content.strip()  # Remove any extra newline at the end
-
+        return message_content.strip() # Remove any extra newline at the end
