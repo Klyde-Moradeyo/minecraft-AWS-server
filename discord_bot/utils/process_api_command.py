@@ -4,7 +4,6 @@ from .message_manager import MessageManager
 from .permision_manager import PermissionManager
 from .api_helper import APIUtil
 from .bot_response import BotResponse
-from .env_manager import EnvironmentVariables
 
 class ProcessAPICommand:
     ADMIN_ONLY_COMMANDS = ["mc_world_archive"]

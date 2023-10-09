@@ -1,7 +1,5 @@
 # Discord Dev Portal: http://discordapp.com/developers/applications
 import discord
-import time
-import yaml
 import asyncio
 from discord.ext import commands
 from config import *
@@ -12,7 +10,7 @@ from utils.file_helper import FileHelper, YamlHelper
 from utils.health_checks import HealthCheck
 from utils.env_manager import EnvironmentVariables
 from utils.bot_response import BotResponse
-from utils.commands import ProcessAPICommand
+from utils.process_api_command import ProcessAPICommand
 from utils.permision_manager import PermissionManager
 
 class MinecraftBot(commands.Cog):
