@@ -36,8 +36,8 @@ class ProcessAPICommand:
             if response is None:
                 message = self.bot_response.api_err_msg()
             else:
-                mc_server_status = response.json().get("STATUS")
-                command = response.json().get("COMMAND")
+                mc_server_status = response.get("STATUS")
+                command = response.get("COMMAND")
                 message = self.bot_response.cmd_reply(command, mc_server_status) 
 
             # Send new message
@@ -55,12 +55,12 @@ class ProcessAPICommand:
             "action": self.command,
             "user": {
                 "id": str(self.context.author.id),
-                "username": self.context.author.name,
+                "username": str(self.context.author.name),
                 # "role": "normal"
             },
             "discord_server": {
                 "id": str(self.context.guild.id),
-                "name": self.context.guild.name
+                "name": str(self.context.guild.name),
             },
             # "mc_server_settings": {
             #     "id": "unknown-id",

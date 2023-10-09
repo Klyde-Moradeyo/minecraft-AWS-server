@@ -37,7 +37,7 @@ class APIUtil:
         }
         return data
 
-    def send_to_api(self, data, reason, endpoint="command", timeout=10, retries=3, wait_time=2):
+    def send_to_api(self, data, reason, endpoint="command", timeout=15, retries=3, wait_time=2):
         """
         Sends standardized data to the API and returns the response.
         """

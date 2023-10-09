@@ -1,7 +1,9 @@
 import discord
+from utils.logger import setup_logging
 
 class ChannelManager:
     def __init__(self, category_name, channel_name):
+        self.logger = setup_logging() # Setting up logger
         self.channel_mappings = {}
         self.category_name = category_name
         self.channel_name = channel_name
@@ -22,25 +24,28 @@ class ChannelManager:
 
     def add_channel(self, guild_id, channel_id):
         """
-        Add a channel mapping. If the guild_id already exists, it'll be updated.
+        Add a channel mapping. If the guild_id already exists, it'll be updated
         """
         self.channel_mappings[guild_id] = channel_id
 
     def get_channel(self, guild_id):
         """
-        Retrieve the channel name for a given guild_id. 
-        Returns None if the guild_id doesn't exist.
+        Retrieve the channel name for a given guild_id
+        Returns None if the guild_id doesn't exist
         """
         return self.channel_mappings.get(guild_id)
 
     def remove_channel(self, guild_id):
         """
-        Remove a channel mapping by guild_id. If the guild_id doesn't exist, it'll do nothing.
+        Remove a channel mapping by guild_id. If the guild_id doesn't exist, it'll do nothing
         """
         if guild_id in self.channel_mappings:
             del self.channel_mappings[guild_id]
 
     def list_channels(self):
-        """List all channel mappings."""
+        """
+        List all channel mappings
+        """
         return self.channel_mappings
+        
 
