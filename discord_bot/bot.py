@@ -1,6 +1,6 @@
 # Discord Dev Portal: http://discordapp.com/developers/applications
-import discord
 import asyncio
+import discord
 from discord.ext import commands
 from config import *
 from utils.logger import setup_logging
@@ -12,6 +12,7 @@ from utils.env_manager import EnvironmentVariables
 from utils.bot_response import BotResponse
 from utils.process_api_command import ProcessAPICommand
 from utils.permision_manager import PermissionManager
+from utils.scheduler import Scheduler
 
 class MinecraftBot(commands.Cog):
     def __init__(self, bot):
@@ -21,6 +22,7 @@ class MinecraftBot(commands.Cog):
         self.channel_manager = ChannelManager(DISCORD_CHANNEL_CATEGORY_NAME, DISCORD_CHANNEL_NAME)
         self.file_helper = FileHelper()
         self.permission_manager = PermissionManager()
+        self.scheduler = Scheduler()
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -38,7 +40,7 @@ class MinecraftBot(commands.Cog):
             await channel.purge(limit=None)
 
             # Print Initilizing message
-            self.logger.info("Sending Initilization Message...")  
+            self.logger.info(f"guild_name: '{guild.name}' - id: '{guild.id}' - - Sending Initilization Message...")  
             init_yml = YamlHelper(yaml_str=INIT_MSG)
             message = self.info_msg.construct_message_from_dict(init_yml.get_data())
             await self.info_msg.send_new_msg(channel, message)
@@ -75,22 +77,28 @@ class MinecraftBot(commands.Cog):
             self.permission_manager.set_owner(guild)
 
             # Send Version Message
-            self.logger.info("Sending Version Message...")  
+            self.logger.info(f"guild_name: '{guild.name}' - id: '{guild.id}' - Sending Version Message...")  
             message = self.info_msg.construct_message_from_dict(bot_message_yml.get_data()["VERSION"])
             await self.info_msg.edit_msg(channel, message)
 
             # Update Info Message to show User Guide
-            self.logger.info("Sending User Guide Message...")  
+            self.logger.info(f"guild_name: '{guild.name}' - id: '{guild.id}' - Sending User Guide Message...")  
             message = self.info_msg.construct_message_from_dict(bot_message_yml.get_data()["USER_GUIDE"]) 
             await self.info_msg.edit_msg(channel, message)
 
-            self.logger.info("Sending User Command Scroll Message...")  
+            self.logger.info(f"guild_name: '{guild.name}' - id: '{guild.id}' - Sending User Command Scroll Message...")  
             message = self.bot_response.get_cmd_scroll_msg()
             await self.command_scroll_msg.send_new_msg(channel, message)
 
         # Log connected servers
         guild_names = [guild.name for guild in bot.guilds]
-        self.logger.info(f"Connected to Servers: {guild_names}")
+        self.logger.info(f"Running in Servers: {guild_names}")
+
+        # Start Scheduled Tasks and Checks
+        self.scheduler.start("periodic_health_check", 300)
+
+        # Bot is now ready to Process commands
+        READY = True 
 
     @commands.Cog.listener()
     async def on_message(self, message):

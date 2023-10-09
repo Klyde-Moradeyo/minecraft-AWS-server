@@ -22,5 +22,8 @@ BOT_MSG_PATH = os.path.join(BASE_DIR, "data", "bot_messages.yml")
 ##### Roles #####
 ADMIN_ROLE_NAME = "Minecraft-Admin"
 
+##### Flag to determine whether bot is ready to process commands #####
+READY = False
+
 
 

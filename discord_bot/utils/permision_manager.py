@@ -37,7 +37,7 @@ class PermissionManager:
             self.admin_ids = ids
             self._add_admin(ids)
         else:
-            self.logger.warning(f"No role found with name: {self.admin_role}")
+            self.logger.warning(f"guild_name: '{guild.name}' - id: '{guild.id}' - No role found with name: {self.admin_role}")
 
     def is_owner(self, user_id: int) -> bool:
         """

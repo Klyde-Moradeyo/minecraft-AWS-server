@@ -20,6 +20,10 @@ class ProcessAPICommand:
     async def execute(self):
         self.logger.info(f"Proccessing Command: '{self.command}'")
         try:
+            # If bot is not done initilizing, do nothing
+            if not READY:
+                return
+            
             message = f"User {self.context.author.name} used `{self.command}` command..."
             await self.command_scroll_msg.edit_msg(self.context.channel, message)
 
@@ -72,19 +76,6 @@ class ProcessAPICommand:
         }
 
         return data
-
-    async def _is_maintenance(self):
-        """
-        Maintenance Mode - Only allow Admins to use Discord bot while maintenance mode is ON.
-        """
-        self.logger.info(f"IS_MAINTENANCE: {IS_MAINTENANCE}")
-        if IS_MAINTENANCE and not self.permision_manager.is_admin(self.context.author.id):
-            message = self.bot_response.get_maintenance_msg()
-            await self.command_scroll_msg.edit_msg(self.context.channel, message)
-            # self.datetime = datetime.now() 
-            # latest_guild_commands[self.context.guild.id] = self
-            return True
-        return False
     
     async def _authorized(self):
         """
@@ -108,6 +99,3 @@ class ProcessAPICommand:
             return False
 
         return True
-        
-    # def _feature_command(self):
-    #     BOT_REPLY = BotConfig.HELP_MESSAGES["features"]
