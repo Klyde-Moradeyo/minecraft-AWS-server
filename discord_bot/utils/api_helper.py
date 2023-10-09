@@ -57,11 +57,12 @@ class APIUtil:
                 return response.json()
 
             except requests.exceptions.Timeout:
-                self.logger.warning(f"Request timed out for endpoint: {endpoint}. Retrying...")
+                self.logger.warning(f"Request timed out for endpoint: {endpoint}.")
             except requests.exceptions.RequestException as err:
-                self.logger.warning(f"Error occurred while sending data to {endpoint}: {err}. Retrying...")
+                self.logger.warning(f"Error occurred while sending data to {endpoint}: {err}.")
             
             if attempt < retries - 1:  # To avoid sleeping after the last attempt
+                self.logger.info(f"Waiting {wait_time}s before retry.")
                 time.sleep(wait_time)
 
         self.logger.error(f"Failed to send data to API after {retries} attempts.")
