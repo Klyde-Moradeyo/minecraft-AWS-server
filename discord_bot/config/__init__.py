@@ -10,10 +10,13 @@ DISCORD_CHANNEL_CATEGORY_NAME = "BOT"
 ##### BOT INIT MESSAGE #####
 INIT_MSG = """
 INIT_MSG:
-  - "------------------------------------------------------------------------------------------------------------"
-  - "                                  🛠️ Initialization in progress... ⚙️                                      "
-  - "------------------------------------------------------------------------------------------------------------"
+  - "------------------------------------------------------------------"
+  - "                🛠️ Discord Bot Initializating... ⚙️              "
+  - "------------------------------------------------------------------"
 """
+
+## RESET COMMAND SCROLL CHECK INTERVAL
+RESET_COMMAND_SCROLL_CHECK_INTERVAL = 1 # seconds
 
 ##### DATA PATHS #####
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

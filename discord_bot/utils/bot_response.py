@@ -1,7 +1,10 @@
 import random
+from utils.message_manager import MessageManager
+from utils.logger import setup_logging
 
 class BotResponse():
     def __init__(self, data):
+        self.logger = setup_logging()
         self.data = data
         self.help_desk_users = "REPLACE"
 
@@ -50,3 +53,6 @@ class BotResponse():
     
     def get_admin_only_reply_msg(self):
         return random.choice(self.data["ACCESS_RESTRICTIONS"]["ADMIN_ONLY_REPLIES"])
+    
+    def get_features(self):
+        return MessageManager().construct_message_from_dict(self.data["FEATURES"])

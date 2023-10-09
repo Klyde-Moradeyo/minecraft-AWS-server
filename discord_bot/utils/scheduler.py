@@ -76,20 +76,32 @@ class Scheduler:
         self.logger.info("periodic_health_check running!")
         pass
 
-    async def reset_command_scroll(self, task_id, command_scroll_msg: MessageManager, bot_response: BotResponse, channel, reset_time):
+    async def reset_command_scroll(self, task_id, command_scroll_msg: MessageManager, bot_response: BotResponse, channel):
             """
             Reset command scroll after a specific interval.
             """
             try:
-                self.logger.info(f"Scheduler - '{task_id}' - Running Command Scroll Check for channel id: '{channel.id}'")
-                current_time_str = self.dt_manager.get_current_datetime()
-                dt_current_time = self.dt_manager.parse_datetime(current_time_str)
-                check_interval = self.dt_manager.get_time_delta(seconds=reset_time)
+                # reset time
+                reset_time = 5 
 
+                # Get Message Map details
                 msg_list = command_scroll_msg.list_messages()
                 msg = msg_list[channel.id]
                 # msg_id = msg["message_id"]
                 msg_time = self.dt_manager.parse_datetime(msg['datetime'])
+                msg_task_id = msg["task_id"]
+
+                # Check if Message already has task running, if it's running do stop task
+                if msg_task_id is not None and msg_task_id != task_id:
+                    await self.stop_task(task_id, f"Scheduler - '{task_id}' - '{msg_task_id}' Task Already runnning")
+                    return
+                
+                command_scroll_msg.update_task_id(channel.id, task_id)
+                self.logger.info(f"Scheduler - '{task_id}' - Running Command Scroll Check for channel id: '{channel.id}'")
+
+                current_time_str = self.dt_manager.get_current_datetime()
+                dt_current_time = self.dt_manager.parse_datetime(current_time_str)
+                check_interval = self.dt_manager.get_time_delta(seconds=reset_time)
 
                 if msg_time < dt_current_time - check_interval:
                     self.logger.info(f"Scheduler - '{task_id}' - Resetting command for message_id '{msg['message_id']}' in channel '{channel.id}'")

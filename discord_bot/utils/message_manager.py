@@ -5,7 +5,7 @@ from utils.helpers import DateTimeManager
 
 class MessageManager:
     def __init__(self):
-        self.logger = setup_logging() # Setting up logger
+        self.logger = setup_logging()
         self.message_map = {}
         self.datetime = DateTimeManager()
 
@@ -23,15 +23,16 @@ class MessageManager:
 
             message_id = message_info['message_id']
             message = await channel.fetch_message(message_id)
+            self.logger.info(f"msg_id: '{message_id}' - Updating message")
             await message.edit(content=content)
             # Update datetime when the message is edited
             self.update_message_datetime(channel.id)
         except discord.NotFound:
-            self.logger.info(f"Message('{message_id}') not found!")
+            self.logger.info(f"msg_id: '{message_id}' - Message not found!")
         except discord.Forbidden:
-            self.logger.info(f"Bot lacks permission to edit the message('{message_id}')!")
+            self.logger.info(f"msg_id: '{message_id}' - Bot lacks permission to edit the message!")
         except discord.HTTPException as e:
-            self.logger.info(f"Editing Message('{message_id}') failed due to {e}")
+            self.logger.info(f"msg_id: '{message_id}' -  Editing Message failed due to {e}")
 
     
     async def delete_msg(self, context, message_id):
@@ -41,21 +42,22 @@ class MessageManager:
 
             # Delete the message
             await message.delete()
-            await context.send(f"Deleted message with ID: {message_id}")
+            await context.send(f"msg_id: '{message_id}' - Deleted message")
         except discord.NotFound:
-            await context.send(f"Could not find a message with ID: {message_id}")
+            await context.send(f"msg_id: '{message_id}' - Could not find a message")
         except discord.Forbidden:
-            await context.send("I don't have permissions to delete this message.")
+            await context.send(f"msg_id: '{message_id}' - I don't have permissions to delete this message.")
         except discord.HTTPException as e:
-            await context.send(f"Failed to delete message. Error: {e}")
+            await context.send(f"msg_id: '{message_id}' - Failed to delete message. Error: {e}")
 
-    def add_message(self, channel_id, message_id):
+    def add_message(self, channel_id, message_id, task_id=None):
         """
         Add a message mapping. If the channel_id already exists, it'll be updated.
         """
         self.message_map[channel_id] = {
             'message_id': message_id,
-            'datetime': self.datetime.get_current_datetime()
+            'datetime': self.datetime.get_current_datetime(),
+            'task_id': task_id
         }
 
     async def get_message(self, channel):
@@ -79,7 +81,7 @@ class MessageManager:
             return None
         except discord.HTTPException as e:
             # Handle other HTTP exceptions (e.g., lack of permissions, rate limits, etc.)
-            self.logger.info(f'Failed to fetch message: {e}')  # Updated to use logger instead of print
+            self.logger.info(f"'msg_id: '{message_id}' - Failed to fetch message: {e}")  # Updated to use logger instead of print
             return None
 
         return message
@@ -114,6 +116,14 @@ class MessageManager:
         message_info = self.message_map.get(channel_id)
         if message_info:
             message_info['datetime'] = self.datetime.get_current_datetime()
+
+    def update_task_id(self, channel_id, task_id):
+        """
+        Update the task_id for a given channel_id.
+        """
+        message_info = self.message_map.get(channel_id)
+        if message_info:
+            message_info['task_id'] = task_id
     
     def construct_message_from_dict(self, data):
         """

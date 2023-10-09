@@ -16,6 +16,15 @@ from utils.scheduler import Scheduler
 from utils.helpers import DateTimeManager,BotReady
 
 class MinecraftBot(commands.Cog):
+    VALID_COMMANDS = {
+        "api": { "start", "stop", "status" },
+        "features": { "features" },
+        "admin_only": { "mc_world_archive" },
+        "errors": { 
+            "invalid_command": { "invalid_command" }
+        }
+    }
+
     def __init__(self, bot):
         self.bot = bot
         self.logger = setup_logging() # Setting up logger
@@ -48,7 +57,7 @@ class MinecraftBot(commands.Cog):
             await self.info_msg.send_new_msg(channel, message)
              
         # Load yaml file
-        bot_message_yml = YamlHelper(BOT_MSG_PATH)
+        self.bot_message_yml = YamlHelper(BOT_MSG_PATH)
 
         # Perform Health Check - WIP
         self.logger.info("Performing Health Checks...")
@@ -59,17 +68,17 @@ class MinecraftBot(commands.Cog):
         variables = {
             "SERVER_IP": str(self.envs["SERVER_IP"]),
             "SERVER_PORT": str(self.envs["SERVER_PORT"]),
-            "SERVER_VERSION": "N/A until it checks the server",
+            "SERVER_VERSION": "N/A",
             "INFRASTRUCTURE_STATUS_MSG": health_check.get_health(),
             "DISCORD_BOT_VER": str(bot_ver),
             "LAMBDA_VER": str(lambda_ver),
             "FARGATE_VER": str(fargate_ver),
             "INFRA_VER": str(infra_ver)
         }
-        bot_message_yml.resolve_placeholders(variables)
+        self.bot_message_yml.resolve_placeholders(variables)
 
         # Init Bot Responses
-        self.bot_response = BotResponse(bot_message_yml.get_data())
+        self.bot_response = BotResponse(self.bot_message_yml.get_data())
 
         for guild in bot.guilds:
             channel = self.channel_manager.get_channel(guild)
@@ -80,12 +89,12 @@ class MinecraftBot(commands.Cog):
 
             # Send Version Message
             self.logger.info(f"guild_name: '{guild.name}' - id: '{guild.id}' - Sending Version Message...")  
-            message = self.info_msg.construct_message_from_dict(bot_message_yml.get_data()["VERSION"])
+            message = self.info_msg.construct_message_from_dict(self.bot_message_yml.get_data()["VERSION"])
             await self.info_msg.edit_msg(channel, message)
 
             # Update Info Message to show User Guide
             self.logger.info(f"guild_name: '{guild.name}' - id: '{guild.id}' - Sending User Guide Message...")  
-            message = self.info_msg.construct_message_from_dict(bot_message_yml.get_data()["USER_GUIDE"]) 
+            message = self.info_msg.construct_message_from_dict(self.bot_message_yml.get_data()["USER_GUIDE"]) 
             await self.info_msg.edit_msg(channel, message)
 
             self.logger.info(f"guild_name: '{guild.name}' - id: '{guild.id}' - Sending User Command Scroll Message...")  
@@ -117,15 +126,15 @@ class MinecraftBot(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, context, error):
         if isinstance(error, commands.CommandNotFound):
-            message = f"Invalid command: `{context.message.content}`. Please use a valid command."
-            await self.command_scroll_msg.edit_msg(context.channel, message)
+            command = ProcessAPICommand(context, "invalid_command", self.bot_ready, self.VALID_COMMANDS, self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
+            await command.execute()
 
     @commands.command()
     async def start(self, context):
         """
         Starts the Minecraft server.
         """
-        command = ProcessAPICommand(context, "start", self.bot_ready, self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
+        command = ProcessAPICommand(context, "start", self.bot_ready, self.VALID_COMMANDS, self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
         await command.execute()
         
     @commands.command(name='status')
@@ -133,7 +142,7 @@ class MinecraftBot(commands.Cog):
         """
         Checks the status of the Minecraft server.
         """
-        command = ProcessAPICommand(context, "status", self.bot_ready, self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
+        command = ProcessAPICommand(context, "status", self.bot_ready, self.VALID_COMMANDS, self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
         await command.execute()
         
     @commands.command()
@@ -141,7 +150,7 @@ class MinecraftBot(commands.Cog):
         """
         Stops the Minecraft server.
         """
-        command = ProcessAPICommand(context, "stop", self.bot_ready, self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
+        command = ProcessAPICommand(context, "stop", self.bot_ready, self.VALID_COMMANDS, self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
         await command.execute()
 
     @commands.command()
@@ -149,16 +158,16 @@ class MinecraftBot(commands.Cog):
         """
         Compress the Minecraft World Repository - Only Admins can use this command
         """
-        command = ProcessAPICommand(context, "mc_world_archive", self.bot_ready, self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
+        command = ProcessAPICommand(context, "mc_world_archive", self.bot_ready, self.VALID_COMMANDS, self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
         await command.execute() 
 
-    # @commands.command()
-    # async def features(self, context):
-    #     """
-    #     Show Minecraft server Features
-    #     """
-    #     command = ExecuteCommand(context, "features")
-    #     await command.execute()
+    @commands.command()
+    async def features(self, context):
+        """
+        Show Minecraft server Features
+        """
+        command = ProcessAPICommand(context, "features", self.bot_ready, self.VALID_COMMANDS, self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
+        await command.execute() 
 
 if __name__ == '__main__':
     envs = EnvironmentVariables(True).get_vars()  # Get Environment Variables

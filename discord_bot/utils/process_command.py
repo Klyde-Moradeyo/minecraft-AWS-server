@@ -8,18 +8,18 @@ from utils.helpers import BotReady
 from utils.scheduler import Scheduler
 
 class ProcessAPICommand:
-    ADMIN_ONLY_COMMANDS = ["mc_world_archive"]
-    def __init__(self, context, command, bot_ready: BotReady(), envs, command_scroll_msg: MessageManager, permision_manager: PermissionManager, bot_response: BotResponse):
+
+    def __init__(self, context, command, bot_ready: BotReady(), valid_commands, envs, command_scroll_msg: MessageManager, permision_manager: PermissionManager, bot_response: BotResponse):
         self.logger = setup_logging()
         self.context = context
         self.command = command
         self.command_scroll_msg = command_scroll_msg
-        # self.datetime = datetime.now()
         self.bot_response = bot_response
         self.permision_manager = permision_manager
         self.envs = envs
         self.bot_ready = bot_ready
         self.scheduler = Scheduler()
+        self.valid_commands = valid_commands
 
     async def execute(self):
         try:
@@ -38,23 +38,30 @@ class ProcessAPICommand:
             if not await self._authorized():
                 return
 
-            data = self._create_data()
-            api = APIUtil(self.envs)
-            reason = f"Discord User used command: '{self.command}'"
-            response = api.send_to_api(data, reason)
+            if self.command in self.valid_commands["api"]:
+                data = self._create_data()
+                api = APIUtil(self.envs)
+                reason = f"Discord User used command: '{self.command}'"
+                response = api.send_to_api(data, reason)
 
-            # Response will be none if it was unsuccessful
-            self.logger.info(f"API Response: {response}")
-            if response is None:
-                message = self.bot_response.api_err_msg()
+                # Response will be none if it was unsuccessful
+                self.logger.info(f"API Response: {response}")
+                if response is None:
+                    message = self.bot_response.api_err_msg()
+                else:
+                    mc_server_status = response.get("STATUS")
+                    command = response.get("COMMAND")
+                    message = self.bot_response.cmd_reply(command, mc_server_status)
+            elif self.command in self.valid_commands["features"]:
+                message = self.bot_response.get_features()
+            elif self.command in self.valid_commands["errors"]["invalid_command"]:
+                message =  f"Please use a valid command."
             else:
-                mc_server_status = response.get("STATUS")
-                command = response.get("COMMAND")
-                message = self.bot_response.cmd_reply(command, mc_server_status) 
+                raise Exception(f"Couldnt resolve Command: {self.command}")
 
             # Send new message
             await self.command_scroll_msg.edit_msg(self.context.channel, message)
-            await self.scheduler.add_task("reset_command_scroll", self.scheduler.reset_command_scroll, 1, self.command_scroll_msg, self.bot_response, self.context.channel, 5)
+            await self.scheduler.add_task("reset_command_scroll", self.scheduler.reset_command_scroll, RESET_COMMAND_SCROLL_CHECK_INTERVAL, self.command_scroll_msg, self.bot_response, self.context.channel)
             self.logger.info(message)
         except Exception as e:
             self.logger.exception(str(e))
@@ -98,7 +105,7 @@ class ProcessAPICommand:
             # latest_guild_commands[self.context.guild.id] = self
             return False
         
-        if self.command in self.ADMIN_ONLY_COMMANDS and not self.permision_manager.is_admin(self.context.author.id):
+        if self.command in self.valid_commands["admin_only"] and not self.permision_manager.is_admin(self.context.author.id):
             self.logger.info(f"{self.context.author.name} not AUTHORIZED to perform {self.command}")
             message = self.bot_response.get_admin_only_reply_msg()
             await self.command_scroll_msg.edit_msg(self.context.channel, message)
