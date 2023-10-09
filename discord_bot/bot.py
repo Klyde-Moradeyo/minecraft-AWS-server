@@ -1,3 +1,4 @@
+# Discord Dev Portal: http://discordapp.com/developers/applications
 import discord
 import time
 import yaml
@@ -44,26 +45,36 @@ class MinecraftBot(commands.Cog):
             message = self.info_msg.construct_message_from_dict(init_yml.get_data())
             await self.info_msg.send_new_msg(channel, message)
              
-            # Load yaml file
-            bot_message_yml = YamlHelper(BOT_MSG_PATH)
+        # Load yaml file
+        bot_message_yml = YamlHelper(BOT_MSG_PATH)
 
-            # Perform Health Check - WIP
-            self.logger.info("Performing Health Checks...")
-            health_check = HealthCheck()
-            bot_ver, lambda_ver, fargate_ver, infra_ver = health_check.get_version()
+        # Perform Health Check - WIP
+        self.logger.info("Performing Health Checks...")
+        health_check = HealthCheck()
+        bot_ver, lambda_ver, fargate_ver, infra_ver = health_check.get_version()
 
-            # Update bot_messages.yml data
-            variables = {
-                "SERVER_IP": str(self.envs["SERVER_IP"]),
-                "SERVER_PORT": str(self.envs["SERVER_PORT"]),
-                "SERVER_VERSION": "N/A until it checks the server",
-                "INFRASTRUCTURE_STATUS_MSG": health_check.get_health(),
-                "DISCORD_BOT_VER": str(bot_ver),
-                "LAMBDA_VER": str(lambda_ver),
-                "FARGATE_VER": str(fargate_ver),
-                "INFRA_VER": str(infra_ver)
-            }
-            bot_message_yml.resolve_placeholders(variables)
+        # Update bot_messages.yml data
+        variables = {
+            "SERVER_IP": str(self.envs["SERVER_IP"]),
+            "SERVER_PORT": str(self.envs["SERVER_PORT"]),
+            "SERVER_VERSION": "N/A until it checks the server",
+            "INFRASTRUCTURE_STATUS_MSG": health_check.get_health(),
+            "DISCORD_BOT_VER": str(bot_ver),
+            "LAMBDA_VER": str(lambda_ver),
+            "FARGATE_VER": str(fargate_ver),
+            "INFRA_VER": str(infra_ver)
+        }
+        bot_message_yml.resolve_placeholders(variables)
+
+        # Init Bot Responses
+        self.bot_response = BotResponse(bot_message_yml.get_data())
+
+        for guild in bot.guilds:
+            channel = self.channel_manager.get_channel(guild)
+
+            # Set Owner and Admins
+            self.permission_manager.set_admin(guild)
+            self.permission_manager.set_owner(guild)
 
             # Send Version Message
             self.logger.info("Sending Version Message...")  
@@ -75,11 +86,7 @@ class MinecraftBot(commands.Cog):
             message = self.info_msg.construct_message_from_dict(bot_message_yml.get_data()["USER_GUIDE"]) 
             await self.info_msg.edit_msg(channel, message)
 
-        # Init Bot Responses
-        self.bot_response = BotResponse(bot_message_yml.get_data())
-
-        self.logger.info("Sending User Command Scroll Message...")  
-        for guild in bot.guilds:
+            self.logger.info("Sending User Command Scroll Message...")  
             message = self.bot_response.get_cmd_scroll_msg()
             await self.command_scroll_msg.send_new_msg(channel, message)
 
@@ -131,7 +138,7 @@ class MinecraftBot(commands.Cog):
     @commands.command()
     async def mc_world_archive(self, context):
         """
-        Compress the Minecraft World Repository - Only Developers can use this command
+        Compress the Minecraft World Repository - Only Admins can use this command
         """
         command = ProcessAPICommand(context, "mc_world_archive", self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
         await command.execute() 
@@ -147,6 +154,7 @@ class MinecraftBot(commands.Cog):
 if __name__ == '__main__':
     envs = EnvironmentVariables(True).get_vars()  # Get Environment Variables
     intents = discord.Intents.default()
+    intents.members = True  # Enable the members intent
     intents.message_content = True
     bot = commands.Bot(command_prefix='!', intents=intents)
 
