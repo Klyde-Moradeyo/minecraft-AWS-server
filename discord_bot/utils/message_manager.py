@@ -45,12 +45,29 @@ class MessageManager:
         """
         self.message_map[channel_id] = message_id
 
-    def get_message(self, channel_id):
+    async def get_message(self, channel):
         """
-        Retrieve the message name for a given channel_id. 
-        Returns None if the channel_id doesn't exist.
+        Retrieve the message object for a given channel.
+        Returns None if the channel_id doesn't exist in message_map
+        or if the message doesn't exist in the channel.
         """
-        return self.message_map.get(channel_id)
+        # Get the message ID from the message_map dictionary
+        message_id = self.message_map.get(channel.id)
+
+        if message_id is None:
+            return None
+
+        # Use channel.fetch_message to get the message object
+        try:
+            message = await channel.fetch_message(message_id)
+        except discord.NotFound:
+            return None
+        except discord.HTTPException as e:
+            # Handle other HTTP exceptions (e.g., lack of permissions, rate limits, etc.)
+            print(f'Failed to fetch message: {e}')
+            return None
+
+        return message
 
     def remove_message(self, channel_id):
         """
