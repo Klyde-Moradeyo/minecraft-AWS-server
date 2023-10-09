@@ -1,13 +1,16 @@
+import config
 from config import *
 from .logger import setup_logging
 from .message_manager import MessageManager
 from .permision_manager import PermissionManager
 from .api_helper import APIUtil
 from .bot_response import BotResponse
+from .helpers import BotReady
+import importlib
 
 class ProcessAPICommand:
     ADMIN_ONLY_COMMANDS = ["mc_world_archive"]
-    def __init__(self, context, command, envs, command_scroll_msg: MessageManager, permision_manager: PermissionManager, bot_response: BotResponse):
+    def __init__(self, context, command, bot_ready: BotReady(), envs, command_scroll_msg: MessageManager, permision_manager: PermissionManager, bot_response: BotResponse):
         self.logger = setup_logging()
         self.context = context
         self.command = command
@@ -16,13 +19,17 @@ class ProcessAPICommand:
         self.bot_response = bot_response
         self.permision_manager = permision_manager
         self.envs = envs
+        self.bot_ready = bot_ready
 
     async def execute(self):
-        self.logger.info(f"Proccessing Command: '{self.command}'")
         try:
             # If bot is not done initilizing, do nothing
-            if not READY:
+            isBotReady = self.bot_ready.get_status()
+            if not isBotReady:
+                self.logger.warn(f"------ Discord Bot not READY('{isBotReady}') so cannot execute command('{self.command}')  ------")
                 return
+            
+            self.logger.info(f"Proccessing Command: '{self.command}'")
             
             message = f"User {self.context.author.name} used `{self.command}` command..."
             await self.command_scroll_msg.edit_msg(self.context.channel, message)

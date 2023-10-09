@@ -10,9 +10,10 @@ from utils.file_helper import FileHelper, YamlHelper
 from utils.health_checks import HealthCheck
 from utils.env_manager import EnvironmentVariables
 from utils.bot_response import BotResponse
-from utils.process_api_command import ProcessAPICommand
+from utils.process_command import ProcessAPICommand
 from utils.permision_manager import PermissionManager
 from utils.scheduler import Scheduler
+from utils.helpers import DateTimeManager,BotReady
 
 class MinecraftBot(commands.Cog):
     def __init__(self, bot):
@@ -23,6 +24,7 @@ class MinecraftBot(commands.Cog):
         self.file_helper = FileHelper()
         self.permission_manager = PermissionManager()
         self.scheduler = Scheduler()
+        self.bot_ready = BotReady()
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -95,10 +97,11 @@ class MinecraftBot(commands.Cog):
         self.logger.info(f"Running in Servers: {guild_names}")
 
         # Start Scheduled Tasks and Checks
-        self.scheduler.start("periodic_health_check", 300)
+        await self.scheduler.start_task("periodic_health_check", 30)
 
         # Bot is now ready to Process commands
-        READY = True 
+        self.bot_ready.set_status(True)
+        self.logger.info(f"------ Discord Bot is Ready('{self.bot_ready.get_status()}') ------")
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -122,7 +125,7 @@ class MinecraftBot(commands.Cog):
         """
         Starts the Minecraft server.
         """
-        command = ProcessAPICommand(context, "start", self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
+        command = ProcessAPICommand(context, "start", self.bot_ready, self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
         await command.execute()
         
     @commands.command(name='status')
@@ -130,7 +133,7 @@ class MinecraftBot(commands.Cog):
         """
         Checks the status of the Minecraft server.
         """
-        command = ProcessAPICommand(context, "status", self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
+        command = ProcessAPICommand(context, "status", self.bot_ready, self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
         await command.execute()
         
     @commands.command()
@@ -138,7 +141,7 @@ class MinecraftBot(commands.Cog):
         """
         Stops the Minecraft server.
         """
-        command = ProcessAPICommand(context, "stop", self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
+        command = ProcessAPICommand(context, "stop", self.bot_ready, self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
         await command.execute()
 
     @commands.command()
@@ -146,7 +149,7 @@ class MinecraftBot(commands.Cog):
         """
         Compress the Minecraft World Repository - Only Admins can use this command
         """
-        command = ProcessAPICommand(context, "mc_world_archive", self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
+        command = ProcessAPICommand(context, "mc_world_archive", self.bot_ready, self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
         await command.execute() 
 
     # @commands.command()

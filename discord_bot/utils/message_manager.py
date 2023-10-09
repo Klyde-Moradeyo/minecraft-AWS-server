@@ -1,11 +1,13 @@
 import discord
 from discord.ext import commands
 from utils.logger import setup_logging
+from utils.helpers import DateTimeManager
 
 class MessageManager:
     def __init__(self):
         self.logger = setup_logging() # Setting up logger
         self.message_map = {}
+        self.datetime = DateTimeManager()
 
     async def send_new_msg(self, channel, content):
         msg = await channel.send(content)
@@ -14,15 +16,23 @@ class MessageManager:
     
     async def edit_msg(self, channel, content):
         try:
-            message_id = self.message_map[channel.id]
+            message_info = self.message_map.get(channel.id)
+            if message_info is None:
+                self.logger.info(f"No message found for channel {channel.id}")
+                return
+
+            message_id = message_info['message_id']
             message = await channel.fetch_message(message_id)
             await message.edit(content=content)
+            # Update datetime when the message is edited
+            self.update_message_datetime(channel.id)
         except discord.NotFound:
             self.logger.info(f"Message('{message_id}') not found!")
         except discord.Forbidden:
-            self.logger.info("Bot lacks permission to edit the message('{message_id}')!")
+            self.logger.info(f"Bot lacks permission to edit the message('{message_id}')!")
         except discord.HTTPException as e:
             self.logger.info(f"Editing Message('{message_id}') failed due to {e}")
+
     
     async def delete_msg(self, context, message_id):
         try:
@@ -43,7 +53,10 @@ class MessageManager:
         """
         Add a message mapping. If the channel_id already exists, it'll be updated.
         """
-        self.message_map[channel_id] = message_id
+        self.message_map[channel_id] = {
+            'message_id': message_id,
+            'datetime': self.datetime.get_current_datetime()
+        }
 
     async def get_message(self, channel):
         """
@@ -51,11 +64,13 @@ class MessageManager:
         Returns None if the channel_id doesn't exist in message_map
         or if the message doesn't exist in the channel.
         """
-        # Get the message ID from the message_map dictionary
-        message_id = self.message_map.get(channel.id)
+        # Get the message info from the message_map dictionary
+        message_info = self.message_map.get(channel.id)
 
-        if message_id is None:
+        if message_info is None:
             return None
+
+        message_id = message_info['message_id']  # Access message_id from message_info
 
         # Use channel.fetch_message to get the message object
         try:
@@ -64,10 +79,20 @@ class MessageManager:
             return None
         except discord.HTTPException as e:
             # Handle other HTTP exceptions (e.g., lack of permissions, rate limits, etc.)
-            print(f'Failed to fetch message: {e}')
+            self.logger.info(f'Failed to fetch message: {e}')  # Updated to use logger instead of print
             return None
 
         return message
+    
+    def get_message_datetime(self, channel):
+        """
+        Retrieve the datetime for a given channel's message.
+        Returns None if the channel_id doesn't exist in message_map.
+        """
+        message_info = self.message_map.get(channel.id)
+        if message_info is None:
+            return None
+        return message_info['datetime']
 
     def remove_message(self, channel_id):
         """
@@ -77,8 +102,18 @@ class MessageManager:
             del self.message_map[channel_id]
 
     def list_messages(self):
-        """List all message mappings."""
+        """
+        List all message mappings.
+        """
         return self.message_map
+    
+    def update_message_datetime(self, channel_id):
+        """
+        Update the datetime for a given channel_id.
+        """
+        message_info = self.message_map.get(channel_id)
+        if message_info:
+            message_info['datetime'] = self.datetime.get_current_datetime()
     
     def construct_message_from_dict(self, data):
         """
