@@ -7,6 +7,7 @@ from .bot_response import BotResponse
 from .env_manager import EnvironmentVariables
 
 class ProcessAPICommand:
+    ADMIN_ONLY_COMMANDS = ["mc_world_archive"]
     def __init__(self, context, command, envs, command_scroll_msg: MessageManager, permision_manager: PermissionManager, bot_response: BotResponse):
         self.logger = setup_logging()
         self.context = context
@@ -23,7 +24,8 @@ class ProcessAPICommand:
             message = f"User {self.context.author.name} used `{self.command}` command..."
             await self.command_scroll_msg.edit_msg(self.context.channel, message)
 
-            if await self._is_maintenance():
+            # If user is not authroized to run the command then return
+            if not await self._authorized():
                 return
 
             data = self._create_data()
@@ -84,6 +86,29 @@ class ProcessAPICommand:
             # latest_guild_commands[self.context.guild.id] = self
             return True
         return False
+    
+    async def _authorized(self):
+        """
+        Authrozier to check if User get use a command
+        """
+        # Check Maintenance - Only allow Admins to use Discord bot while maintenance mode is ON.
+        self.logger.info(f"IS_MAINTENANCE: {IS_MAINTENANCE}")
+        if IS_MAINTENANCE and not self.permision_manager.is_admin(self.context.author.id):
+            message = self.bot_response.get_maintenance_msg()
+            await self.command_scroll_msg.edit_msg(self.context.channel, message)
+            # self.datetime = datetime.now() 
+            # latest_guild_commands[self.context.guild.id] = self
+            return False
+        
+        if self.command in self.ADMIN_ONLY_COMMANDS and not self.permision_manager.is_admin(self.context.author.id):
+            self.logger.info(f"{self.context.author.name} not AUTHORIZED to perform {self.command}")
+            message = self.bot_response.get_admin_only_reply_msg()
+            await self.command_scroll_msg.edit_msg(self.context.channel, message)
+            # self.datetime = datetime.now() 
+            # latest_guild_commands[self.context.guild.id] = self
+            return False
+
+        return True
         
     # def _feature_command(self):
     #     BOT_REPLY = BotConfig.HELP_MESSAGES["features"]
