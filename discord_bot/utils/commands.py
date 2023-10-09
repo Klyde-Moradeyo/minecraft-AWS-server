@@ -23,10 +23,10 @@ class ProcessAPICommand:
             message = f"User {self.context.author.name} used `{self.command}` command..."
             await self.command_scroll_msg.edit_msg(self.context.channel, message)
 
-            await self._check_maintenance()
+            if await self._is_maintenance():
+                return
 
             data = self._create_data()
-
             api = APIUtil(self.envs)
             reason = f"Discord User used command: '{self.command}'"
             response = api.send_to_api(data, reason)
@@ -72,7 +72,7 @@ class ProcessAPICommand:
 
         return data
 
-    async def _check_maintenance(self):
+    async def _is_maintenance(self):
         """
         Maintenance Mode - Only allow Admins to use Discord bot while maintenance mode is ON.
         """
@@ -82,7 +82,8 @@ class ProcessAPICommand:
             await self.command_scroll_msg.edit_msg(self.context.channel, message)
             # self.datetime = datetime.now() 
             # latest_guild_commands[self.context.guild.id] = self
-            return
+            return True
+        return False
         
     # def _feature_command(self):
     #     BOT_REPLY = BotConfig.HELP_MESSAGES["features"]
