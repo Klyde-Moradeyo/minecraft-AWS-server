@@ -1,0 +1,125 @@
+VERSION:
+  HEADER: "------------------------------------------------------------------"
+  MESSAGE:
+  - "Discord Bot: `v{DISCORD_BOT_VER}`"
+  - "Lambda Function: `v{LAMBDA_VER}`"
+  - "Fargate: `v{FARGATE_VER}`"
+  - "Infrastructure Handler: `v{INFRA_VER}`"
+  FOOTER: "------------------------------------------------------------------"
+
+USER_GUIDE:
+  HEADER:
+    - "🥭 **Mango Minecraft Guidebook** 🗺️"
+    - ""
+    - "🏡 IP: `{SERVER_IP}:{SERVER_PORT}`"
+    - "⚙️ Version: `{SERVER_VERSION}`"
+    - "🛡️ System HP: {INFRASTRUCTURE_STATUS_MSG}"
+    - ""
+  COMMANDS_TITLE: 🛠️ **Commands:**
+  START_CMD:
+    - "**start**: 🚀 Use this command to start the Minecraft server! Just type `!start` and watch the magic happen."
+  STATUS_CMD:
+    - "**status**: 🔍 Type `!status` and I'll get the latest updates for you."
+  STOP_CMD:
+    - "**stop**: 🛑 Want to pause your Minecraft journey for now? Type `!stop` and the server will safely stop, allowing you to resume later"
+  FEAT_CMD:
+    - "**features**: ✨ Type `!features` to learn about the unique capabilities and tools of the Minecraft server."
+  FOOTER: "------------------------------------------------------------------"
+
+COMMAND_SCROLL:
+  - "📜 The command scroll is at your service 🔮"
+  - "📜 Scroll open, awaiting command 🌟"
+  - "📜 Input command to start the magic 🔮"
+  - "🔮 Ready and waiting for your command 📜"
+
+FEATURES:
+  - "✨ **Features:**"
+  - "- **Multiplayer Sleep:** 💤 A single player can sleep and skip the night for everyone."
+  - "- **Coordinates HUD:** 📍 Coordinates and 24-hour clock display above the hotbar using `/trigger ch_toggle`"
+  - "- **Armour Status:** 🛡️ Modify and pose armor stands using a special book."
+  - "- **Custom Nether Portal:** 🔥 Create Nether portals of any shape or size, even with crying obsidian."
+  - "- **Item Averages:** 💡 Count items passing through a given spot."
+  - "- **Larger Phantoms:** 🦇 Creates larger phantoms based on how long since you last slept."
+  - "- **Real-Time Clock:** ⏰ Trigger to let you see how long a Minecraft world has been running."
+  - "- **Village Death Message:** 💔 Villager death messages."
+  - "- **XP Management:** 💼 Right-Click an enchantment table with an empty bottle to fill it with some of your XP."
+
+FARGATE:
+  STARTING_REPLIES:
+    - "Your Minecraft server is under construction! Please hang in there, it should be ready in about 6-7 minutes."
+    - "We're hard at work setting up your Minecraft server. Expect to be playing in just 6-7 minutes!"
+    - "Minecraft server coming up! Sit tight, we'll have it ready for you in roughly 6-7 minutes."
+  ACTIVATING_REPLIES:
+    - "Initiating server setup. Your Minecraft world is being created!"
+    - "Hang tight! We're in the process of creating your Minecraft world."
+    - "Just a moment more. We're bringing your Minecraft server to life!"
+  RUNNING_REPLIES:
+    - "Your Minecraft server is being prepared. Please wait while we set up the infrastructure for your adventure!"
+    - "Great news! We're currently setting up your Minecraft server. Get ready to embark on your journey soon!"
+    - "Your Minecraft server is currently being provisioned. It won't be long before you can start your exciting adventure!"
+  STOPPING_REPLIES:
+    - "We're wrapping up server setup. Your Minecraft world is almost ready!"
+    - "Just a few final touches and your Minecraft world will be ready."
+    - "Almost there! Your Minecraft world is nearly ready for you."
+  STOPPED_REPLIES:
+    - "Minecraft server setup complete. Welcome to your new world!"
+    - "Server setup is done! Your Minecraft world awaits."
+    - "All done! Your Minecraft server is ready for exploration."
+  STOP_PROVISIONING_REPLIES:
+    - "We're preparing to take your Minecraft server offline, please wait."
+    - "Starting the shutdown process for your Minecraft server, please hold on."
+    - "We're beginning the process to bring your Minecraft server offline."
+  STOP_ACTIVATING_REPLIES:
+    - "Initiating server shutdown. Your Minecraft world is being saved."
+    - "Starting the process to safely shut down your Minecraft world."
+    - "Your Minecraft server is preparing to go offline. We're saving your world data."
+  STOP_RUNNING_REPLIES:
+    - "Your Minecraft server is currently shutting down."
+    - "Server shutdown in progress. Your Minecraft world will be ready for you when you return."
+    - "Your Minecraft server is on its way offline. We're making sure everything is saved for next time."
+
+MINECRAFT_SERVER:
+  MC_SERVER_UP:
+    - "✅ Great news! Our Minecraft server has returned from its break and is ready for crafting and building. Time to dive back in!"
+    - "✅ Get your pickaxes ready! The server is online and eager for more Minecraft adventures."
+    - "✅ All systems are go! Our server has returned from the Nether and is now online. It's crafting time once again."
+    - "✅ Attention all builders! The Minecraft server is now online and ready for your epic adventure."
+    - "✅ We're back! The Minecraft server has returned from its ocean monument adventure. Dive back into your world!"
+  MC_SERVER_DOWN:
+    - "🚫 Minecraft server is currently taking a well-earned break. Type `!start` to launch the server!"
+    - "🚫 The Minecraft server is currently offline. Now's a great time to plan your next big build."
+    - "🚫 Our server is currently catching some Z's. Type `!start` to nudge it awake for more crafting."
+    - "🚫 The Minecraft server is off on a short adventure. Type `!start` for its return, and be ready for more epic gameplay!"
+    - "🚫 The Minecraft server is currently in rest mode. A perfect opportunity to gather your thoughts for your next big project!"
+
+ERRORS_AND_MAINTENANCE:
+  API_ERROR_MSGS:
+    - "Oh no! There seems to be a creeper in the system. Please try again and if the problem persists, get in touch with {help_desk_users}."
+    - "We hit some bedrock! Your request couldn't be completed right now. If you continue to have issues, let {help_desk_users} know."
+    - "It seems our redstone circuitry is acting up. Please try again and let {help_desk_users} know if you're still facing issues."
+  MAINTENANCE_MESSAGES:
+    - "⚙️ Minecraft server maintenance underway. Back shortly!"
+    - "⚙️ Crafting break! Maintenance in progress."
+    - "⚙️ Temporarily offline for upgrades."
+    - "⚙️ Server maintenance in motion. See you soon!"
+    - "⚙️ Leveling up! Momentary server maintenance."
+    - "⚙️ Brb - Server maintenance ongoing."
+    - "⚙️ Minecraft world undergoing maintenance. Back shortly!"
+    - "⚙️ Hold tight! Maintenance mode activated."
+
+ACCESS_RESTRICTIONS:
+  ADMIN_ONLY_REPLIES:
+    - "🖋️ Only Admins can write this book's next chapter."
+    - "🚪 Behind this door are Admin mysteries. Got the key?"
+    - "🌌 That's a path to the End. Only Ender Admins can tread."
+    - "🗝️ Looks like a locked Nether portal. Admins may have the key."
+    - "🧪 Need the right potion (Admin access) to brew that."
+    - "📜 A sealed scroll? Only Admins can unroll it."
+    - "🔒 Enchanted lock detected. Seek an Admin for the charm."
+    - "🌠 Shooting star? Only Admins can make this wish."
+
+ARCHIVING_ACTIONS:
+  WORLD_ARCHIVE_REPO_REPLIES:
+    - "📦 Packing up and compressing the realm"
+    - "🏺 Sealing your world in a smaller vessel"
+    - "⛏️ Archiving blocks and memories into a compact chest"

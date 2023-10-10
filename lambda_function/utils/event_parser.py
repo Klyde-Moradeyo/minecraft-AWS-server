@@ -16,7 +16,7 @@ class APIEventParser:
         self.logger.info(f"body: \n{format_dictionary(self.body)}")
 
     def parse(self):
-        action = self.extract_key("command")
+        action = self.extract_key("action")
 
         return {
             "action": action,
