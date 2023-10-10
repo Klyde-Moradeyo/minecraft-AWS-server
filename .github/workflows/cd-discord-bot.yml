@@ -64,10 +64,12 @@ jobs:
           # Get Terraform outputs
           API_URL=$(terraform output -raw api_gateway_url)
           SERVER_IP=$(terraform output -raw eip)
+          SERVER_PORT=$(terraform output -raw mc_port)
 
           # Create Env Vars
           echo "API_URL=$API_URL" >> $GITHUB_ENV
           echo "SERVER_IP=$SERVER_IP" >> $GITHUB_ENV
+          echo "SERVER_PORT=$SERVER_PORT" >> $GITHUB_ENV
 
           # Hide the Environment Variables
           echo "::add-mask::$API_URL"
@@ -83,6 +85,7 @@ jobs:
         run: |
           flyctl secrets set API_URL=${{ env.API_URL }}
           flyctl secrets set SERVER_IP=${{ env.SERVER_IP }}
+          flyctl secrets set SERVER_PORT=${{ env.SERVER_PORT }}
           flyctl secrets set DEV_DISCORD_ACCOUNT_ID=${{ secrets.DEV_DISCORD_ACCOUNT_ID }}
           flyctl deploy --remote-only
 
