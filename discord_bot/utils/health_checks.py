@@ -32,4 +32,5 @@ class HealthCheck:
         Placeholder for health check
         """
         status = ["`HEALTHY💚`", "`MAINTENANCE🔧`", "`Issues⚠️ - [REASON] `"]
-        return random.choice(status)
+        # return random.choice(status)
+        return "`HEALTHY💚`"

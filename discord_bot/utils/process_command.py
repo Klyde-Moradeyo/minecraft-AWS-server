@@ -61,7 +61,7 @@ class ProcessAPICommand:
 
             # Send new message
             await self.command_scroll_msg.edit_msg(self.context.channel, message)
-            await self.scheduler.add_task("reset_command_scroll", self.scheduler.reset_command_scroll, RESET_COMMAND_SCROLL_CHECK_INTERVAL, self.command_scroll_msg, self.bot_response, self.context.channel)
+            await self.scheduler.add_task("reset_command_scroll", self.scheduler.reset_command_scroll, RESET_COMMAND_SCROLL_CHECK_INTERVAL, self.command_scroll_msg, self.bot_response, self.context.channel, RESET_COMMAND_SCROLL_TIME)
             self.logger.info(message)
         except Exception as e:
             self.logger.exception(str(e))

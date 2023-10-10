@@ -76,14 +76,11 @@ class Scheduler:
         self.logger.info("periodic_health_check running!")
         pass
 
-    async def reset_command_scroll(self, task_id, command_scroll_msg: MessageManager, bot_response: BotResponse, channel):
+    async def reset_command_scroll(self, task_id, command_scroll_msg: MessageManager, bot_response: BotResponse, channel, reset_time):
             """
             Reset command scroll after a specific interval.
             """
             try:
-                # reset time
-                reset_time = 5 
-
                 # Get Message Map details
                 msg_list = command_scroll_msg.list_messages()
                 msg = msg_list[channel.id]
@@ -93,7 +90,7 @@ class Scheduler:
 
                 # Check if Message already has task running, if it's running do stop task
                 if msg_task_id is not None and msg_task_id != task_id:
-                    await self.stop_task(task_id, f"Scheduler - '{task_id}' - '{msg_task_id}' Task Already runnning")
+                    await self.stop_task(task_id, f"Task Already runnning")
                     return
                 
                 command_scroll_msg.update_task_id(channel.id, task_id)
@@ -108,6 +105,7 @@ class Scheduler:
                     message = bot_response.get_cmd_scroll_msg()
                     await command_scroll_msg.edit_msg(channel, message)
                     await self.stop_task(task_id, "Task Finished")
+                    command_scroll_msg.update_task_id(channel.id, None)
             except Exception as e:
                 self.logger.exception(f"Scheduler - '{task_id}' - Exception in reset_command_scroll for channel id: '{channel.id}': {e}")
                 await self.stop_task(task_id, "Task Error")
