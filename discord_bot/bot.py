@@ -29,11 +29,11 @@ class MinecraftBot(commands.Cog):
         self.bot = bot
         self.logger = setup_logging() # Setting up logger
         self.envs = EnvironmentVariables().get_vars()
-        self.channel_manager = ChannelManager(DISCORD_CHANNEL_CATEGORY_NAME, DISCORD_CHANNEL_NAME)
         self.file_helper = FileHelper()
         self.permission_manager = PermissionManager()
         self.scheduler = Scheduler()
         self.bot_ready = BotReady()
+        self.channel_manager = ChannelManager(DISCORD_CHANNEL_CATEGORY_NAME, DISCORD_CHANNEL_NAME)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -45,15 +45,20 @@ class MinecraftBot(commands.Cog):
 
         # Loop through discord servers and 
         for guild in bot.guilds:
-            channel = await self.channel_manager.create_channel(guild) # Create channels
-
-            # Remove Previous Contents from the channel
-            await channel.purge(limit=None)
+            channel, isFirstTimeChannelRun = await self.channel_manager.create_channel(guild) # Create channels
 
             # Print Initilizing message
             self.logger.info(f"guild_name: '{guild.name}' - id: '{guild.id}' - - Sending Initilization Message...")  
             init_yml = YamlHelper(yaml_str=INIT_MSG)
-            message = self.info_msg.construct_message_from_dict(init_yml.get_data())
+
+            if isFirstTimeChannelRun:
+                self.logger.info(f"isFirstTimeChannelRun: {isFirstTimeChannelRun}")  
+                message = self.info_msg.construct_message_from_dict(init_yml.get_data()["ON_INIT"])
+            else:
+                self.logger.info(f"isFirstTimeChannelRun: {isFirstTimeChannelRun}")  
+                message = self.info_msg.construct_message_from_dict(init_yml.get_data()["UPDATING"])
+
+            # Send Message
             await self.info_msg.send_new_msg(channel, message)
              
         # Load yaml file

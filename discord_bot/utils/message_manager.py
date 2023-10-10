@@ -1,18 +1,29 @@
 import discord
 from discord.ext import commands
+from config import *
 from utils.logger import setup_logging
 from utils.helpers import DateTimeManager
+from utils.state_manager import StateManager
 
 class MessageManager:
     def __init__(self):
         self.logger = setup_logging()
-        self.message_map = {}
         self.datetime = DateTimeManager()
+        self.state_manager = StateManager(MESSAGE_STATE_FILE)
+
+        # Try and Restore State
+        if self.state_manager.isStateExist():
+            self.message_map = self.state_manager.load_state()
+        else:
+            self.message_map = {}
 
     async def send_new_msg(self, channel, content):
-        msg = await channel.send(content)
-        self.add_message(channel.id, msg.id)
-        return msg.id 
+        if self.message_map.get(channel.id, {}):
+            return self.message_map[channel.id]
+        else:
+            msg = await channel.send(content)
+            self.add_message(channel.id, msg.id)
+            return msg.id
     
     async def edit_msg(self, channel, content):
         try:
@@ -60,6 +71,9 @@ class MessageManager:
             'task_id': task_id
         }
 
+        # Update state
+        self.state_manager.save_state(self.list_messages())
+
     async def get_message(self, channel):
         """
         Retrieve the message object for a given channel.
@@ -102,6 +116,7 @@ class MessageManager:
         """
         if channel_id in self.message_map:
             del self.message_map[channel_id]
+            self.state_manager.save_state(self.list_messages()) # Update state
 
     def list_messages(self):
         """
@@ -116,6 +131,9 @@ class MessageManager:
         message_info = self.message_map.get(channel_id)
         if message_info:
             message_info['datetime'] = self.datetime.get_current_datetime()
+        
+        # Update state
+        self.state_manager.save_state(self.list_messages())
 
     def update_task_id(self, channel_id, task_id):
         """
@@ -124,6 +142,9 @@ class MessageManager:
         message_info = self.message_map.get(channel_id)
         if message_info:
             message_info['task_id'] = task_id
+
+        # Update state
+        self.state_manager.save_state(self.list_messages())
     
     def construct_message_from_dict(self, data):
         """
