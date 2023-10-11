@@ -1,18 +1,31 @@
 import discord
 from discord.ext import commands
+from config import *
 from utils.logger import setup_logging
 from utils.helpers import DateTimeManager
+from utils.state_manager import StateManager
 
 class MessageManager:
-    def __init__(self):
+    def __init__(self, state_file):
         self.logger = setup_logging()
-        self.message_map = {}
         self.datetime = DateTimeManager()
+        self.state_manager = StateManager(state_file)
+
+        # Try and Restore State
+        if self.state_manager.has_data():
+            self.message_map = self.state_manager.get_state()
+            self.logger.info(f"MessageHandler State('{state_file}'): {self.message_map}")
+        else:
+            self.message_map = {}
 
     async def send_new_msg(self, channel, content):
-        msg = await channel.send(content)
-        self.add_message(channel.id, msg.id)
-        return msg.id 
+        if channel.id in self.message_map:
+            await self.edit_msg(channel, content)
+            return self.get_message_id(channel.id)
+        else:
+            msg = await channel.send(content)
+            self.add_message(channel.id, msg.id)
+            return msg.id
     
     async def edit_msg(self, channel, content):
         try:
@@ -34,7 +47,6 @@ class MessageManager:
         except discord.HTTPException as e:
             self.logger.info(f"msg_id: '{message_id}' -  Editing Message failed due to {e}")
 
-    
     async def delete_msg(self, context, message_id):
         try:
             # Fetch the message from the current channel
@@ -60,6 +72,9 @@ class MessageManager:
             'task_id': task_id
         }
 
+        # Update state
+        self.state_manager.save_state(self.list_messages())
+
     async def get_message(self, channel):
         """
         Retrieve the message object for a given channel.
@@ -81,10 +96,19 @@ class MessageManager:
             return None
         except discord.HTTPException as e:
             # Handle other HTTP exceptions (e.g., lack of permissions, rate limits, etc.)
-            self.logger.info(f"'msg_id: '{message_id}' - Failed to fetch message: {e}")  # Updated to use logger instead of print
+            self.logger.info(f"'msg_id: '{message_id}' - Failed to fetch message: {e}")
             return None
 
         return message
+    
+    def get_message_id(self, channel_id):
+        """
+        Get message id
+        """
+        message_info = self.message_map.get(channel_id)
+        if message_info is None:
+            return None
+        return message_info['message_id']
     
     def get_message_datetime(self, channel):
         """
@@ -102,6 +126,16 @@ class MessageManager:
         """
         if channel_id in self.message_map:
             del self.message_map[channel_id]
+            self.state_manager.save_state(self.list_messages()) # Update state 
+
+    def has_message(self, channel_id):
+        """
+        Check if a specific channel has a message mapped to it.
+        
+        :param channel_id: ID of the channel to check.
+        :return: True if the channel has a message mapped, otherwise False.
+        """
+        return channel_id in self.message_map
 
     def list_messages(self):
         """
@@ -116,6 +150,9 @@ class MessageManager:
         message_info = self.message_map.get(channel_id)
         if message_info:
             message_info['datetime'] = self.datetime.get_current_datetime()
+        
+        # Update state
+        self.state_manager.save_state(self.list_messages())
 
     def update_task_id(self, channel_id, task_id):
         """
@@ -124,6 +161,9 @@ class MessageManager:
         message_info = self.message_map.get(channel_id)
         if message_info:
             message_info['task_id'] = task_id
+
+        # Update state
+        self.state_manager.save_state(self.list_messages())
     
     def construct_message_from_dict(self, data):
         """

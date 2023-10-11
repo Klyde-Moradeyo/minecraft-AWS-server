@@ -1,5 +1,6 @@
 # Discord Dev Portal: http://discordapp.com/developers/applications
 import asyncio
+import time
 import discord
 from discord.ext import commands
 from config import *
@@ -29,33 +30,42 @@ class MinecraftBot(commands.Cog):
         self.bot = bot
         self.logger = setup_logging() # Setting up logger
         self.envs = EnvironmentVariables().get_vars()
-        self.channel_manager = ChannelManager(DISCORD_CHANNEL_CATEGORY_NAME, DISCORD_CHANNEL_NAME)
         self.file_helper = FileHelper()
         self.permission_manager = PermissionManager()
         self.scheduler = Scheduler()
         self.bot_ready = BotReady()
+        self.channel_manager = ChannelManager(DISCORD_CHANNEL_CATEGORY_NAME, DISCORD_CHANNEL_NAME)
 
     @commands.Cog.listener()
     async def on_ready(self):
         self.logger.info(f"'{bot.user}' has connected to Discord!")  
 
         # Init MessageManagers
-        self.info_msg = MessageManager()
-        self.command_scroll_msg = MessageManager()
+        self.info_msg = MessageManager(INFO_MSG_MANAGER_STATE_FILE)
+        self.command_scroll_msg = MessageManager(CMD_SCROLL_MSG_MANAGER_STATE_FILE)
 
         # Loop through discord servers and 
         for guild in bot.guilds:
             channel = await self.channel_manager.create_channel(guild) # Create channels
 
-            # Remove Previous Contents from the channel
-            await channel.purge(limit=None)
-
             # Print Initilizing message
-            self.logger.info(f"guild_name: '{guild.name}' - id: '{guild.id}' - - Sending Initilization Message...")  
+            self.logger.info(f"guild_name: '{guild.name}' - id: '{guild.id}' - Sending Initilization Message...")  
             init_yml = YamlHelper(yaml_str=INIT_MSG)
-            message = self.info_msg.construct_message_from_dict(init_yml.get_data())
+
+            if self.info_msg.has_message(channel.id):
+                message = self.info_msg.construct_message_from_dict(init_yml.get_data()["UPDATING"])
+            else:
+                await channel.purge(limit=None)
+                message = self.info_msg.construct_message_from_dict(init_yml.get_data()["ON_INIT"])
+
+            # Send info Message
             await self.info_msg.send_new_msg(channel, message)
-             
+
+            # Check If Command Scroll is present
+            if self.command_scroll_msg.has_message(channel.id):
+                message = self.command_scroll_msg.construct_message_from_dict(init_yml.get_data()["CMD_SCROLL_DISABLED"])
+                await self.command_scroll_msg.edit_msg(channel, message)
+    
         # Load yaml file
         self.bot_message_yml = YamlHelper(BOT_MSG_PATH)
 
@@ -79,7 +89,7 @@ class MinecraftBot(commands.Cog):
 
         # Init Bot Responses
         self.bot_response = BotResponse(self.bot_message_yml.get_data())
-
+        time.sleep(10) # temporary
         for guild in bot.guilds:
             channel = self.channel_manager.get_channel(guild)
 
