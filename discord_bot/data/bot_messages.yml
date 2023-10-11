@@ -1,11 +1,11 @@
 VERSION:
-  HEADER: "------------------------------------------------------------------"
+  HEADER: "-------------------------------------------------------"
   MESSAGE:
   - "Discord Bot: `v{DISCORD_BOT_VER}`"
   - "Lambda Function: `v{LAMBDA_VER}`"
   - "Fargate: `v{FARGATE_VER}`"
   - "Infrastructure Handler: `v{INFRA_VER}`"
-  FOOTER: "------------------------------------------------------------------"
+  FOOTER: "-------------------------------------------------------"
 
 USER_GUIDE:
   HEADER:
@@ -24,7 +24,7 @@ USER_GUIDE:
     - "**stop**: 🛑 Want to pause your Minecraft journey for now? Type `!stop` and the server will safely stop, allowing you to resume later"
   FEAT_CMD:
     - "**features**: ✨ Type `!features` to learn about the unique capabilities and tools of the Minecraft server."
-  FOOTER: "------------------------------------------------------------------"
+  FOOTER: "-------------------------------------------------------"
 
 COMMAND_SCROLL:
   - "📜 The command scroll is at your service 🔮"
