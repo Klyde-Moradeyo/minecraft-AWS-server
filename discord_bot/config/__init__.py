@@ -22,8 +22,8 @@ CMD_SCROLL_DISABLED:
 """
 
 ## RESET COMMAND SCROLL CHECK INTERVAL
-RESET_COMMAND_SCROLL_CHECK_INTERVAL = 1 # seconds
-RESET_COMMAND_SCROLL_TIME = 5 # seconds
+RESET_COMMAND_SCROLL_CHECK_INTERVAL = 60 # seconds
+RESET_COMMAND_SCROLL_TIME = 300 # seconds
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
