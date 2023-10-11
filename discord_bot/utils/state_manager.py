@@ -14,6 +14,9 @@ class StateManager:
         os.makedirs(dir_path, exist_ok=True)
 
     def _load_initial_state(self):
+        if self.file_path == "NOT_SPECIFIED":
+            return {}
+        
         self._ensure_directory_exists()
 
         if not os.path.exists(self.file_path):
