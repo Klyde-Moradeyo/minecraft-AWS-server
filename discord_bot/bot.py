@@ -65,7 +65,7 @@ class MinecraftBot(commands.Cog):
             if self.command_scroll_msg.has_message(channel.id):
                 message = self.command_scroll_msg.construct_message_from_dict(init_yml.get_data()["CMD_SCROLL_DISABLED"])
                 await self.command_scroll_msg.edit_msg(channel, message)
-             
+    
         # Load yaml file
         self.bot_message_yml = YamlHelper(BOT_MSG_PATH)
 
