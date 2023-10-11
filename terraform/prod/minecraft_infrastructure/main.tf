@@ -28,7 +28,7 @@ locals {
 #           Modules            #
 ################################
 module "minecraft_server" {
-  source = "github.com/Klyde-Moradeyo/minecraft-AWS-server//modules/ec2_instance?ref=TF_0.0.2"
+  source = "git@github.com:Klyde-Moradeyo/minecraft-AWS-server.git//modules/ec2_instance?ref=TF_0.0.2"
   
   # Terraform Cloud Config
   tf_cloud_org                      = var.tf_cloud_org
