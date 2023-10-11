@@ -1,6 +1,6 @@
 requests==2.31.0
 boto3==1.26.121
-gitpython==3.1.35
+gitpython==3.1.37
 cryptography==41.0.4
 paramiko==3.2.0
 scp==0.14.5
