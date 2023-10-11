@@ -11,8 +11,8 @@ class ChannelManager:
         self.state_manager = StateManager(CHANNEL_STATE_FILE)
 
         # Try and Restore State
-        if self.state_manager.isStateExist():
-            self.channel_mappings = self.state_manager.load_state()
+        if self.state_manager.has_data():
+            self.channel_mappings = self.state_manager.get_state()
         else:
             self.channel_mappings = {}
 
@@ -26,20 +26,23 @@ class ChannelManager:
         channel = discord.utils.get(category.text_channels, name=self.channel_name)
         if channel is None:
             channel = await category.create_text_channel(self.channel_name)
+        
+        if not self.has_channel(channel.id):
             self.add_channel(guild.id, channel.id) 
-            await channel.purge(limit=None)
-            isFirstRun = True
-        else:
-            isFirstRun = False
-
-        return channel, isFirstRun
+        return channel
 
     def add_channel(self, guild_id, channel_id):
         """
         Add a channel mapping. If the guild_id already exists, it'll be updated
         """
-        self.channel_mappings[guild_id] = channel_id
+        self.channel_mappings[guild_id] = int(channel_id)
         self.state_manager.save_state(self.list_channels()) # save state
+
+    def has_channel(self, channel_id):
+        """
+        Check if the channel is present
+        """
+        return channel_id in self.channel_mappings
 
     def get_channel(self, guild):
         """
