@@ -39,12 +39,12 @@ class Scheduler:
             task_id = self._generate_task_id(task_name)
             partial_coro = functools.partial(task_method, task_id, *args)
             self.tasks[task_id] = tasks.loop(seconds=interval)(partial_coro)
-            await self.start_task(task_id, interval)
+            await self._start_task(task_id, interval)
             return task_id
         except Exception as e:
             self.logger.exception(f"Scheduler - Exception in add_task: {e}")
 
-    async def start_task(self, task_id, interval):
+    async def _start_task(self, task_id, interval):
         """
         Start a scheduled task.
         """
@@ -56,7 +56,7 @@ class Scheduler:
             self.tasks[task_id].start()
             self.logger.info(f"Scheduler - '{task_id}' - Started at check interval '{interval}s'")
         except Exception as e:
-            self.logger.exception(f"Scheduler - '{task_id}' - Exception in start_task: {e}")
+            self.logger.exception(f"Scheduler - '{task_id}' - Exception in _start_task: {e}")
 
     async def stop_task(self, task_id, reason):
         """
@@ -111,4 +111,7 @@ class Scheduler:
                 await self.stop_task(task_id, "Task Error")
 
     async def poll_minecraft_server_online(self):
+        pass  # Implement
+
+    async def check_if_channel_has_present(self):
         pass  # Implement
