@@ -40,8 +40,3 @@ CMD_SCROLL_MSG_MANAGER_STATE_FILE = os.path.join(BASE_DIR, "state", "cmd_scroll_
 
 ##### ROLES #####
 ADMIN_ROLE_NAME = "Minecraft-Admin"
-
-
-
-
-
