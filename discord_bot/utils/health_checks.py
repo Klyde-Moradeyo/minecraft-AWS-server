@@ -20,10 +20,10 @@ class HealthCheck:
         """
         Placeholder for version checker
         """
-        discord_bot_version = 1.0
-        lambda_version = 2.1
-        fargate_verson = 4.59
-        infra_handler_version = 3.11
+        discord_bot_version = None
+        lambda_version = None
+        fargate_verson = None
+        infra_handler_version = None
         return discord_bot_version, lambda_version, fargate_verson, infra_handler_version
     
     def get_health(self):

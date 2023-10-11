@@ -6,7 +6,7 @@ from utils.helpers import DateTimeManager
 from utils.state_manager import StateManager
 
 class MessageManager:
-    def __init__(self, state_file):
+    def __init__(self, state_file="NOT_SPECIFIED"):
         self.logger = setup_logging()
         self.datetime = DateTimeManager()
         self.state_manager = StateManager(state_file)

@@ -33,6 +33,9 @@ override.tf.json
 # Terraform EIP and Lambda minecraft_infrastructure
 terraform/minecraft_infrastructure/scripts
 
+# Discord Bot folder
+discord_bot/state
+
 # Lambda Folder
 lambda_function/package
 lambda_function_payload.zip
