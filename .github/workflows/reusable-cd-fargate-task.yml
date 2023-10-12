@@ -41,6 +41,14 @@ jobs:
         name: "Push fargate task"
         runs-on: ubuntu-latest
         steps:
+        - name: Setup SSH Key
+          env:
+            SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          run: |
+            echo "${SSH_PRIVATE_KEY}" | base64 -d > ~/.ssh/id_rsa
+            chmod 600 ~/.ssh/id_rsa
+            ssh-keyscan github.com >> ~/.ssh/known_hosts
+
         - name: Checkout code
           uses: actions/checkout@v3
           with:
