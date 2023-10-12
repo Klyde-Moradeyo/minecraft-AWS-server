@@ -1,7 +1,7 @@
 import os
 
 ##### Maintenance Mode #####
-IS_MAINTENANCE = False
+IS_MAINTENANCE = True
 
 ##### DISCORD VARS #####
 DISCORD_CHANNEL_NAME = "mango-minecraft"
