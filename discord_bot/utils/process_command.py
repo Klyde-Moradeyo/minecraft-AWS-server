@@ -9,13 +9,13 @@ from utils.scheduler import Scheduler
 
 class ProcessAPICommand:
 
-    def __init__(self, context, command, bot_ready: BotReady(), valid_commands, envs, command_scroll_msg: MessageManager, permision_manager: PermissionManager, bot_response: BotResponse):
+    def __init__(self, context, command, bot_ready: BotReady(), valid_commands, envs, command_scroll_msg: MessageManager, permission_manager: PermissionManager, bot_response: BotResponse):
         self.logger = setup_logging()
         self.context = context
         self.command = command
         self.command_scroll_msg = command_scroll_msg
         self.bot_response = bot_response
-        self.permision_manager = permision_manager
+        self.permission_manager = permission_manager
         self.envs = envs
         self.bot_ready = bot_ready
         self.scheduler = Scheduler()
@@ -98,14 +98,14 @@ class ProcessAPICommand:
         """
         # Check Maintenance - Only allow Admins to use Discord bot while maintenance mode is ON.
         self.logger.info(f"IS_MAINTENANCE: {IS_MAINTENANCE}")
-        if IS_MAINTENANCE and not self.permision_manager.is_admin(self.context.author.id):
+        if IS_MAINTENANCE and not self.permission_manager.is_admin(self.context.author.id):
             message = self.bot_response.get_maintenance_msg()
             await self.command_scroll_msg.edit_msg(self.context.channel, message)
             # self.datetime = datetime.now() 
             # latest_guild_commands[self.context.guild.id] = self
             return False
         
-        if self.command in self.valid_commands["admin_only"] and not self.permision_manager.is_admin(self.context.author.id):
+        if self.command in self.valid_commands["admin_only"] and not self.permission_manager.is_admin(self.context.author.id):
             self.logger.info(f"{self.context.author.name} not AUTHORIZED to perform {self.command}")
             message = self.bot_response.get_admin_only_reply_msg()
             await self.command_scroll_msg.edit_msg(self.context.channel, message)
