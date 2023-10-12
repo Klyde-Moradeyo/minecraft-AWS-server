@@ -20,6 +20,8 @@ on:
         required: true
       tf_api_token:
         required: true
+      ssh_private_key:
+        required: true
     outputs:
       artifact_name:
         description: "Artifact name"
@@ -73,7 +75,7 @@ jobs:
 
         - name: Setup SSH Key
           env:
-            SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+            SSH_PRIVATE_KEY: ${{ secrets.ssh_private_key }}
           run: |
             echo "${{ env.SSH_PRIVATE_KEY }}" | base64 -d > ~/.ssh/id_rsa
             chmod 600 ~/.ssh/id_rsa
