@@ -70,6 +70,14 @@ jobs:
             terraform_version: 1.4.4
             cli_config_credentials_token: ${{ secrets.tf_api_token }}
             terraform_wrapper: false
+
+        - name: Setup SSH Key
+          env:
+            SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          run: |
+            echo "${{ env.SSH_PRIVATE_KEY }}" | base64 -d > ~/.ssh/id_rsa
+            chmod 600 ~/.ssh/id_rsa
+            ssh-keyscan github.com >> ~/.ssh/known_hosts 
             
         - name: Initialize Terraform Env
           working-directory: ${{ inputs.tf_config_dir }}
