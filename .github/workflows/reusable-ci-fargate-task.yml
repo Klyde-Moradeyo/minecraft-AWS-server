@@ -78,7 +78,7 @@ jobs:
             SSH_PRIVATE_KEY: ${{ secrets.ssh_private_key }}
           run: |
             mkdir -p ~/.ssh
-            echo "${{ env.SSH_PRIVATE_KEY }}" | base64 -d > ~/.ssh/id_rsa
+            echo "${{ env.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
             chmod 600 ~/.ssh/id_rsa
             ssh-keyscan github.com >> ~/.ssh/known_hosts 
             
