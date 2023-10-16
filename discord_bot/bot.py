@@ -71,14 +71,16 @@ class MinecraftBot(commands.Cog):
 
         # Perform Health Check - WIP
         self.logger.info("Performing Health Checks...")
-        health_check = HealthCheck()
+        health_check = HealthCheck(self.envs)
+        self.logger.info(f"Service Summary: {health_check.retrieve_health_summary()}")
+        # format_json_neatly
         bot_ver, lambda_ver, fargate_ver, infra_ver = health_check.get_version()
 
         # Update bot_messages.yml data
         variables = {
             "SERVER_IP": str(self.envs["SERVER_IP"]),
             "SERVER_PORT": str(self.envs["SERVER_PORT"]),
-            "SERVER_VERSION": "N/A",
+            "SERVER_VERSION": "-",
             "INFRASTRUCTURE_STATUS_MSG": health_check.get_health(),
             "DISCORD_BOT_VER": str(bot_ver),
             "LAMBDA_VER": str(lambda_ver),
