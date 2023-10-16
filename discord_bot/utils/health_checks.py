@@ -1,41 +1,87 @@
-# check if:
-# - AWS is online
-# - Discord is online
-# - Terraform Cloud is Online
-# - Github is Online
-# - AWS lambda is functioning
-# - Fargate is functioning and has a image available
-# - 
-
 import os
 import requests
-from requests.exceptions import RequestException
+from requests.exceptions import RequestException, Timeout
 from .logger import setup_logging
+from utils.api_helper import APIUtil
 
 class HealthCheck:
-    def __init__(self):
-        self.services = None
+    def __init__(self, envs):
+        self.services = {}
         self.logger = setup_logging()
+        self.envs = envs
+        self.base_urls = {
+            'fly_io': 'https://status.flyio.net/api/v2/summary.json',
+            'AWS_MCI': envs['API_URL'], # Minecraft Infrastructure Coordinator Lambda
+            'Discord': 'https://discordstatus.com/api/v2/summary.json',
+            'Terraform_Cloud': 'https://status.hashicorp.com/api/v2/summary.json',
+            'Github': 'https://kctbh9vrtdwd.statuspage.io/api/v2/summary.json'
+        }
+
+    def _request_status(self, url):
+        try:
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+            return response.json(), None
+        except (RequestException, Timeout, ValueError) as e:
+            return None, str(e)
+
+    def check_generic_service(self, service_name):
+        data, error = self._request_status(self.base_urls[service_name])
+        if error:
+            return 'issues', error
+        if data['status']['indicator'] == 'none':
+            return "healthy", None
+        return 'issues', data['status']['description']
+
+    def check_terraform(self):
+        data, error = self._request_status(self.base_urls['Terraform_Cloud'])
+        if error:
+            return 'issues', error
+        for component in data['components']:
+            if component['name'] == "Terraform Cloud":
+                if component['status'] == 'operational':
+                    return "healthy", None
+                return 'issues', component['status']
+        return 'issues', 'Unknown error'
+    
+    def check_lambda_MCI(self):
+        data = { "action": "PING" }
+        api_helper = APIUtil(self.envs)
+        response = api_helper.send_to_api(data, None, 10, 3, 1)
+
+        response = {}
+        response["STATUS"] = "PONG"
+        # Returns Pong if Healthy
+        if response["STATUS"] == "PONG":
+            return "healthy", None
+        else:
+            return 'issues', "API Unavailable"
 
     def get_service_status(self):
         self.logger.info("HealthCheck - Querying Service Health Status...")
-        services = {
-                    "AWS_MCI_Lambda": self._check_AWS_MCI, # Minecraft Infrastructure Coordinator Lambda # use aws health and a ping pong for lambda
-                    'fly_io': self._check_flyio,
-                    'Discord': self._check_discord,
-                    'Terraform_Cloud': self._check_terraform,
-                    'Github': self._check_github,
+
+        checks = {
+            "AWS_MCI": self.check_lambda_MCI,
+            'fly_io': self.check_generic_service,
+            'Discord': self.check_generic_service,
+            'Github': self.check_generic_service,
+            'Terraform_Cloud': self.check_terraform
         }
-        self.logger.info(f"HealthCheck - Received Service Health Status:'{services}'")   
-        return services
+
+        for service, checker in checks.items():
+            if service == "Terraform_Cloud" or service == "AWS_MCI":
+                status, reason = checker()
+            else:
+                status, reason = checker(service)
+
+            self.services[service] = (status, reason)
+            self.logger.info(f"HealthCheck - {service} is {status}. Reason: {reason}")
+
+        return self.services
 
     def retrieve_health_summary(self):
-        self.services = self.get_service_status()
-        issues = []
-        for service, checker in self.services.items():
-            status, reason = checker()
-            if status == 'issues':
-                issues.append(f"{service} - {reason}")
+        self.get_service_status()
+        issues = [f"{service} - {reason}" for service, (status, reason) in self.services.items() if status == 'issues']
 
         if issues:
             return f'issues - {", ".join(issues)}'
@@ -44,70 +90,3 @@ class HealthCheck:
     
     def get_last_status(self):
         return self.services
-
-    def _check_flyio(self):
-        self.logger.info("HealthCheck - Retrieving Fly.io Status...")
-        url = 'https://status.flyio.net/api/v2/summary.json'
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            data = response.json()
-            if data['status']['indicator'] == 'none':
-                return 'healthy', ''
-            return 'issues', data['status']['description']
-        except RequestException as e:
-            return 'issues', str(e)
-
-    def _check_aws(self):
-        self.logger.info("HealthCheck - Retrieving AWS Status...")
-        url = 'https://status.aws.amazon.com/api/v2/summary.json'
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            data = response.json()
-            if data['status']['indicator'] == 'none':
-                return 'healthy', ''
-            return 'issues', data['status']['description']
-        except RequestException as e:
-            return 'issues', str(e)
-
-    def _check_discord(self):
-        self.logger.info("HealthCheck - Retrieving Discord Status...")
-        url = 'https://discordstatus.com/api/v2/summary.json'
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            data = response.json()
-            if data['status']['indicator'] == 'none':
-                return 'healthy', ''
-            return 'issues', data['status']['description']
-        except RequestException as e:
-            return 'issues', str(e)
-
-    def _check_terraform(self):
-        self.logger.info("HealthCheck - Retrieving Terraform Cloud Status...")
-        url = "https://status.hashicorp.com/api/v2/summary.json"
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            data = response.json()
-            for component in data['components']:
-                if component['name'] == "Terraform Cloud":
-                    if component['status'] == 'operational':
-                        return 'healthy', ''
-                    return 'issues', component['status']
-        except RequestException as e:
-            return 'issues', str(e)
-
-    def _check_github(self):
-        self.logger.info("HealthCheck - Retrieving Github Status...")
-        url = 'https://kctbh9vrtdwd.statuspage.io/api/v2/summary.json'
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            data = response.json()
-            if data['status']['indicator'] == 'none':
-                return 'healthy', ''
-            return 'issues', data['status']['description']
-        except RequestException as e:
-            return 'issues', str(e)
