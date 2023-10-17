@@ -40,7 +40,9 @@ class LambdaHandler:
     
     def execute_command(self):
         try:
-            if self.ACTION == "mc_world_archive":
+            if self.ACTION == "PING":
+                response = self.handle_ping
+            elif self.ACTION == "mc_world_archive":
                 response = self.handle_mc_world_archive()
             elif self.ACTION == 'start':
                 response = self.handle_start()
@@ -155,6 +157,10 @@ class LambdaHandler:
         # If no task is running, directly launch a new one
         self.launch_new_fargate_task()
         return { "STATUS": task_name, 'COMMAND': self.ACTION, "INFO": f"New Fargate task launched: {task_arn} | {task_status}" } # Surely I should be used previous command here instead
+    
+    def handle_ping(self):
+        return {"STATUS": "PONG", "COMMAND": self.ACTION, "INFO": "Testing Lambda with PING - PONG"}
+
 
 # Where the magic happens
 def lambda_handler(event, context):
