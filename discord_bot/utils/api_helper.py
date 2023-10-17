@@ -25,7 +25,10 @@ class APIUtil:
         """
         Constructs a complete URL using the base URL and endpoint.
         """
-        return f"{self.base_url}/{endpoint}"
+        if endpoint == None:
+            return f"{self.base_url}"
+        else:
+            return f"{self.base_url}/{endpoint}"
 
     def _append_metadata(self, data, reason):
         """
