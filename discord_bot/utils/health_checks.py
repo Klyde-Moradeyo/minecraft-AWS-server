@@ -39,7 +39,7 @@ class HealthCheck:
         self.logger.info("HealthCheck - Querying Service Health Status...")
 
         checks = {
-            "AWS_MCI": self._check_lambda_MCI,
+            # "AWS_MCI": self._check_lambda_MCI,
             'fly_io': self._check_flyio,
             'Discord': self._check_discord,
             'Github': self._check_github,
@@ -61,9 +61,9 @@ class HealthCheck:
         if issues:
             issue_details = { "ISSUE_DETAILS": f"{', '.join(issues)}"}
             bot_msg_yaml.resolve_placeholders(issue_details)
-            return bot_msg_yaml.get_data()["INFRASTRUCTURE_STATUS_MSG"]["ISSUES"][0]
+            return bot_msg_yaml.get_data()["INFRASTRUCTURE_STATUS_MSG"]["ISSUES"]
         
-        return bot_msg_yaml.get_data()["INFRASTRUCTURE_STATUS_MSG"]["HEALTHY"][0]
+        return bot_msg_yaml.get_data()["INFRASTRUCTURE_STATUS_MSG"]["HEALTHY"]
     
     def check_maintenance_mode(self):
         return "WIP"
