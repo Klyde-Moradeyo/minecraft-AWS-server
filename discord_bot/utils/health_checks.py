@@ -54,12 +54,15 @@ class HealthCheck:
 
     def retrieve_health_summary(self):
         self.get_service_status()
-        issues = [f"{service} - {reason}" for service, (status, reason) in self.services.items() if status == 'issues']
+        issues = [f"{service} - {reason}" for service, (status, reason) in self.services.items() if status == False]
 
         if issues:
-            return f'issues - {", ".join(issues)}'
+            return f"Issues⚠️ - {', '.join(issues)}"
         
-        return 'healthy'
+        return "`HEALTHY💚`"
+    
+    def check_maintenance_mode(self):
+        return "WIP"
     
     def get_last_status(self):
         return self.services
@@ -68,7 +71,7 @@ class HealthCheck:
         components_list = [ "Deployments", "LHR - London, United Kingdom", "Persistent Storage (Volumes)" ] # components to check
         data, error = self._request_status(self.base_urls["fly_io"])
         if error:
-            return 'issues', error
+            return False, error
         for component in data['components']:
             if component['name'] in components_list:
                 if component['status'] == 'operational':
@@ -97,7 +100,7 @@ class HealthCheck:
         components_list = [ "Terraform Cloud" ] # components to check
         data, error = self._request_status(self.base_urls["Terraform_Cloud"])
         if error:
-            return 'issues', error
+            return False, error
         for component in data['components']:
             if component['name'] in components_list:
                 if component['status'] == 'operational':
@@ -109,7 +112,7 @@ class HealthCheck:
         components_list = [ "Git Operations" ] # components to check
         data, error = self._request_status(self.base_urls["Github"])
         if error:
-            return 'issues', error
+            return False, error
         for component in data['components']:
             if component['name'] in components_list:
                 if component['status'] == 'operational':
