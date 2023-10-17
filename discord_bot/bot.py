@@ -116,6 +116,11 @@ class MinecraftBot(commands.Cog):
             self.logger.info(f"guild_name: '{guild.name}' - id: '{guild.id}' - Sending User Guide Message...")  
             message = self.info_msg.construct_message_from_dict(self.bot_message_yml.get_data()["USER_GUIDE"]) 
             await self.info_msg.edit_msg(channel, message)
+            
+            # self.bot_message_yml.resolve_placeholders({"SERVER_VERSION": "1.20.6666"})
+            # self.logger.info(f"USER_GUILD_HERE: {self.bot_message_yml.get_data()['USER_GUIDE']}")
+            # message = self.info_msg.construct_message_from_dict(self.bot_message_yml.get_data()["USER_GUIDE"])
+            # await self.info_msg.edit_msg(channel, message)
 
             self.logger.info(f"guild_name: '{guild.name}' - id: '{guild.id}' - Sending User Command Scroll Message...")  
             message = self.bot_response.get_cmd_scroll_msg()
