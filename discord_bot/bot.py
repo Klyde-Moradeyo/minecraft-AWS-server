@@ -35,6 +35,7 @@ class MinecraftBot(commands.Cog):
         self.scheduler = Scheduler()
         self.bot_ready = BotReady()
         self.channel_manager = ChannelManager(DISCORD_CHANNEL_CATEGORY_NAME, DISCORD_CHANNEL_NAME)
+        self.health_check = HealthCheck(self.envs)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -73,10 +74,13 @@ class MinecraftBot(commands.Cog):
         # Load yaml file
         self.bot_message_yml = YamlHelper(BOT_MSG_PATH)
 
-        # Perform Health Check - WIP
+        # Perform Health Check
         self.logger.info("Performing Health Checks...")
-        health_check = HealthCheck(self.envs)
-        health_status = health_check.retrieve_health_summary()
+        health_status = self.health_check.retrieve_health_summary(self.bot_message_yml)
+        self.logger.info(f"health_status: {health_status}")
+
+        # Get Versions
+        self.logger.info("Performing Health Checks...")
         smb_ver, msmc_ver, mci_ver, msih_ver = get_versions(self.envs, self.logger)
 
         # Update bot_messages.yml data
@@ -126,8 +130,8 @@ class MinecraftBot(commands.Cog):
         guild_names = [guild.name for guild in bot.guilds]
         self.logger.info(f"Running in Servers: {guild_names}")
 
-        # Start Scheduled Tasks and Checks
-        await self.scheduler.add_task("periodic_health_check", self.scheduler.periodic_health_check, 30)
+        # Start Health Check - currently on 5 sec checks
+        await self.scheduler.add_task("periodic_health_check", self.scheduler.periodic_health_check, 360, self.health_check, bot.guilds, self.info_msg, self.channel_manager, self.bot_message_yml) 
 
         # Bot is now ready to Process commands
         self.bot_ready.set_status(True)

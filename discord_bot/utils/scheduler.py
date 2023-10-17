@@ -8,6 +8,9 @@ from utils.logger import setup_logging
 from utils.helpers import DateTimeManager
 from utils.bot_response import BotResponse
 from utils.message_manager import MessageManager
+from utils.channel_manager import ChannelManager
+from utils.health_checks import HealthCheck
+from utils.file_helper import YamlHelper
 
 class TaskNotFoundError(Exception):
     """
@@ -72,9 +75,23 @@ class Scheduler:
         except Exception as e:
             self.logger.exception(f"Scheduler - '{task_id}' - Exception in stop_task: {e}")
 
-    async def periodic_health_check(self):
-        self.logger.info("periodic_health_check running!")
-        pass
+    async def periodic_health_check(self, task_id, health_check: HealthCheck, guilds, info_msg: MessageManager, channel_manager: ChannelManager, bot_msg_yaml: YamlHelper):
+        try:
+            # Get Health Status
+            health_status = { "INFRASTRUCTURE_STATUS_MSG": health_check.retrieve_health_summary(bot_msg_yaml) }
+            
+            # Prepare Message
+            bot_msg_yaml.resolve_placeholders(health_status)
+            message = info_msg.construct_message_from_dict(bot_msg_yaml.get_data()["USER_GUIDE"]) 
+
+            # Update Info Section with new health status
+            for guild in guilds:
+                channel = channel_manager.get_channel(guild)
+                await info_msg.edit_msg(channel, message)
+
+            self.logger.info(f"Scheduler - '{task_id}' - Periodic Health Check Status: '{health_status['INFRASTRUCTURE_STATUS_MSG']}'")
+        except Exception as e:
+            self.logger.exception(f"Scheduler - '{task_id}' - Exception in periodic_health_check: {e}")
 
     async def reset_command_scroll(self, task_id, command_scroll_msg: MessageManager, bot_response: BotResponse, channel, reset_time):
             """

@@ -160,7 +160,7 @@ class LambdaHandler:
     
     def handle_ping(self):
         self.logger.info("Testing Lambda with PING - PONG")
-        return {"STATUS": "PONG", "COMMAND": self.ACTION, "INFO": "Testing Lambda with PING - PONG"}
+        return { "STATUS": "PONG", "COMMAND": self.ACTION, "INFO": "Testing Lambda with PING - PONG" }
 
 
 # Where the magic happens

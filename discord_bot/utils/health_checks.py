@@ -1,8 +1,10 @@
 import os
 import requests
 from requests.exceptions import RequestException, Timeout
-from .logger import setup_logging
+from config import *
+from utils.logger import setup_logging
 from utils.api_helper import APIUtil
+from utils.file_helper import YamlHelper
 
 class HealthCheck:
     def __init__(self, envs):
@@ -19,7 +21,7 @@ class HealthCheck:
 
     def _request_status(self, url):
         try:
-            response = requests.get(url, timeout=10)
+            response = requests.get(url, timeout=20)
             response.raise_for_status()
             return response.json(), None
         except (RequestException, Timeout, ValueError) as e:
@@ -52,14 +54,16 @@ class HealthCheck:
 
         return self.services
 
-    def retrieve_health_summary(self):
+    def retrieve_health_summary(self, bot_msg_yaml: YamlHelper):
         self.get_service_status()
         issues = [f"{service} - {reason}" for service, (status, reason) in self.services.items() if status == False]
 
         if issues:
-            return f"Issues⚠️ - {', '.join(issues)}"
+            issue_details = { "ISSUE_DETAILS": f"{', '.join(issues)}"}
+            bot_msg_yaml.resolve_placeholders(issue_details)
+            return bot_msg_yaml.get_data()["INFRASTRUCTURE_STATUS_MSG"]["ISSUES"][0]
         
-        return "`HEALTHY💚`"
+        return bot_msg_yaml.get_data()["INFRASTRUCTURE_STATUS_MSG"]["HEALTHY"][0]
     
     def check_maintenance_mode(self):
         return "WIP"
@@ -80,18 +84,23 @@ class HealthCheck:
         return False, 'Unknown error'
     
     def _check_lambda_MCI(self):
+        """
+        Checks the health of the Lambda MCI component by sending a PING request.
+        """
         data = { "action": "PING" }
-        api_helper = APIUtil(self.envs)
-        response = api_helper.send_to_api(data, None, 10, 3, 2)
-        
-        # Temp for testing
-        response = {}
-        response["STATUS"] = "PONG"
-        # Returns Pong if Healthy
-        if response["STATUS"] == "PONG":
-            return True, None
-        else:
-            return False, "Core Component MCI is not operational"
+
+        try:
+            api_helper = APIUtil(self.envs)
+            response = api_helper.send_to_api(data, "Health Check")
+
+            # Check if the response indicates that the component is healthy
+            if response and response["STATUS"] == "PONG":
+                return True, None
+            else:
+                return False, "Core Component MCI is not Operational"
+
+        except Exception as e:
+            return False, f"Failed to check Lambda MCI: '{str(e)}'"
 
     def _check_discord(self):
         return self.check_generic_service("Discord")
