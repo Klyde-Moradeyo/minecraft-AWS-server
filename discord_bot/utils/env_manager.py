@@ -9,7 +9,7 @@ class EnvironmentVariables:
         self.REQUIRED_VARS = self.get_required_vars()
         self.configured = self.check_configuration()
         self.env_vars: Dict[str, Any] = {}
-        self.SENSITIVE_VARS = ['DISCORD_TOKEN']
+        self.SENSITIVE_VARS = ['DISCORD_TOKEN', 'GITHUB_TOKEN']
         self.print = print
 
     def get_required_vars(self):
@@ -25,6 +25,9 @@ class EnvironmentVariables:
 
                                 # Admin Discord Users
                                 'DEV_DISCORD_ACCOUNT_ID',
+
+                                # Github
+                                'GITHUB_REPO', 'GITHUB_TOKEN'
                             ]
         return required_configs
 

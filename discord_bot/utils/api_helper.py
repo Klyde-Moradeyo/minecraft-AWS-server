@@ -25,7 +25,10 @@ class APIUtil:
         """
         Constructs a complete URL using the base URL and endpoint.
         """
-        return f"{self.base_url}/{endpoint}"
+        if endpoint == None:
+            return f"{self.base_url}"
+        else:
+            return f"{self.base_url}/{endpoint}"
 
     def _append_metadata(self, data, reason):
         """
@@ -39,7 +42,7 @@ class APIUtil:
 
     def send_to_api(self, data, reason, endpoint="command", timeout=15, retries=3, wait_time=2):
         """
-        Sends standardized data to the API and returns the response.
+        Sends data to the API and returns the response.
         """
         data = self._append_metadata(data, reason)
         self.logger.info(f"API Payload: {data}")

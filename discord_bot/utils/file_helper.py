@@ -46,13 +46,14 @@ class YamlHelper:
         self.logger = setup_logging()  # Setting up logger
         self.file_path = file_path
         self.yaml_str = yaml_str
+        self.variables = {}  # Internal state to keep track of variables
         
         if not self.file_path and not self.yaml_str:
             raise ValueError("Either 'file_path' or 'yaml_str' must be provided!")
         
         if self.file_path:  # Only validate the file if a file path is provided
             self._validate_file()
-        
+    
         self.data = self._load_yaml()
 
     def _validate_file(self):
@@ -94,11 +95,13 @@ class YamlHelper:
         """
         self.data = self._load_yaml_file()
 
-    def resolve_placeholders(self, variables):
+    def resolve_placeholders(self, variables={}):
         """
         Recursively replace placeholders in the loaded YAML data with the given variables.
         """
-        self.data = self._resolve_in_value(self.data, variables)
+        self.variables.update(variables)
+        self.data = self._load_yaml()
+        self.data = self._resolve_in_value(self.data, self.variables)
         return self.data
         
     def _resolve_in_value(self, value, variables):

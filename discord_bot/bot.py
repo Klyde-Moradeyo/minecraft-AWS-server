@@ -14,7 +14,7 @@ from utils.bot_response import BotResponse
 from utils.process_command import ProcessAPICommand
 from utils.permision_manager import PermissionManager
 from utils.scheduler import Scheduler
-from utils.helpers import DateTimeManager,BotReady
+from utils.helpers import DateTimeManager, BotReady, get_versions
 
 class MinecraftBot(commands.Cog):
     VALID_COMMANDS = {
@@ -35,6 +35,7 @@ class MinecraftBot(commands.Cog):
         self.scheduler = Scheduler()
         self.bot_ready = BotReady()
         self.channel_manager = ChannelManager(DISCORD_CHANNEL_CATEGORY_NAME, DISCORD_CHANNEL_NAME)
+        self.health_check = HealthCheck(self.envs)
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -61,51 +62,65 @@ class MinecraftBot(commands.Cog):
             # Send info Message
             await self.info_msg.send_new_msg(channel, message)
 
-            # Check If Command Scroll is present
+            # Check If Command Scroll is present, if its present send disabled message
             if self.command_scroll_msg.has_message(channel.id):
                 message = self.command_scroll_msg.construct_message_from_dict(init_yml.get_data()["CMD_SCROLL_DISABLED"])
                 await self.command_scroll_msg.edit_msg(channel, message)
+
+            # Set Owner and Admins
+            self.permission_manager.set_admin(guild)
+            self.permission_manager.set_owner(guild)
     
         # Load yaml file
         self.bot_message_yml = YamlHelper(BOT_MSG_PATH)
 
-        # Perform Health Check - WIP
+        # Perform Health Check
         self.logger.info("Performing Health Checks...")
-        health_check = HealthCheck()
-        bot_ver, lambda_ver, fargate_ver, infra_ver = health_check.get_version()
+        health_status = self.health_check.retrieve_health_summary(self.bot_message_yml)
+        self.logger.info(f"health_status: {health_status}")
+
+        # Get Versions
+        self.logger.info("Performing Health Checks...")
+        smb_ver, msmc_ver, mci_ver, msih_ver = get_versions(self.envs, self.logger)
 
         # Update bot_messages.yml data
         variables = {
             "SERVER_IP": str(self.envs["SERVER_IP"]),
             "SERVER_PORT": str(self.envs["SERVER_PORT"]),
-            "SERVER_VERSION": "N/A",
-            "INFRASTRUCTURE_STATUS_MSG": health_check.get_health(),
-            "DISCORD_BOT_VER": str(bot_ver),
-            "LAMBDA_VER": str(lambda_ver),
-            "FARGATE_VER": str(fargate_ver),
-            "INFRA_VER": str(infra_ver)
+            "SERVER_VERSION": "-",
+            "INFRASTRUCTURE_STATUS_MSG": health_status,
+            "DISCORD_BOT_VER": str(smb_ver),
+            "LAMBDA_VER": str(mci_ver),
+            "FARGATE_VER": str(msmc_ver),
+            "INFRA_VER": str(msih_ver)
         }
         self.bot_message_yml.resolve_placeholders(variables)
 
         # Init Bot Responses
         self.bot_response = BotResponse(self.bot_message_yml.get_data())
-        time.sleep(10) # temporary
+
         for guild in bot.guilds:
             channel = self.channel_manager.get_channel(guild)
-
-            # Set Owner and Admins
-            self.permission_manager.set_admin(guild)
-            self.permission_manager.set_owner(guild)
 
             # Send Version Message
             self.logger.info(f"guild_name: '{guild.name}' - id: '{guild.id}' - Sending Version Message...")  
             message = self.info_msg.construct_message_from_dict(self.bot_message_yml.get_data()["VERSION"])
             await self.info_msg.edit_msg(channel, message)
 
+        time.sleep(5) # Let Version Message show for a bit
+
+        for guild in bot.guilds:
+            channel = self.channel_manager.get_channel(guild)
+
             # Update Info Message to show User Guide
             self.logger.info(f"guild_name: '{guild.name}' - id: '{guild.id}' - Sending User Guide Message...")  
             message = self.info_msg.construct_message_from_dict(self.bot_message_yml.get_data()["USER_GUIDE"]) 
             await self.info_msg.edit_msg(channel, message)
+            
+            # self.bot_message_yml.resolve_placeholders({"SERVER_VERSION": "1.20.6666"})
+            # self.logger.info(f"USER_GUILD_HERE: {self.bot_message_yml.get_data()['USER_GUIDE']}")
+            # message = self.info_msg.construct_message_from_dict(self.bot_message_yml.get_data()["USER_GUIDE"])
+            # await self.info_msg.edit_msg(channel, message)
 
             self.logger.info(f"guild_name: '{guild.name}' - id: '{guild.id}' - Sending User Command Scroll Message...")  
             message = self.bot_response.get_cmd_scroll_msg()
@@ -115,12 +130,13 @@ class MinecraftBot(commands.Cog):
         guild_names = [guild.name for guild in bot.guilds]
         self.logger.info(f"Running in Servers: {guild_names}")
 
-        # Start Scheduled Tasks and Checks
-        await self.scheduler.add_task("periodic_health_check", self.scheduler.periodic_health_check, 30)
+        # Start Health Check - currently on 5 sec checks
+        await self.scheduler.add_task("periodic_health_check", self.scheduler.periodic_health_check, 360, self.health_check, bot.guilds, self.info_msg, self.channel_manager, self.bot_message_yml) 
 
         # Bot is now ready to Process commands
         self.bot_ready.set_status(True)
         self.logger.info(f"------ Discord Bot is Ready('{self.bot_ready.get_status()}') ------")
+
 
     @commands.Cog.listener()
     async def on_message(self, message):

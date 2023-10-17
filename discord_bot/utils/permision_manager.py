@@ -19,6 +19,7 @@ class PermissionManager:
         """
         Add a user as an admin
         """
+        self.logger.info(f"Permsion Manager - Adding User '{user_id}' as admin")
         self.admin_ids.add(user_id)
 
     def remove_admin(self, user_id: int):
@@ -37,7 +38,7 @@ class PermissionManager:
             self.admin_ids = ids
             self._add_admin(ids)
         else:
-            self.logger.warning(f"guild_name: '{guild.name}' - id: '{guild.id}' - No role found with name: {self.admin_role}")
+            self.logger.warning(f"Permsion Manager - guild_name: '{guild.name}' - id: '{guild.id}' - No role found with name: {self.admin_role}")
 
     def is_owner(self, user_id: int) -> bool:
         """
@@ -51,6 +52,7 @@ class PermissionManager:
         """
         owner = guild.owner
         self._add_admin(owner.id)
+        self.logger.info(f"Permsion Manager - guild_name: '{guild.name}' - id: '{guild.id}' - Setting User '{owner.name}({owner.id})' as Owner")
         return owner
 
     def get_owner(self):
