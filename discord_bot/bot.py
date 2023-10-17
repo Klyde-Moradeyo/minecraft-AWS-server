@@ -116,11 +116,6 @@ class MinecraftBot(commands.Cog):
             self.logger.info(f"guild_name: '{guild.name}' - id: '{guild.id}' - Sending User Guide Message...")  
             message = self.info_msg.construct_message_from_dict(self.bot_message_yml.get_data()["USER_GUIDE"]) 
             await self.info_msg.edit_msg(channel, message)
-            
-            # self.bot_message_yml.resolve_placeholders({"SERVER_VERSION": "1.20.6666"})
-            # self.logger.info(f"USER_GUILD_HERE: {self.bot_message_yml.get_data()['USER_GUIDE']}")
-            # message = self.info_msg.construct_message_from_dict(self.bot_message_yml.get_data()["USER_GUIDE"])
-            # await self.info_msg.edit_msg(channel, message)
 
             self.logger.info(f"guild_name: '{guild.name}' - id: '{guild.id}' - Sending User Command Scroll Message...")  
             message = self.bot_response.get_cmd_scroll_msg()
@@ -130,7 +125,7 @@ class MinecraftBot(commands.Cog):
         guild_names = [guild.name for guild in bot.guilds]
         self.logger.info(f"Running in Servers: {guild_names}")
 
-        # Start Health Check - currently on 5 sec checks
+        # Start Health Check
         await self.scheduler.add_task("periodic_health_check", self.scheduler.periodic_health_check, 360, self.health_check, bot.guilds, self.info_msg, self.channel_manager, self.bot_message_yml) 
 
         # Bot is now ready to Process commands
