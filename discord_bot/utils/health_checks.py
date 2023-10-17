@@ -28,51 +28,24 @@ class HealthCheck:
     def check_generic_service(self, service_name):
         data, error = self._request_status(self.base_urls[service_name])
         if error:
-            return 'issues', error
+            return False, error
         if data['status']['indicator'] == 'none':
-            return "healthy", None
-        return 'issues', data['status']['description']
-
-    def check_terraform(self):
-        data, error = self._request_status(self.base_urls['Terraform_Cloud'])
-        if error:
-            return 'issues', error
-        for component in data['components']:
-            if component['name'] == "Terraform Cloud":
-                if component['status'] == 'operational':
-                    return "healthy", None
-                return 'issues', component['status']
-        return 'issues', 'Unknown error'
-    
-    def check_lambda_MCI(self):
-        data = { "action": "PING" }
-        api_helper = APIUtil(self.envs)
-        response = api_helper.send_to_api(data, None, 10, 3, 1)
-
-        response = {}
-        response["STATUS"] = "PONG"
-        # Returns Pong if Healthy
-        if response["STATUS"] == "PONG":
-            return "healthy", None
-        else:
-            return 'issues', "API Unavailable"
+            return True, None
+        return False, data['status']['description']
 
     def get_service_status(self):
         self.logger.info("HealthCheck - Querying Service Health Status...")
 
         checks = {
-            "AWS_MCI": self.check_lambda_MCI,
-            'fly_io': self.check_generic_service,
-            'Discord': self.check_generic_service,
-            'Github': self.check_generic_service,
-            'Terraform_Cloud': self.check_terraform
+            "AWS_MCI": self._check_lambda_MCI,
+            'fly_io': self._check_flyio,
+            'Discord': self._check_discord,
+            'Github': self._check_github,
+            'Terraform_Cloud': self._check_terraform
         }
 
         for service, checker in checks.items():
-            if service == "Terraform_Cloud" or service == "AWS_MCI":
-                status, reason = checker()
-            else:
-                status, reason = checker(service)
+            status, reason = checker()
 
             self.services[service] = (status, reason)
             self.logger.info(f"HealthCheck - {service} is {status}. Reason: {reason}")
@@ -90,3 +63,56 @@ class HealthCheck:
     
     def get_last_status(self):
         return self.services
+    
+    def _check_flyio(self):
+        components_list = [ "Deployments", "LHR - London, United Kingdom", "Persistent Storage (Volumes)" ] # components to check
+        data, error = self._request_status(self.base_urls["fly_io"])
+        if error:
+            return 'issues', error
+        for component in data['components']:
+            if component['name'] in components_list:
+                if component['status'] == 'operational':
+                    return True, None
+                return False, component['status']
+        return False, 'Unknown error'
+    
+    def _check_lambda_MCI(self):
+        data = { "action": "PING" }
+        api_helper = APIUtil(self.envs)
+        response = api_helper.send_to_api(data, None, 10, 3, 2)
+        
+        # Temp for testing
+        response = {}
+        response["STATUS"] = "PONG"
+        # Returns Pong if Healthy
+        if response["STATUS"] == "PONG":
+            return True, None
+        else:
+            return False, "Core Component MCI is not operational"
+
+    def _check_discord(self):
+        return self.check_generic_service("Discord")
+
+    def _check_terraform(self):
+        components_list = [ "Terraform Cloud" ] # components to check
+        data, error = self._request_status(self.base_urls["Terraform_Cloud"])
+        if error:
+            return 'issues', error
+        for component in data['components']:
+            if component['name'] in components_list:
+                if component['status'] == 'operational':
+                    return True, None
+                return False, component['status']
+        return False, 'Unknown error'
+
+    def _check_github(self):
+        components_list = [ "Git Operations" ] # components to check
+        data, error = self._request_status(self.base_urls["Github"])
+        if error:
+            return 'issues', error
+        for component in data['components']:
+            if component['name'] in components_list:
+                if component['status'] == 'operational':
+                    return True, None
+                return False, component['status']
+        return False, 'Unknown error'
