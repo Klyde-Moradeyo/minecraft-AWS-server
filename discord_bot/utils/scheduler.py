@@ -4,6 +4,7 @@ import functools
 import logging
 from inspect import signature
 from discord.ext import tasks
+from config import *
 from utils.logger import setup_logging
 from utils.helpers import DateTimeManager
 from utils.bot_response import BotResponse
@@ -11,6 +12,7 @@ from utils.message_manager import MessageManager
 from utils.channel_manager import ChannelManager
 from utils.health_checks import HealthCheck
 from utils.file_helper import YamlHelper
+from utils.minecraft import MinecraftServer
 
 class TaskNotFoundError(Exception):
     """
@@ -127,8 +129,58 @@ class Scheduler:
                 self.logger.exception(f"Scheduler - '{task_id}' - Exception in reset_command_scroll for channel id: '{channel.id}': {e}")
                 await self.stop_task(task_id, "Task Error")
 
-    async def poll_minecraft_server_online(self):
-        pass  # Implement
+    async def poll_minecraft_server_online(self, task_id, envs, context, info_msg: MessageManager, command_scroll_msg: MessageManager, bot_msg_yaml: YamlHelper, bot_response: BotResponse):
+        try:
+            server = MinecraftServer(envs["SERVER_IP"], envs["SERVER_PORT"])
+            server_info = server.check()
+            self.logger.info(f"poll_minecraft_server_online - Received {server_info}")
 
-    async def check_if_channel_has_present(self):
+            if server_info["online"]:
+                self.logger.info(f"poll_minecraft_server_online - detected online")
+                # Inform User in private dms that the server is running
+                self.logger.info(f"poll_minecraft_server_online - getting bot resposne")
+                message = bot_response.get_server_running_msg()
+                self.logger.info(f"poll_minecraft_server_online - Sending DM {message}")
+                user_message = await context.author.send(message)
+                await self.add_task("reset_mc_server_online_private_msg", self.reset_mc_server_online_private_msg, RESET_PRIVATE_ONLINE_MSG_CHECK_INTERVAL, self.dt_manager.get_current_datetime(), user_message, RESET_PRIVATE_ONLINE_MSG_TIME)
+
+                # Edit Command Scroll Message to inform users it is online
+                message = bot_response.get_server_running_msg()
+                self.logger.info(f"poll_minecraft_server_online - Sending Comamnd scroll msg: {message}")
+                await command_scroll_msg.edit_msg(context.channel, message)
+                await self.add_task("reset_command_scroll", self.reset_command_scroll, RESET_COMMAND_SCROLL_CHECK_INTERVAL, command_scroll_msg, bot_response, context.channel, RESET_COMMAND_SCROLL_TIME)
+
+                # Add version to info message
+                version = { "SERVER_VERSION": server_info["version"] }
+                bot_msg_yaml.resolve_placeholders(version)
+                message = info_msg.construct_message_from_dict(bot_msg_yaml.get_data()["USER_GUIDE"]) 
+                self.logger.info(f"poll_minecraft_server_online - Sending Info msg: {message}")
+                await info_msg.edit_msg(context.channel, message)
+
+                # Stop Task from running as its finished
+                await self.stop_task(task_id, "Task Finished")
+        except Exception as e:
+            self.logger.exception(f"Scheduler - '{task_id}' - Exception in poll_minecraft_server_online for channel id: '{context.channel.id}': {e}")
+            await self.stop_task(task_id, "Task Error")
+
+    async def reset_mc_server_online_private_msg(self, task_id, sent_datetime, message, reset_time):
+        try:
+            self.logger.info(f"reset_mc_server_online_private_msg - Checking private msg time: {sent_datetime}")
+            # Convert send_datetime string to datetime object
+            sent_dt = self.dt_manager.parse_datetime(sent_datetime)
+        
+            # Get current datetime
+            current_dt = self.dt_manager.parse_datetime(self.dt_manager.get_current_datetime())
+
+            # Check if X Seconds have passed since send_datetime
+            if current_dt - sent_dt >= self.dt_manager.get_time_delta(seconds=reset_time):
+                self.logger.info(f"reset_mc_server_online_private_msg - Deleting private msg")
+                await message.delete()
+                # Stop Task from running as its finished
+                await self.stop_task(task_id, "Task Finished")
+        except Exception as e:
+            self.logger.exception(f"Scheduler - '{task_id}' - Exception in reset_mc_server_online_private_msg for' {message.id}': {e}")
+            await self.stop_task(task_id, "Task Error")
+          
+    async def check_if_channel_is_present(self):
         pass  # Implement

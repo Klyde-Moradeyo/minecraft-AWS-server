@@ -38,6 +38,7 @@ class ProcessAPICommand:
             if not await self._authorized():
                 return
 
+            response = None
             if self.command in self.valid_commands["api"]:
                 data = self._create_data()
                 api = APIUtil(self.envs)
@@ -58,14 +59,20 @@ class ProcessAPICommand:
                 message =  f"Please use a valid command."
             else:
                 raise Exception(f"Couldnt resolve Command: {self.command}")
-
+            
             # Send new message
             await self.command_scroll_msg.edit_msg(self.context.channel, message)
             await self.scheduler.add_task("reset_command_scroll", self.scheduler.reset_command_scroll, RESET_COMMAND_SCROLL_CHECK_INTERVAL, self.command_scroll_msg, self.bot_response, self.context.channel, RESET_COMMAND_SCROLL_TIME)
             self.logger.info(message)
+
+            if response:
+                return response
+            else:
+                return None
         except Exception as e:
             self.logger.exception(str(e))
             await self.on_error(str(e))
+            return None
  
     async def on_error(self, error_message):
         await self.command_scroll_msg.edit_msg(self.context.channel, error_message)
