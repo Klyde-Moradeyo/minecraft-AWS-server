@@ -1,10 +1,11 @@
 VERSION:
   HEADER: "-------------------------------------------------------"
   MESSAGE:
-  - "Discord Bot: `v{DISCORD_BOT_VER}`"
-  - "Lambda Function: `v{LAMBDA_VER}`"
-  - "Fargate: `v{FARGATE_VER}`"
-  - "Infrastructure Handler: `v{INFRA_VER}`"
+  - "📖 **Tome of Versions** 📜"
+  - "🔮 Discord Enchantment: `v{DISCORD_BOT_VER}`"
+  - "📜 Lambda Spellbook: `{LAMBDA_VER}`"
+  - "🚪 Fargate Portal: `{FARGATE_VER}`"
+  - "⚙️ Forge Master (Infrastructure Handler): `{INFRA_VER}`"
   FOOTER: "-------------------------------------------------------"
 
 USER_GUIDE:
@@ -17,13 +18,13 @@ USER_GUIDE:
     - ""
   COMMANDS_TITLE: 🛠️ **Commands:**
   START_CMD:
-    - "**start**: 🚀 Use this command to start the Minecraft server! Just type `!start` and watch the magic happen."
+    - "**start**: 🚀 Type `!start` to launch the server!"
   STATUS_CMD:
-    - "**status**: 🔍 Type `!status` and I'll get the latest updates for you."
+    - "**status**: 🔍 `!status` for server insights!"
   STOP_CMD:
-    - "**stop**: 🛑 Want to pause your Minecraft journey for now? Type `!stop` and the server will safely stop, allowing you to resume later"
+    - "**stop**: 🛑 Rest your pickaxe; use !stop."
   FEAT_CMD:
-    - "**features**: ✨ Type `!features` to learn about the unique capabilities and tools of the Minecraft server."
+    - "**features**: ✨ `!features` to showcase minecraft server's secrets."
   FOOTER: "-------------------------------------------------------"
 
 INFRASTRUCTURE_STATUS_MSG:
