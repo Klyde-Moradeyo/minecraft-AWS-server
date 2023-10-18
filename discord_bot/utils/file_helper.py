@@ -124,3 +124,9 @@ class YamlHelper:
         Returns the loaded data from the YAML file.
         """
         return self.data
+
+    def get_variables(self):
+        """
+        Returns the loaded data from the YAML file.
+        """
+        return self.variables
