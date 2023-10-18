@@ -36,7 +36,7 @@ class HealthCheck:
         return False, data['status']['description']
 
     def get_service_status(self):
-        self.logger.info("HealthCheck - Querying Service Health Status...")
+        # self.logger.info("HealthCheck - Querying Service Health Status...")
 
         checks = {
             # "AWS_MCI": self._check_lambda_MCI,
@@ -50,7 +50,7 @@ class HealthCheck:
             status, reason = checker()
 
             self.services[service] = (status, reason)
-            self.logger.info(f"HealthCheck - {service} is {status}. Reason: {reason}")
+            # self.logger.info(f"HealthCheck - {service} is {status}. Reason: {reason}")
 
         return self.services
 

@@ -80,7 +80,7 @@ class MinecraftBot(commands.Cog):
         self.logger.info(f"health_status: {health_status}")
 
         # Get Versions
-        self.logger.info("Performing Health Checks...")
+        self.logger.info("Getting Versions...")
         smb_ver, msmc_ver, mci_ver, msih_ver = get_versions(self.envs, self.logger)
 
         # Update bot_messages.yml data
@@ -116,11 +116,6 @@ class MinecraftBot(commands.Cog):
             self.logger.info(f"guild_name: '{guild.name}' - id: '{guild.id}' - Sending User Guide Message...")  
             message = self.info_msg.construct_message_from_dict(self.bot_message_yml.get_data()["USER_GUIDE"]) 
             await self.info_msg.edit_msg(channel, message)
-            
-            # self.bot_message_yml.resolve_placeholders({"SERVER_VERSION": "1.20.6666"})
-            # self.logger.info(f"USER_GUILD_HERE: {self.bot_message_yml.get_data()['USER_GUIDE']}")
-            # message = self.info_msg.construct_message_from_dict(self.bot_message_yml.get_data()["USER_GUIDE"])
-            # await self.info_msg.edit_msg(channel, message)
 
             self.logger.info(f"guild_name: '{guild.name}' - id: '{guild.id}' - Sending User Command Scroll Message...")  
             message = self.bot_response.get_cmd_scroll_msg()
@@ -130,8 +125,8 @@ class MinecraftBot(commands.Cog):
         guild_names = [guild.name for guild in bot.guilds]
         self.logger.info(f"Running in Servers: {guild_names}")
 
-        # Start Health Check - currently on 5 sec checks
-        await self.scheduler.add_task("periodic_health_check", self.scheduler.periodic_health_check, 360, self.health_check, bot.guilds, self.info_msg, self.channel_manager, self.bot_message_yml) 
+        # Start Health Check
+        await self.scheduler.add_task("periodic_health_check", self.scheduler.periodic_health_check, PERIODIC_HEALTH_CHECK_INTERVAL, self.health_check, bot.guilds, self.info_msg, self.channel_manager, self.bot_message_yml) 
 
         # Bot is now ready to Process commands
         self.bot_ready.set_status(True)
@@ -161,7 +156,10 @@ class MinecraftBot(commands.Cog):
         Starts the Minecraft server.
         """
         command = ProcessAPICommand(context, "start", self.bot_ready, self.VALID_COMMANDS, self.envs, self.command_scroll_msg, self.permission_manager, self.bot_response)
-        await command.execute()
+        response = await command.execute()
+        
+        if response and response["STATUS"] != "MC_SERVER_UP":
+            await self.scheduler.add_task("poll_minecraft_server_online", self.scheduler.poll_minecraft_server_online, POLL_MC_SERVER_ONLINE_CHECK_INTERVAL, self.envs, context, self.info_msg, self.command_scroll_msg, self.bot_message_yml, self.bot_response)
         
     @commands.command(name='status')
     async def get_server_status(self, context):

@@ -1,6 +1,6 @@
 from mcstatus import JavaServer
 from typing import Dict, Any
-from .logger import setup_logging
+from utils.logger import setup_logging
 
 class MinecraftServer:
     def __init__(self, ip: str, port: str):

@@ -65,7 +65,6 @@ def get_versions(envs, logger):
         page = 1
 
         while True:
-            print(f"Checking Page {page}...")
             url = f"https://api.github.com/repos/{repo}/commits?sha=main&page={page}"
             response = requests.get(url, headers=HEADERS)
             response.raise_for_status()

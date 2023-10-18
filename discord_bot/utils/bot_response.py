@@ -10,7 +10,7 @@ class BotResponse():
 
     def cmd_reply(self, command, state):
         if state == "MC_SERVER_UP":
-            bot_reply = random.choice(self.data["MINECRAFT_SERVER"]["MC_SERVER_UP"])
+            bot_reply = self.get_server_running_msg()
         elif state == "MC_SERVER_DOWN":
             bot_reply = random.choice(self.data["MINECRAFT_SERVER"]["MC_SERVER_DOWN"])
         elif command == "start":
@@ -53,6 +53,9 @@ class BotResponse():
     
     def get_admin_only_reply_msg(self):
         return random.choice(self.data["ACCESS_RESTRICTIONS"]["ADMIN_ONLY_REPLIES"])
+    
+    def get_server_running_msg(self):
+        return random.choice(self.data["MINECRAFT_SERVER"]["MC_SERVER_UP"])
     
     def get_features(self):
         return MessageManager().construct_message_from_dict(self.data["FEATURES"])
