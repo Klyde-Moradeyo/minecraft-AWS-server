@@ -165,7 +165,6 @@ class Scheduler:
 
     async def reset_mc_server_online_private_msg(self, task_id, sent_datetime, message, reset_time):
         try:
-            self.logger.info(f"reset_mc_server_online_private_msg - Checking private msg time: {sent_datetime}")
             # Convert send_datetime string to datetime object
             sent_dt = self.dt_manager.parse_datetime(sent_datetime)
         
@@ -174,7 +173,7 @@ class Scheduler:
 
             # Check if X Seconds have passed since send_datetime
             if current_dt - sent_dt >= self.dt_manager.get_time_delta(seconds=reset_time):
-                self.logger.info(f"reset_mc_server_online_private_msg - Deleting private msg")
+                self.logger.info(f"Scheduler - '{task_id}' - msg_id: '{message.id}' - Deleting private msg")
                 await message.delete()
                 # Stop Task from running as its finished
                 await self.stop_task(task_id, "Task Finished")
