@@ -82,14 +82,17 @@ class Scheduler:
             # Get Health Status
             health_status = { "INFRASTRUCTURE_STATUS_MSG": health_check.retrieve_health_summary(bot_msg_yaml) }
             
-            # Prepare Message
-            bot_msg_yaml.resolve_placeholders(health_status)
-            message = info_msg.construct_message_from_dict(bot_msg_yaml.get_data()["USER_GUIDE"]) 
+            if bot_msg_yaml.get_variables()["INFRASTRUCTURE_STATUS_MSG"] != health_status["INFRASTRUCTURE_STATUS_MSG"]:
+                self.logger.info(f"Scheduler - '{task_id}' - Updating info message with latest health status: '{health_status['INFRASTRUCTURE_STATUS_MSG']}'")
 
-            # Update Info Section with new health status
-            for guild in guilds:
-                channel = channel_manager.get_channel(guild)
-                await info_msg.edit_msg(channel, message)
+                # Prepare Message
+                bot_msg_yaml.resolve_placeholders(health_status)
+                message = info_msg.construct_message_from_dict(bot_msg_yaml.get_data()["USER_GUIDE"]) 
+
+                # Update Info Section with new health status
+                for guild in guilds:
+                    channel = channel_manager.get_channel(guild)
+                    await info_msg.edit_msg(channel, message)
 
             self.logger.info(f"Scheduler - '{task_id}' - Periodic Health Check Status: '{health_status['INFRASTRUCTURE_STATUS_MSG']}'")
         except Exception as e:
