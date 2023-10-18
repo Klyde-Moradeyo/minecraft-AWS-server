@@ -170,7 +170,7 @@ function run {
   home_dir="/home/ubuntu"
   git_private_key_path=$(setup_git_creds)
   repo="git@github.com:Klyde-Moradeyo/minecraft-AWS-server.git"
-  repo_branch="dev"
+  repo_branch="main"
   repo_folder="$home_dir/minecraft-AWS-server"
   docker_folder="$repo_folder/docker"
   docker_compose_file="$repo_folder/docker"
