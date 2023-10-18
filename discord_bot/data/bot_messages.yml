@@ -1,7 +1,9 @@
 VERSION:
-  HEADER: "-------------------------------------------------------"
-  MESSAGE:
+  HEADER: 
+  - "-------------------------------------------------------"
   - "📖 **Tome of Versions** 📜"
+  - ""
+  MESSAGE:
   - "🔮 Discord Enchantment: `v{DISCORD_BOT_VER}`"
   - "📜 Lambda Spellbook: `{LAMBDA_VER}`"
   - "🚪 Fargate Portal: `{FARGATE_VER}`"
@@ -18,13 +20,13 @@ USER_GUIDE:
     - ""
   COMMANDS_TITLE: 🛠️ **Commands:**
   START_CMD:
-    - "**start**: 🚀 Type `!start` to launch the server!"
+    - "**start**: 🚀 Type `!start` to launch the server."
   STATUS_CMD:
-    - "**status**: 🔍 `!status` for server insights!"
+    - "**status**: 🔍 `!status` for server insights."
   STOP_CMD:
-    - "**stop**: 🛑 Rest your pickaxe; use !stop."
+    - "**stop**: 🛑 Use `!stop` to rest your pickaxe."
   FEAT_CMD:
-    - "**features**: ✨ `!features` to showcase minecraft server's secrets."
+    - "**features**: ✨ Unveil the server's magic, use `!features`."
   FOOTER: "-------------------------------------------------------"
 
 INFRASTRUCTURE_STATUS_MSG:
@@ -86,15 +88,16 @@ FARGATE:
 
 MINECRAFT_SERVER:
   MC_SERVER_UP:
-    - "✅ Great news! Our Minecraft server has returned from its break and is ready for crafting and building. Time to dive back in!"
+    - "✅ Great news! Your Minecraft server has returned from its break and is ready for crafting and building. Time to dive back in!"
     - "✅ Get your pickaxes ready! The server is online and eager for more Minecraft adventures."
-    - "✅ All systems are go! Our server has returned from the Nether and is now online. It's crafting time once again."
+    - "✅ All systems are go! Your server has returned from the Nether and is now online. It's crafting time once again."
     - "✅ Attention all builders! The Minecraft server is now online and ready for your epic adventure."
     - "✅ We're back! The Minecraft server has returned from its ocean monument adventure. Dive back into your world!"
+    - "✅ Good news! Your Minecraft server is up and running. Grab your pickaxe and let the adventure begin!"
   MC_SERVER_DOWN:
     - "🚫 Minecraft server is currently taking a well-earned break. Type `!start` to launch the server!"
     - "🚫 The Minecraft server is currently offline. Now's a great time to plan your next big build."
-    - "🚫 Our server is currently catching some Z's. Type `!start` to nudge it awake for more crafting."
+    - "🚫 Your server is currently catching some Z's. Type `!start` to nudge it awake for more crafting."
     - "🚫 The Minecraft server is off on a short adventure. Type `!start` for its return, and be ready for more epic gameplay!"
     - "🚫 The Minecraft server is currently in rest mode. A perfect opportunity to gather your thoughts for your next big project!"
 
