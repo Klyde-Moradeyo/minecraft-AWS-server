@@ -1,5 +1,5 @@
 import requests
-from logger import setup_logging
+from utils.logger import setup_logging
 
 # Setting up logging
 logger = setup_logging()
