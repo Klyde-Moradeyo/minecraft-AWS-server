@@ -105,7 +105,7 @@ class MONITOR:
         TIMEOUT = 5  # seconds
 
         headers = {'Content-Type': 'application/json'}
-        data =  { "command": command }
+        data =  { "action": command }
 
         log_data = {
             "api_command": command,
