@@ -1,6 +1,7 @@
 import hcl
 import tempfile
-from .logger import setup_logging
+from utils.logger import setup_logging
+from utils.api import send_to_api
 
 # Setting up logging
 logger = setup_logging()
