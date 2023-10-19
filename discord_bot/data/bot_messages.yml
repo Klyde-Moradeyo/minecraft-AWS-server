@@ -26,7 +26,7 @@ USER_GUIDE:
   STOP_CMD:
     - "**stop**: 🛑 Use `!stop` to rest your pickaxe."
   FEAT_CMD:
-    - "**features**: ✨ Unveil the server's magic, use `!features`."
+    - "**features**: ✨Discover server magic with `!features`."
   FOOTER: "-------------------------------------------------------"
 
 INFRASTRUCTURE_STATUS_MSG:
