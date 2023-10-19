@@ -53,7 +53,7 @@ def check_mc_bundle_size(file_size, api_url):
         logger.info(f"Minecraft Bundle size: {convert_bytes(file_size)['size_gb']} GB")
 
         if convert_bytes(file_size)["size_mb"] > BUNDLE_SIZE_LIMIT:
-            data = {"command": "mc_world_archive"}
+            data = {"action": "mc_world_archive"}
             response = send_to_api(data, api_url)
             return response
         else:
