@@ -14,7 +14,7 @@ USER_GUIDE:
   HEADER:
     - "🥭 **Mango Minecraft Guidebook** 🗺️"
     - ""
-    - "🏡 IP: `{SERVER_IP}:{SERVER_PORT}`"
+    - "🏡 IP: `{SERVER_IP}`" # :{SERVER_PORT}`"
     - "⚙️ Version: `{SERVER_VERSION}`"
     - "🛡️ System HP: {INFRASTRUCTURE_STATUS_MSG}"
     - ""
