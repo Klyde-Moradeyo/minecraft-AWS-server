@@ -88,7 +88,7 @@ class MinecraftBot(commands.Cog):
             "SERVER_IP": str(self.envs["SERVER_IP"]),
             "SERVER_PORT": str(self.envs["SERVER_PORT"]),
             "SERVER_VERSION": "-",
-            "INFRASTRUCTURE_STATUS_MSG": health_status,
+            "INFRASTRUCTURE_STATUS_MSG": "NOT OPERATIONAL⛔",
             "DISCORD_BOT_VER": str(smb_ver),
             "LAMBDA_VER": str(mci_ver),
             "FARGATE_VER": str(msmc_ver),
@@ -126,7 +126,7 @@ class MinecraftBot(commands.Cog):
         self.logger.info(f"Running in Servers: {guild_names}")
 
         # Start Health Check
-        await self.scheduler.add_task("periodic_health_check", self.scheduler.periodic_health_check, PERIODIC_HEALTH_CHECK_INTERVAL, self.health_check, bot.guilds, self.info_msg, self.channel_manager, self.bot_message_yml) 
+        # await self.scheduler.add_task("periodic_health_check", self.scheduler.periodic_health_check, PERIODIC_HEALTH_CHECK_INTERVAL, self.health_check, bot.guilds, self.info_msg, self.channel_manager, self.bot_message_yml) 
 
         # Bot is now ready to Process commands
         self.bot_ready.set_status(True)
