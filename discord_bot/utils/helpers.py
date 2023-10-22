@@ -41,7 +41,8 @@ class BotReady:
         """
         Get Discord Bot Status
         """
-        self.isBotReady = value
+        # self.isBotReady = value
+        self.isBotReady = False # Disable Commands
         return self.isBotReady
 
 ###################################
