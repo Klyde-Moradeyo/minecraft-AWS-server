@@ -88,7 +88,7 @@ class MinecraftBot(commands.Cog):
             "SERVER_IP": str(self.envs["SERVER_IP"]),
             "SERVER_PORT": str(self.envs["SERVER_PORT"]),
             "SERVER_VERSION": "-",
-            "INFRASTRUCTURE_STATUS_MSG": "`NOT OPERATIONAL⛔`",
+            "INFRASTRUCTURE_STATUS_MSG": "NOT OPERATIONAL⛔",
             "DISCORD_BOT_VER": str(smb_ver),
             "LAMBDA_VER": str(mci_ver),
             "FARGATE_VER": str(msmc_ver),
