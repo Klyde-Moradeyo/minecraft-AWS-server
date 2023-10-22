@@ -32,7 +32,8 @@ USER_GUIDE:
 INFRASTRUCTURE_STATUS_MSG:
   HEALTHY: "`HEALTHY💚`"
   ISSUES: "`Issues⚠️ - {ISSUE_DETAILS}`"
-  FAILED: ""
+  NOT_OPERATIONAL: "`NOT OPERATIONAL⛔`"
+  FAILED: "`FAILED❌`"
 
 COMMAND_SCROLL:
   - "📜 The command scroll is at your service 🔮"
