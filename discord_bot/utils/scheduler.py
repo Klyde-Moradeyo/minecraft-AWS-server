@@ -184,3 +184,10 @@ class Scheduler:
           
     async def check_if_channel_is_present(self):
         pass  # Implement
+
+    async def purge_non_bot_messages(self, task_id, channel: discord.TextChannel, bot_user):
+        """
+        Purge all messages in the given channel that aren't sent by the bot.
+        """
+        await channel.purge(check=lambda msg: msg.author != bot_user)
+
