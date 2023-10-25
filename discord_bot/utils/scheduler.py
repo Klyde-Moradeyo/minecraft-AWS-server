@@ -139,25 +139,23 @@ class Scheduler:
             self.logger.info(f"poll_minecraft_server_online - Received {server_info}")
 
             if server_info["online"]:
-                self.logger.info(f"poll_minecraft_server_online - detected online")
                 # Inform User in private dms that the server is running
-                self.logger.info(f"poll_minecraft_server_online - getting bot resposne")
+                self.logger.info(f"Scheduler - '{task_id}' - Minecraft Server is Online...Sending DM '{message}'")
                 message = bot_response.get_server_running_msg()
-                self.logger.info(f"poll_minecraft_server_online - Sending DM {message}")
                 user_message = await context.author.send(message)
                 await self.add_task("reset_mc_server_online_private_msg", self.reset_mc_server_online_private_msg, RESET_PRIVATE_ONLINE_MSG_CHECK_INTERVAL, self.dt_manager.get_current_datetime(), user_message, RESET_PRIVATE_ONLINE_MSG_TIME)
 
                 # Edit Command Scroll Message to inform users it is online
+                self.logger.info(f"Scheduler - '{task_id}' - Sending Command scroll msg: '{message}'")
                 message = bot_response.get_server_running_msg()
-                self.logger.info(f"poll_minecraft_server_online - Sending Comamnd scroll msg: {message}")
                 await command_scroll_msg.edit_msg(context.channel, message)
                 await self.add_task("reset_command_scroll", self.reset_command_scroll, RESET_COMMAND_SCROLL_CHECK_INTERVAL, command_scroll_msg, bot_response, context.channel, RESET_COMMAND_SCROLL_TIME)
 
                 # Add version to info message
+                self.logger.info(f"Scheduler - '{task_id}' - Update Info msg to include mc server version('{server_info['version']}')")
                 version = { "SERVER_VERSION": server_info["version"] }
                 bot_msg_yaml.resolve_placeholders(version)
                 message = info_msg.construct_message_from_dict(bot_msg_yaml.get_data()["USER_GUIDE"]) 
-                self.logger.info(f"poll_minecraft_server_online - Sending Info msg: {message}")
                 await info_msg.edit_msg(context.channel, message)
 
                 # Stop Task from running as its finished
