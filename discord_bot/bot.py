@@ -143,6 +143,7 @@ class MinecraftBot(commands.Cog):
 
         # Only process commands in the specified channel
         if message.channel.name == DISCORD_CHANNEL_NAME:
+            await message.delete()  # delete the user's message
             if message.content.upper().startswith("PING") and self.permission_manager.is_admin(message.author.id):
                 await self.command_scroll_msg.edit_msg(message.channel, "PONG")
 
