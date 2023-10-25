@@ -46,7 +46,10 @@ class BotResponse():
         return random.choice(self.data["ERRORS_AND_MAINTENANCE"]["API_ERROR_MSGS"])
     
     def get_cmd_scroll_msg(self):
-        return random.choice(self.data["COMMAND_SCROLL"])
+        return random.choice(self.data["COMMAND_SCROLL"]["READY"])
+    
+    def get_disabled_cmd_scroll_msg(self):
+        return random.choice(self.data["COMMAND_SCROLL"]["DISABLED"])
     
     def get_maintenance_msg(self):
         return random.choice(self.data["ERRORS_AND_MAINTENANCE"]["MAINTENANCE_MESSAGES"])
