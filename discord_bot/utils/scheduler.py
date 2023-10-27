@@ -1,4 +1,5 @@
 import uuid
+import re
 import discord
 import functools
 import logging
@@ -77,10 +78,17 @@ class Scheduler:
         except Exception as e:
             self.logger.exception(f"Scheduler - '{task_id}' - Exception in stop_task: {e}")
 
-    async def periodic_health_check(self, task_id, health_check: HealthCheck, guilds, info_msg: MessageManager, channel_manager: ChannelManager, bot_msg_yaml: YamlHelper, bot_ready: BotReady):
+    async def periodic_health_check(self, task_id, health_check: HealthCheck, guilds, info_msg: MessageManager, channel_manager: ChannelManager, bot_msg_yaml: YamlHelper, bot_ready: BotReady, health_check_history):
         try:
             # Get Health Status
             health_status = { "INFRASTRUCTURE_STATUS_MSG": health_check.retrieve_health_summary(bot_msg_yaml) }
+
+            # Save Status History
+            health_history = health_check_history.get_state()
+            status = re.sub(r'[^a-zA-Z0-9\s]|[\U0001F600-\U0001FAFF]', '', health_status["INFRASTRUCTURE_STATUS_MSG"])
+            data = { self.dt_manager.get_current_datetime(): status}
+            health_history.update(data)
+            health_check_history.save_state(health_history)
             
             # Update Info Message if there is a new status update
             if bot_msg_yaml.get_variables()["INFRASTRUCTURE_STATUS_MSG"] != health_status["INFRASTRUCTURE_STATUS_MSG"]:
