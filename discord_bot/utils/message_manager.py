@@ -19,8 +19,10 @@ class MessageManager:
             self.message_map = {}
 
     async def send_new_msg(self, channel, content):
+        # Edit message if it already exists
         if channel.id in self.message_map:
             await self.edit_msg(channel, content)
+            self.update_task_id(channel.id, None) # Because we are not saving the scheduler in state file, we need to reset the schduler.py tasks on startup
             return self.get_message_id(channel.id)
         else:
             msg = await channel.send(content)
