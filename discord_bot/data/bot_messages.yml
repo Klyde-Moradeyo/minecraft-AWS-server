@@ -20,7 +20,7 @@ USER_GUIDE:
     - ""
   COMMANDS_TITLE: 🛠️ **Commands:**
   START_CMD:
-    - "**start**: 🚀 Type `!start` to launch the server."
+    - "**start**: 🚀 Launch the server with `!start`."
   STATUS_CMD:
     - "**status**: 🔍 For server insights with `!status`."
   STOP_CMD:
@@ -32,7 +32,8 @@ USER_GUIDE:
 INFRASTRUCTURE_STATUS_MSG:
   HEALTHY: "`HEALTHY💚`"
   ISSUES: "`Issues⚠️ - {ISSUE_DETAILS}`"
-  FAILED: ""
+  NOT_OPERATIONAL: "`NOT OPERATIONAL⛔`"
+  FAILED: "`FAILED❌`"
 
 COMMAND_SCROLL:
   READY:
