@@ -20,13 +20,13 @@ USER_GUIDE:
     - ""
   COMMANDS_TITLE: 🛠️ **Commands:**
   START_CMD:
-    - "**start**: 🚀 Type `!start` to launch the server."
+    - "**start**: 🚀 Launch the server with `!start`."
   STATUS_CMD:
-    - "**status**: 🔍 `!status` for server insights."
+    - "**status**: 🔍 For server insights, use `!status`."
   STOP_CMD:
     - "**stop**: 🛑 Use `!stop` to rest your pickaxe."
   FEAT_CMD:
-    - "**features**: ✨Discover server magic with `!features`."
+    - "**features**: ✨ Discover server magic with `!features`."
   FOOTER: "-------------------------------------------------------"
 
 INFRASTRUCTURE_STATUS_MSG:
@@ -36,10 +36,15 @@ INFRASTRUCTURE_STATUS_MSG:
   FAILED: "`FAILED❌`"
 
 COMMAND_SCROLL:
-  - "📜 The command scroll is at your service 🔮"
-  - "📜 Scroll open, awaiting command 🌟"
-  - "📜 Input command to start the magic 🔮"
-  - "🔮 Ready and waiting for your command 📜"
+  READY:
+    - "📜 The command scroll is at your service 🔮"
+    - "📜 Scroll open, awaiting command 🌟"
+    - "📜 Input command to start the magic 🔮"
+    - "🔮 Ready and waiting for your command 📜"
+  DISABLED:
+    - "🚫 External realms interfere, the scroll remains dormant 🚫"
+    - "🌀 Beware! External sorceries disrupt our scroll ⛔"
+    - "❌ Interferance in the realms! The command scroll is dormant ❌"
 
 FEATURES:
   - "✨ **Features:**"

@@ -27,6 +27,13 @@ class ProcessAPICommand:
             isBotReady = self.bot_ready.get_status()
             if not isBotReady:
                 self.logger.warn(f"------ Discord Bot not READY('{isBotReady}') so cannot execute command('{self.command}')  ------")
+
+                # If bot is not ready and it has this message, usually means bot is intilizing or issue with external services
+                if self.command_scroll_msg.has_message(self.context.channel.id):
+                    message = self.bot_response.get_disabled_cmd_scroll_msg()
+                    await self.command_scroll_msg.edit_msg(self.context.channel, message)
+                    self.logger.info(message)
+                    await self.scheduler.add_task("reset_command_scroll", self.scheduler.reset_command_scroll, RESET_COMMAND_SCROLL_CHECK_INTERVAL, self.command_scroll_msg, self.bot_response, self.context.channel, RESET_COMMAND_SCROLL_TIME)
                 return
             
             self.logger.info(f"Proccessing Command: '{self.command}'")
