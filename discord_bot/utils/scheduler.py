@@ -87,7 +87,7 @@ class Scheduler:
                 self.logger.info(f"Scheduler - '{task_id}' - Updating info message with latest health status: '{health_status['INFRASTRUCTURE_STATUS_MSG']}'")
                 
                 # If there are issues, disable the discord bot
-                if health_status["INFRASTRUCTURE_STATUS_MSG"] != bot_msg_yaml.get_data()["HEALTHY"]:
+                if health_status["INFRASTRUCTURE_STATUS_MSG"] != bot_msg_yaml.get_data()["INFRASTRUCTURE_STATUS_MSG"]["HEALTHY"]:
                     bot_ready.set_status(False)
                 else:
                     bot_ready.set_status(True)

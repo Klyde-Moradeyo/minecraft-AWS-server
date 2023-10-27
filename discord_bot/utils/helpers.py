@@ -1,6 +1,8 @@
-from datetime import datetime, timedelta
+
 import pytz
 import requests
+from datetime import datetime, timedelta
+from .logger import setup_logging
 
 class DateTimeManager:
     def __init__(self):
@@ -28,7 +30,7 @@ class DateTimeManager:
 
 class BotReady:
     def __init__(self):
-        # self.logger = setup_logging()
+        self.logger = setup_logging()
         self.isBotReady = False
 
     def get_status(self):
@@ -42,6 +44,7 @@ class BotReady:
         Get Discord Bot Status
         """
         self.isBotReady = value
+        self.logger.info(f"Setting Discord Bot to: '{value}'")
         return self.isBotReady
 
 ###################################
