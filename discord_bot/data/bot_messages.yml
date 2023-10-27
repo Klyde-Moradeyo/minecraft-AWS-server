@@ -35,15 +35,10 @@ INFRASTRUCTURE_STATUS_MSG:
   FAILED: ""
 
 COMMAND_SCROLL:
-  READY:
-    - "📜 The command scroll is at your service 🔮"
-    - "📜 Scroll open, awaiting command 🌟"
-    - "📜 Input command to start the magic 🔮"
-    - "🔮 Ready and waiting for your command 📜"
-  DISABLED:
-    - "🚫 External realms interfere, the scroll remains dormant 🚫"
-    - "⛔ Beware! External sorceries disrupt our scroll ⛔"
-    - "❌ Interferance in the realms! The command scroll is dormant ❌"
+  - "📜 The command scroll is at your service 🔮"
+  - "📜 Scroll open, awaiting command 🌟"
+  - "📜 Input command to start the magic 🔮"
+  - "🔮 Ready and waiting for your command 📜"
 
 FEATURES:
   - "✨ **Features:**"

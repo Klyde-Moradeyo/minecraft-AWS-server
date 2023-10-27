@@ -6,7 +6,7 @@ from inspect import signature
 from discord.ext import tasks
 from config import *
 from utils.logger import setup_logging
-from utils.helpers import DateTimeManager, BotReady
+from utils.helpers import DateTimeManager
 from utils.bot_response import BotResponse
 from utils.message_manager import MessageManager
 from utils.channel_manager import ChannelManager
@@ -77,20 +77,13 @@ class Scheduler:
         except Exception as e:
             self.logger.exception(f"Scheduler - '{task_id}' - Exception in stop_task: {e}")
 
-    async def periodic_health_check(self, task_id, health_check: HealthCheck, guilds, info_msg: MessageManager, channel_manager: ChannelManager, bot_msg_yaml: YamlHelper, bot_ready: BotReady):
+    async def periodic_health_check(self, task_id, health_check: HealthCheck, guilds, info_msg: MessageManager, channel_manager: ChannelManager, bot_msg_yaml: YamlHelper):
         try:
             # Get Health Status
             health_status = { "INFRASTRUCTURE_STATUS_MSG": health_check.retrieve_health_summary(bot_msg_yaml) }
             
-            # Update Info Message if there is a new status update
             if bot_msg_yaml.get_variables()["INFRASTRUCTURE_STATUS_MSG"] != health_status["INFRASTRUCTURE_STATUS_MSG"]:
                 self.logger.info(f"Scheduler - '{task_id}' - Updating info message with latest health status: '{health_status['INFRASTRUCTURE_STATUS_MSG']}'")
-                
-                # If there are issues, disable the discord bot
-                if health_status["INFRASTRUCTURE_STATUS_MSG"] != bot_msg_yaml.get_data()["HEALTHY"]:
-                    bot_ready.set_status(False)
-                else:
-                    bot_ready.set_status(True)
 
                 # Prepare Message
                 bot_msg_yaml.resolve_placeholders(health_status)
