@@ -20,9 +20,9 @@ USER_GUIDE:
     - ""
   COMMANDS_TITLE: 🛠️ **Commands:**
   START_CMD:
-    - "**start**: 🚀 Launch the server with `!start`."
+    - "**start**: 🚀 Type `!start` to launch the server."
   STATUS_CMD:
-    - "**status**: 🔍 For server insights, use `!status`."
+    - "**status**: 🔍 For server insights with `!status`."
   STOP_CMD:
     - "**stop**: 🛑 Use `!stop` to rest your pickaxe."
   FEAT_CMD:

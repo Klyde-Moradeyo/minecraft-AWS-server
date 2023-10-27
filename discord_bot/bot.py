@@ -129,7 +129,9 @@ class MinecraftBot(commands.Cog):
         self.logger.info(f"Running in Servers: {guild_names}")
 
         # Start Health Check
-        await self.scheduler.add_task("periodic_health_check", self.scheduler.periodic_health_check, PERIODIC_HEALTH_CHECK_INTERVAL, self.health_check, bot.guilds, self.info_msg, self.channel_manager, self.bot_message_yml, self.bot_ready) 
+        from utils.state_manager import StateManager
+        health_check_history = StateManager(HEALTH_STATUS_HISTORY_FILE)
+        await self.scheduler.add_task("periodic_health_check", self.scheduler.periodic_health_check, PERIODIC_HEALTH_CHECK_INTERVAL, self.health_check, bot.guilds, self.info_msg, self.channel_manager, self.bot_message_yml, self.bot_ready, health_check_history) 
 
         # Bot is now ready to Process commands
         self.bot_ready.set_status(True)
