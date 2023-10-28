@@ -157,7 +157,7 @@ class Scheduler:
                 # Inform User in private dms that the server is running
                 self.logger.info(f"Scheduler - '{task_id}' - Minecraft Server is Online")
                 message = bot_response.get_server_running_msg()
-                self.logger.info(f"Scheduler - '{task_id}' - '{context.author.name}({context.author.id})' - Sending private message: '{message}'")
+                self.logger.info(f"Scheduler - '{task_id}' - User: '{context.author.name}({context.author.id})' - Sending user private message: '{message}'")
                 user_message = await context.author.send(message)
                 await self.add_task("reset_mc_server_online_private_msg", self.reset_mc_server_online_private_msg, RESET_PRIVATE_ONLINE_MSG_CHECK_INTERVAL, self.dt_manager.get_current_datetime(), user_message, RESET_PRIVATE_ONLINE_MSG_TIME)
 
