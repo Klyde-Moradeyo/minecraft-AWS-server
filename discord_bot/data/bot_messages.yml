@@ -43,7 +43,7 @@ COMMAND_SCROLL:
     - "🔮 Ready and waiting for your command 📜"
   DISABLED:
     - "🚫 External realms interfere, the scroll remains dormant 🚫"
-    - "🌀 Beware! External sorceries disrupt our scroll ⛔"
+    - "❌ Beware! External sorceries disrupt our scroll ❌"
     - "❌ Interferance in the realms! The command scroll is dormant ❌"
 
 FEATURES:
