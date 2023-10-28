@@ -50,3 +50,4 @@ CHANNEL_STATE_FILE = os.path.join(BASE_DIR, "state", "channel_state.json")
 SCHEDULER_STATE_FILE = os.path.join(BASE_DIR, "state", "scheduler_state.json")
 INFO_MSG_MANAGER_STATE_FILE = os.path.join(BASE_DIR, "state", "info_message_state.json")
 CMD_SCROLL_MSG_MANAGER_STATE_FILE = os.path.join(BASE_DIR, "state", "cmd_scroll_message_state.json")
+HEALTH_STATUS_HISTORY_FILE = os.path.join(BASE_DIR, "state", "health_status_history.json") # Temporary till I get proper monitoring
