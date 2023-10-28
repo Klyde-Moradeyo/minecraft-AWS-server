@@ -89,16 +89,16 @@ class Scheduler:
             data = { self.dt_manager.get_current_datetime(): status}
             health_history.update(data)
             health_check_history.save_state(health_history)
+
+            # If there are issues, disable the discord bot
+            if health_status["INFRASTRUCTURE_STATUS_MSG"] != bot_msg_yaml.get_data()["INFRASTRUCTURE_STATUS_MSG"]["HEALTHY"]:
+                bot_ready.set_status(False)
+            else:
+                bot_ready.set_status(True)
             
             # Update Info Message if there is a new status update
             if bot_msg_yaml.get_variables()["INFRASTRUCTURE_STATUS_MSG"] != health_status["INFRASTRUCTURE_STATUS_MSG"]:
                 self.logger.info(f"Scheduler - '{task_id}' - Updating info message with latest health status: '{health_status['INFRASTRUCTURE_STATUS_MSG']}'")
-                
-                # If there are issues, disable the discord bot
-                if health_status["INFRASTRUCTURE_STATUS_MSG"] != bot_msg_yaml.get_data()["INFRASTRUCTURE_STATUS_MSG"]["HEALTHY"]:
-                    bot_ready.set_status(False)
-                else:
-                    bot_ready.set_status(True)
 
                 # Prepare Message
                 bot_msg_yaml.resolve_placeholders(health_status)
