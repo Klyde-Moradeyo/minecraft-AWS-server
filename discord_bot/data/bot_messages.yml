@@ -22,7 +22,7 @@ USER_GUIDE:
   START_CMD:
     - "**start**: 🚀 Launch the server with `!start`."
   STATUS_CMD:
-    - "**status**: 🔍 For server insights with `!status`."
+    - "**status**: 🔍 Type `!status` for server insights."
   STOP_CMD:
     - "**stop**: 🛑 Use `!stop` to rest your pickaxe."
   FEAT_CMD:
@@ -42,9 +42,9 @@ COMMAND_SCROLL:
     - "📜 Input command to start the magic 🔮"
     - "🔮 Ready and waiting for your command 📜"
   DISABLED:
-    - "🚫 External realms interfere, the scroll remains dormant 🚫"
-    - "❌ Beware! External sorceries disrupt our scroll ❌"
-    - "❌ Interferance in the realms! The command scroll is dormant ❌"
+    - "🚫 External realms interfere, try again soon 🚫"
+    - "❌ External sorceries disrupt our scroll ❌"
+    - "❌ Sorceries interferance! Try again shortly ❌"
 
 FEATURES:
   - "✨ **Features:**"
