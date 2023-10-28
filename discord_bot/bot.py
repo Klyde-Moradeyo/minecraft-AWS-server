@@ -83,7 +83,6 @@ class MinecraftBot(commands.Cog):
         self.logger.info(f"health_status: {health_status}")
 
         # Get Versions
-        self.logger.info("Getting Versions...")
         smb_ver, msmc_ver, mci_ver, msih_ver = get_versions(self.envs, self.logger)
 
         # Update bot_messages.yml data

@@ -56,7 +56,7 @@ class StateManager:
         self._write_state()
 
     def get_state(self):
-        self.logger.info(f"state - '{self.file_name}' - Getting State | state {self.state}")
+        self.logger.info(f"state - '{self.file_name}' - Getting State")
         return self.state
 
     def _write_state(self):
