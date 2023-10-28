@@ -92,12 +92,13 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}  
         run: |
-          flyctl secrets set API_URL=${{ env.API_URL }}
-          flyctl secrets set SERVER_IP=${{ env.SERVER_IP }}
-          flyctl secrets set SERVER_PORT=${{ env.SERVER_PORT }}
-          flyctl secrets set DEV_DISCORD_ACCOUNT_ID=${{ secrets.DEV_DISCORD_ACCOUNT_ID }}
-          flyctl secrets set GITHUB_REPO=${{ github.repository }}
-          flyctl secrets set GITHUB_TOKEN=${{ secrets.GH_PAT }}
+          flyctl secrets set \
+            API_URL=${{ env.API_URL }} \
+            SERVER_IP=${{ env.SERVER_IP }} \
+            SERVER_PORT=${{ env.SERVER_PORT }} \
+            DEV_DISCORD_ACCOUNT_ID=${{ secrets.DEV_DISCORD_ACCOUNT_ID }} \
+            GITHUB_REPO=${{ github.repository }} \
+            GITHUB_TOKEN=${{ secrets.GH_PAT }}
 
       - name: Deploy Discord Bot
         working-directory: discord_bot
