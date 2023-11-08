@@ -8,7 +8,7 @@ locals {
 }
 
 resource "aws_iam_policy" "s3_bucket_access" {
-  name        = "${var.label_id}-S3BucketAccess"
+  name        = "${local.s3_bucket_name}-S3BucketAccess"
   path        = "/"
   description = "IAM policy for providing S3 bucket access"
 
