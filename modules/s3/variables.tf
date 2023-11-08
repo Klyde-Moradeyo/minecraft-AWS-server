@@ -24,3 +24,9 @@ variable "bucket_force_destroy" {
   type        = bool
   default     = false
 }
+
+variable "version_config_status" {
+  description = "Boolean that indicates all objects should be deleted from the bucket"
+  type        = string
+  default     = "Disabled"
+}

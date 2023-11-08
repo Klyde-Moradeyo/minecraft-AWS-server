@@ -27,7 +27,7 @@ resource "aws_s3_bucket_versioning" "mc_s3" {
   bucket = local.s3_bucket_name
 
   versioning_configuration {
-    status    = "Suspended"
+    status    = var.version_config_status
   }
 }
 
