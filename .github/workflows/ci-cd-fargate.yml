@@ -9,6 +9,7 @@ on:
     paths:
       - "fargate_task/**"
       - ".github/workflows/ci-cd-fargate.yml"
+  workflow_dispatch:
 
 jobs:
   set-env-vars:

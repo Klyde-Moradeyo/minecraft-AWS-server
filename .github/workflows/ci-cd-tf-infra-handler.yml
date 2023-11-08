@@ -11,6 +11,7 @@ on:
       - "terraform/prod/infrastructure_handler/**"
       - "lambda_function/**"
       - ".github/workflows/ci-cd-tf-infra-handler.yml"
+  workflow_dispatch:
 
 jobs:
   set-env-vars:
