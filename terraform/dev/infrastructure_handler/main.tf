@@ -151,6 +151,31 @@ module "s3_mc_world" {
   
   # S3 Bucket 
   bucket_name = "world-s3-${random_string.unique_bucket_suffix.result}"
+  version_config_status = "Suspended"
+
+  # Module labels
+  label_id                         = module.labels.label_id
+  label_tags                       = module.labels.label_tags
+}
+
+module "s3_mc_server_assets" {
+  source = "git@github.com:Klyde-Moradeyo/minecraft-AWS-server.git//modules/s3?ref=tf-infra-service-modules"
+  
+  # S3 Bucket 
+  bucket_name = "mc-server-assets-${random_string.unique_bucket_suffix.result}"
+  version_config_status = "Enabled"
+
+  # Module labels
+  label_id                         = module.labels.label_id
+  label_tags                       = module.labels.label_tags
+}
+
+module "s3_mc_world_bck_up" {
+  source = "git@github.com:Klyde-Moradeyo/minecraft-AWS-server.git//modules/s3?ref=tf-infra-service-modules"
+  
+  # S3 Bucket 
+  bucket_name = "mc-world-bck-up-${random_string.unique_bucket_suffix.result}"
+  version_config_status = "Enabled"
 
   # Module labels
   label_id                         = module.labels.label_id
